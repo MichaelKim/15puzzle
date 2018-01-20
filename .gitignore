@@ -3,3 +3,5 @@ obj/
 *.layout
 *.depend
 *.txt
+
+database-*.txt
