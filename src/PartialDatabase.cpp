@@ -57,6 +57,7 @@ void PartialDatabase::setup() {
 
         while (file >> id >> dist) {
             distMap[id] = dist;
+            if (id == "0_0_1_0_3_0_2_0") cout << id << ": " << dist << endl;
         }
     }
 
@@ -141,8 +142,27 @@ void PartialDatabase::saveDists() {
     }
 }
 
-int PartialDatabase::getDist(vector<vector<int>> grid) {
-    return 0;
+int PartialDatabase::getDist(const vector<vector<int>>& grid) {
+    vector<Point> points(cells.size());
+
+    for (int y = 0; y < grid.size(); y++) {
+        for (int x = 0; x < grid[y].size(); x++) {
+            auto it = cells.find(grid[y][x]);
+            if (it != cells.end()) {
+                points[it->second] = {x, y};
+            }
+        }
+    }
+
+    string id = "";
+    for (Point p: points) {
+        if (id.length() > 0) id += "_";
+        id += to_string(p.x) + "_" + to_string(p.y);
+    }
+
+    cout << "Getting dist: " << id << ": " << distMap[id] << endl;
+
+    return distMap[id];
 }
 
 PartialDatabase::~PartialDatabase() {}

@@ -13,9 +13,10 @@ class PartialDatabase {
         string filename;
         Board board;
         unordered_map<int, int> cells;
-        unordered_map<string, int> distMap;
 
     public:
+        unordered_map<string, int> distMap;
+
         PartialDatabase(vector<vector<int>> grid, string filename);
         // PartialDatabase(vector<vector<int>> grid, vector<int> targets);
         virtual ~PartialDatabase();
@@ -23,7 +24,7 @@ class PartialDatabase {
         void setup();
         void generateDists();
         void saveDists();
-        int getDist(vector<vector<int>> grid);
+        int getDist(const vector<vector<int>>& grid);
 };
 
 #endif // PARTIALDATABASE_H
