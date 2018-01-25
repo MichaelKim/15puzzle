@@ -1,11 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <queue>
-#include <unordered_map>
-#include <iomanip>
-#include <ctime>
-#include <fstream>
-#include <algorithm>
 
 #include "Direction.h"
 #include "DisjointDatabase.h"

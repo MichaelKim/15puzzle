@@ -20,13 +20,14 @@ void DisjointDatabase::setup() {
 vector<Direction> DisjointDatabase::solve(vector<vector<int>> grid) {
     // Uses A* with additive pattern disjoint database heuristics
     Board start(grid);
+    Board goal({{1,2,3,4},{5,6,7,8},{9,10,11,12},{13,14,15,0});
 
     // Nodes already evaluated
     unordered_set<string> closedSet;
     // Currently discovered nodes, but not evaluated yet
-    priority_queue<pair<int, string>> openSet;
+    unordered_set<string> openSet;
     // Which node a node can be most efficiently be reached from
-    unordered_map<string, string> cameFrom;
+    unordered_map<string, pair<string, Direction>> cameFrom;
     // Cost of getting from start node to that node
     // Default value is infinity; don't check with [], use find()
     unordered_map<string, int> gScore;
@@ -38,16 +39,34 @@ vector<Direction> DisjointDatabase::solve(vector<vector<int>> grid) {
     fScore[start.getId()] = getTotalDist(grid);
 
     while(!openSet.empty()) {
-        string currId = // node in openSet with lowest fScore
+        string currId = ""; // node in openSet with lowest fScore
+        int minF = 1000000;
+        for (string id: openSet) {
+            if (fScore[id] < minF) {
+                minF = fScore[id];
+                currId = id;
+            }
+        }
 
         if (currId == goal) {
-            return generatePath(cameFrom, currId);
+            vector<Direction> moves(0);
+
+            while (cameFrom.find(currId) != cameFrom.end()) {
+                pair<string, Direction> prev = cameFrom[currId];
+                currId = prev.first;
+                moves.push_back(prev.second);
+            }
+
+            return moves;
         }
+
+        openSet.erase(currId);
+        closedSet.emplace(currId);
+
+
     }
 
-
-
-    return vector<Direction>{Direction::N, Direction::E};
+    return vector<Direction>{};
 }
 
 int DisjointDatabase::getTotalDist(const vector<vector<int>>& grid) {
