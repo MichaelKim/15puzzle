@@ -1,7 +1,6 @@
 #include "../include/PartialDatabase.h"
 
-#include "../include/Board.h"
-#include "../include/State.h"
+#include "../include/Pattern.h"
 
 #include <ctime>
 #include <fstream>
@@ -10,7 +9,7 @@
 
 using namespace std;
 
-PartialDatabase::PartialDatabase(vector<vector<int>> grid, string filename): board(Board(grid)), filename(filename) {
+PartialDatabase::PartialDatabase(vector<vector<int>> grid, string filename): pattern(Pattern(grid)), filename(filename) {
     int count = 0;
     for (int y = 0; y < grid.size(); y++) {
         for (int x = 0; x < grid[y].size(); x++) {
@@ -20,18 +19,6 @@ PartialDatabase::PartialDatabase(vector<vector<int>> grid, string filename): boa
         }
     }
 }
-
-/* PartialDatabase::PartialDatabase(vector<vector<int>> grid, vector<int> targets) {
-    int count = 0;
-    for (int y = 0; y < grid.size(); y++) {
-        for (int x = 0; x < grid[y].size(); x++) {
-            auto it = find(targets.begin(), targets.end(), grid[y][x]);
-            if (it != targets.end()) {
-                cells[grid[y][x]] = count++;
-            }
-        }
-    }
-} */
 
 void PartialDatabase::setup() {
     ifstream file("database/database-" + filename + ".txt");
@@ -57,7 +44,6 @@ void PartialDatabase::setup() {
 
         while (file >> id >> dist) {
             distMap[id] = dist;
-            if (id == "0_0_1_0_3_0_2_0") cout << id << ": " << dist << endl;
         }
     }
 
@@ -68,18 +54,23 @@ void PartialDatabase::setup() {
         cout << i.first << " " << i.second << endl;
     }
 
-    cout << "Board:" << endl << board << endl;
+    cout << "Pattern:" << endl << pattern << endl;
 }
 
 void PartialDatabase::generateDists() {
+    struct State {
+        Pattern board;
+        int dist;
+    };
+
     // board has 0 for irrelevant cells, non-0 for those part of the database
     int count = 0;
     int dist = 0;
 
     cout << "Generating database for: " << endl;
-    cout << board << endl;
+    cout << pattern << endl;
 
-    clock_t startTime, test;
+    clock_t startTime;
     double duration;
 
     startTime = clock();
@@ -88,8 +79,8 @@ void PartialDatabase::generateDists() {
     distMap.clear();
     queue<State> bfs;
 
-    bfs.push({board, 0});
-    distMap[board.getId()] = 0;
+    bfs.push({pattern, 0});
+    distMap[pattern.getId()] = 0;
 
     while(!bfs.empty()) {
         State curr = bfs.front();
@@ -143,21 +134,20 @@ void PartialDatabase::saveDists() {
 }
 
 int PartialDatabase::getDist(const vector<vector<int>>& grid) {
-    vector<Point> points(cells.size());
-
+    string id = "";
     for (int y = 0; y < grid.size(); y++) {
         for (int x = 0; x < grid[y].size(); x++) {
-            auto it = cells.find(grid[y][x]);
-            if (it != cells.end()) {
-                points[it->second] = {x, y};
+            if (id.length() > 0) {
+                id += "_";
+            }
+
+            if (cells.find(grid[y][x]) != cells.end()) {
+                id += to_string(grid[y][x]);
+            }
+            else {
+                id += "0";
             }
         }
-    }
-
-    string id = "";
-    for (Point p: points) {
-        if (id.length() > 0) id += "_";
-        id += to_string(p.x) + "_" + to_string(p.y);
     }
 
     cout << "Getting dist: " << id << ": " << distMap[id] << endl;

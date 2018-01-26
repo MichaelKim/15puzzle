@@ -1,7 +1,7 @@
 #ifndef PARTIALDATABASE_H
 #define PARTIALDATABASE_H
 
-#include "Board.h"
+#include "Pattern.h"
 
 #include <unordered_map>
 #include <vector>
@@ -11,10 +11,10 @@ using namespace std;
 class PartialDatabase {
     private:
         string filename;
-        Board board;
-        unordered_map<int, int> cells;
+        Pattern pattern;
 
     public:
+        unordered_map<int, int> cells;
         unordered_map<string, int> distMap;
 
         PartialDatabase(vector<vector<int>> grid, string filename);

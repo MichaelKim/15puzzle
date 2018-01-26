@@ -11,21 +11,19 @@ using namespace std;
 
 class Board {
     private:
+        Point blank;
 
     public:
         vector<vector<int>> grid;
-        vector<Point> cells;
 
         Board(vector<vector<int>> grid);
-        Board(vector<int> id2, int width, int height);
+        Board(string id, int width, int height);
         virtual ~Board();
 
         string getId();
-        vector<int> getId2();
-        bool canShift(int index, Direction dir);
-        string getShiftId(int index, Direction dir);
-        void shiftCell(int index, Direction dir);
         Point getBlank();
+        bool canShiftBlank(Direction dir);
+        void shiftBlank(Direction dir);
 
         friend ostream& operator<<(ostream& out, const Board& board);
 };

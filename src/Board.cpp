@@ -2,140 +2,87 @@
 
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 
 using namespace std;
 
 Board::Board(vector<vector<int>> grid): grid(grid) {
     for (int y = 0; y < grid.size(); y++) {
         for (int x = 0; x < grid[y].size(); x++) {
-            if (grid[y][x] > 0) {
-                cells.push_back({x, y});
+            if (grid[y][x] == 0) {
+                blank = {x, y};
             }
         }
     }
 }
 
-Board::Board(vector<int> id2, int width, int height) {
+Board::Board(string id, int width, int height) {
+    stringstream ss(id);
+
     grid = vector<vector<int>>(height, vector<int>(width, 0));
+
+    int i;
     for (int y = 0; y < grid.size(); y++) {
         for (int x = 0; x < grid[y].size(); x++) {
-            grid[y][x] = id2[y * width + x];
+            if (ss >> i) {
+                grid[y][x] = i;
+                if (i == 0) {
+                    blank = {x, y};
+                }
+            }
         }
     }
 }
 
 string Board::getId() {
-    string str = "";
-
-    for (Point cell: cells) {
-        if (str.length() > 0) {
-            str += "_";
-        }
-        str += to_string(cell.x) + "_" + to_string(cell.y);
-    }
-
-    return str;
-}
-
-vector<int> Board::getId2() {
-    vector<int> id2;
+    string id = "";
     for (int y = 0; y < grid.size(); y++) {
         for (int x = 0; x < grid[y].size(); x++) {
-            id2.push_back(grid[y][x]);
+            if (id.length() > 0) {
+                id += " ";
+            }
+            id += to_string(grid[y][x]);
         }
     }
-    return id2;
-}
-
-bool Board::canShift(int index, Direction dir) {
-    int cellX = cells[index].x;
-    int cellY = cells[index].y;
-
-    if (dir == Direction::N) {
-        if (cellY > 0 && grid[cellY - 1][cellX] == 0) {
-            return true;
-        }
-    }
-    else if (dir == Direction::E) {
-        if (cellX < grid[cellY].size() - 1 && grid[cellY][cellX + 1] == 0) {
-            return true;
-        }
-    }
-    else if (dir == Direction::S) {
-        if (cellY < grid.size() - 1 && grid[cellY + 1][cellX] == 0) {
-            return true;
-        }
-    }
-    else {
-        if (cellX > 0 && grid[cellY][cellX - 1] == 0) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
-string Board::getShiftId(int index, Direction dir) {
-    if (!canShift(index, dir)) return "";
-
-    string shiftId = "";
-
-    if (dir == Direction::N) {
-        cells[index].y--;
-        shiftId = getId();
-        cells[index].y++;
-    }
-    else if (dir == Direction::E) {
-        cells[index].x++;
-        shiftId = getId();
-        cells[index].x--;
-    }
-    else if (dir == Direction::S) {
-        cells[index].y++;
-        shiftId = getId();
-        cells[index].y--;
-    }
-    else {
-        cells[index].x--;
-        shiftId = getId();
-        cells[index].x++;
-    }
-
-    return shiftId;
-}
-
-// Assumes canShift(index, dir)
-void Board::shiftCell(int index, Direction dir) {
-    int cellX = cells[index].x;
-    int cellY = cells[index].y;
-
-    if (dir == Direction::N) {
-        cells[index].y--;
-        swap(grid[cellY][cellX], grid[cellY - 1][cellX]);
-    }
-    else if (dir == Direction::E) {
-        cells[index].x++;
-        swap(grid[cellY][cellX], grid[cellY][cellX + 1]);
-    }
-    else if (dir == Direction::S) {
-        cells[index].y++;
-        swap(grid[cellY][cellX], grid[cellY + 1][cellX]);
-    }
-    else {
-        cells[index].x--;
-        swap(grid[cellY][cellX], grid[cellY][cellX - 1]);
-    }
+    return id;
 }
 
 Point Board::getBlank() {
-  for (int y = 0; y < grid.size(); y++) {
-    for (int x = 0; x < grid[y].size(); x++) {
-      if (grid[y][x] == 0) {
-        return {x, y};
-      }
+    return blank;
+}
+
+bool Board::canShiftBlank(Direction dir) {
+    if (dir == Direction::N) {
+        return blank.y > 0;
     }
-  }
-  return {-1, -1};
+    else if (dir == Direction::E) {
+        return blank.x < grid[blank.y].size() - 1;
+    }
+    else if (dir == Direction::S) {
+        return blank.y < grid.size() - 1;
+    }
+    else {
+        return blank.x > 0;
+    }
+}
+
+void Board::shiftBlank(Direction dir) {
+    if (dir == Direction::N) {
+        swap(grid[blank.y][blank.x], grid[blank.y - 1][blank.x]);
+        blank.y -= 1;
+    }
+    else if (dir == Direction::E) {
+        swap(grid[blank.y][blank.x], grid[blank.y][blank.x + 1]);
+        blank.x += 1;
+    }
+    else if (dir == Direction::S) {
+        swap(grid[blank.y][blank.x], grid[blank.y + 1][blank.x]);
+        blank.y += 1;
+    }
+    else {
+        swap(grid[blank.y][blank.x], grid[blank.y][blank.x - 1]);
+        blank.x -= 1;
+    }
 }
 
 Board::~Board() {}

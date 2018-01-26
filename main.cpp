@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <ctime>
 
 #include "../include/Direction.h"
 #include "../include/DisjointDatabase.h"
@@ -26,21 +27,32 @@ int main() {
 
     db.setup();
 
+    double duration;
+    clock_t startTime = clock();
+
     vector<Direction> solution = db.solve({
-        {1, 2, 3, 4},
-        {5, 6, 8, 12},
-        {9, 10, 7, 0},
-        {13, 14, 11, 15}
-        // { 1,  9, 11,  4},
-        // {14,  8,  2,  7},
-        // {10,  6,  3, 12},
-        // { 5,  0, 13, 15}
+        // {1, 2, 3, 4},
+        // {5, 6, 8, 12},
+        // {9, 10, 7, 0},
+        // {13, 14, 11, 15}
+        { 1,  9, 11,  4},
+        {14,  8,  2,  7},
+        {10,  6,  3, 12},
+        { 5,  0, 13, 15}
     });
 
-    cout << "Solution:" << endl;
-    for(Direction dir: solution) {
-        cout << (int) dir << " ";
+    duration = (clock() - startTime) / (double)CLOCKS_PER_SEC;
+    cout<< "Time taken: " << duration << endl;
+
+    if (solution.size() == 0) {
+        cout << "No solutio nfound!" << endl;
     }
-    cout << endl;
+    else {
+        cout << "Solution:" << endl;
+        for (Direction dir: solution) {
+            cout << (int) dir << " ";
+        }
+        cout << endl;
+    }
     return 0;
 }
