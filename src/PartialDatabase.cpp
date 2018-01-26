@@ -1,7 +1,7 @@
-#include "PartialDatabase.h"
+#include "../include/PartialDatabase.h"
 
-#include "Board.h"
-#include "State.h"
+#include "../include/Board.h"
+#include "../include/State.h"
 
 #include <ctime>
 #include <fstream>
@@ -34,7 +34,7 @@ PartialDatabase::PartialDatabase(vector<vector<int>> grid, string filename): boa
 } */
 
 void PartialDatabase::setup() {
-    ifstream file("database-" + filename + ".txt");
+    ifstream file("database/database-" + filename + ".txt");
     if (!file.good()) {
         // Database file missing, generate database
         cout << "Generating database" << endl;
@@ -125,7 +125,7 @@ void PartialDatabase::generateDists() {
 
 void PartialDatabase::saveDists() {
     // Store file
-    ofstream file("database-" + filename + ".txt");
+    ofstream file("database/database-" + filename + ".txt");
     if (!file.good()) {
         cerr << "Could not generate database file: database-" + filename + ".txt" << endl;
     }

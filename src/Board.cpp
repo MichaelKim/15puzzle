@@ -1,6 +1,7 @@
-#include "Board.h"
+#include "../include/Board.h"
 
 #include <iomanip>
+#include <iostream>
 
 using namespace std;
 
@@ -10,6 +11,15 @@ Board::Board(vector<vector<int>> grid): grid(grid) {
             if (grid[y][x] > 0) {
                 cells.push_back({x, y});
             }
+        }
+    }
+}
+
+Board::Board(vector<int> id2, int width, int height) {
+    grid = vector<vector<int>>(height, vector<int>(width, 0));
+    for (int y = 0; y < grid.size(); y++) {
+        for (int x = 0; x < grid[y].size(); x++) {
+            grid[y][x] = id2[y * width + x];
         }
     }
 }
@@ -25,6 +35,16 @@ string Board::getId() {
     }
 
     return str;
+}
+
+vector<int> Board::getId2() {
+    vector<int> id2;
+    for (int y = 0; y < grid.size(); y++) {
+        for (int x = 0; x < grid[y].size(); x++) {
+            id2.push_back(grid[y][x]);
+        }
+    }
+    return id2;
 }
 
 bool Board::canShift(int index, Direction dir) {
@@ -105,6 +125,17 @@ void Board::shiftCell(int index, Direction dir) {
         cells[index].x--;
         swap(grid[cellY][cellX], grid[cellY][cellX - 1]);
     }
+}
+
+Point Board::getBlank() {
+  for (int y = 0; y < grid.size(); y++) {
+    for (int x = 0; x < grid[y].size(); x++) {
+      if (grid[y][x] == 0) {
+        return {x, y};
+      }
+    }
+  }
+  return {-1, -1};
 }
 
 Board::~Board() {}
