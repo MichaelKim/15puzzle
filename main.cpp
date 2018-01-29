@@ -39,13 +39,17 @@ int main() {
         {14,  8,  2,  7},
         {10,  6,  3, 12},
         { 5,  0, 13, 15}
+        // { 0, 12,  9,  13},
+        // {15, 11, 10, 14},
+        // { 7,  8,  5,  6},
+        // { 4,  3,  2,  1}
     });
 
     duration = (clock() - startTime) / (double)CLOCKS_PER_SEC;
     cout<< "Time taken: " << duration << endl;
 
     if (solution.size() == 0) {
-        cout << "No solutio nfound!" << endl;
+        cout << "No solution found!" << endl;
     }
     else {
         cout << "Solution:" << endl;

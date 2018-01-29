@@ -3,8 +3,11 @@
 #include "../include/Board.h"
 
 #include <queue>
+#include <unordered_map>
 #include <unordered_set>
 #include <iostream>
+
+#define INF 1000000
 
 using namespace std;
 
@@ -22,44 +25,40 @@ void DisjointDatabase::setup() {
 
 vector<Direction> DisjointDatabase::solve(vector<vector<int>> grid) {
     typedef string ID;
+    struct Node {
+        ID id;
+        int f;
+
+        bool operator< (const Node& other) const {
+            return f > other.f;
+        }
+    };
 
     // Uses A* with additive pattern disjoint database heuristics
     Board start(grid);
     Board goal({{1,2,3,4},{5,6,7,8},{9,10,11,12},{13,14,15,0}});
-    ID startId = start.getId();
-    ID goalId = goal.getId();
+
+    Node startNode {start.getId(), getTotalDist(grid)};
+    ID goalID = goal.getId();
 
     // Nodes already evaluated
     unordered_set<ID> closedSet;
     // Currently discovered nodes, but not evaluated yet
-    unordered_set<ID> openSet;
-    openSet.emplace(startId);
+    priority_queue<Node> openSet;
+    openSet.push(startNode);
     // Which node a node can be most efficiently be reached from
     unordered_map<ID, pair<ID, Direction>> cameFrom;
     // Cost of getting from start node to that node
     // Default value is infinity; don't check with [], use find()
     unordered_map<ID, int> gScore;
     // Starting grid has no cost
-    gScore[startId] = 0;
-    // Cost of getting from start node to goal by passing that node
-    unordered_map<ID, int> fScore;
-    // Starting grid is heuristical
-    fScore[startId] = getTotalDist(grid);
+    gScore[startNode.id] = 0;
 
     while(!openSet.empty()) {
-        ID currId; // node in openSet with lowest fScore
-        int minF = 1000000;
-        for (ID id: openSet) {
-            if (fScore.find(id) == fScore.end()) {
-                fScore[id] = 1000000;
-            }
-            if (fScore[id] < minF) {
-                minF = fScore[id];
-                currId = id;
-            }
-        }
+        Node currNode = openSet.top();
+        ID currId = currNode.id;
 
-        if (currId == goalId) {
+        if (currId == goalID) {
             vector<Direction> moves(0);
 
             while (cameFrom.find(currId) != cameFrom.end()) {
@@ -71,7 +70,9 @@ vector<Direction> DisjointDatabase::solve(vector<vector<int>> grid) {
             return moves;
         }
 
-        openSet.erase(currId);
+        // cout << currId << " " << currNode.f << endl;
+
+        openSet.pop();
         closedSet.emplace(currId);
 
         Board curr(currId, 4, 4);
@@ -82,21 +83,18 @@ vector<Direction> DisjointDatabase::solve(vector<vector<int>> grid) {
             if (curr.canShiftBlank(dir)) {
                 Board next = curr;
                 next.shiftBlank(dir);
+
                 ID nextId = next.getId();
                 if (closedSet.find(nextId) == closedSet.end()) {
-                    if (openSet.find(nextId) == openSet.end()) {
-                        openSet.emplace(nextId);
-                    }
-
                     if (gScore.find(nextId) == gScore.end()) {
-                        gScore[nextId] = 1000000;
+                        gScore[nextId] = INF;
                     }
 
                     int nextG = gScore[currId] + 1;
                     if (nextG < gScore[nextId]) {
                         cameFrom[nextId] = make_pair(currId, dir);
                         gScore[nextId] = nextG;
-                        fScore[nextId] = nextG + getTotalDist(next.grid);
+                        openSet.push(Node{nextId, nextG + getTotalDist(next.grid)});
                     }
                 }
             }
@@ -128,7 +126,6 @@ int DisjointDatabase::getTotalDist(const vector<vector<int>>& grid) {
     for (int i = 0; i < databases.size(); i++) {
         totalDist += databases[i].distMap[ids[i]];
     }
-    cout << totalDist << endl;
     // for (PartialDatabase& pd: databases) {
     //     totalDist += pd.getDist(grid);
     // }
