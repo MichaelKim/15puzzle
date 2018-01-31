@@ -1,6 +1,7 @@
 #ifndef PARTIALDATABASE_H
 #define PARTIALDATABASE_H
 
+#include "Board.h"
 #include "Pattern.h"
 
 #include <unordered_map>
@@ -15,16 +16,15 @@ class PartialDatabase {
 
     public:
         unordered_map<int, int> cells;
-        unordered_map<string, int> distMap;
+        unordered_map<unsigned long long int, int> distMap;
 
         PartialDatabase(vector<vector<int>> grid, string filename);
-        // PartialDatabase(vector<vector<int>> grid, vector<int> targets);
         virtual ~PartialDatabase();
 
         void setup();
         void generateDists();
         void saveDists();
-        int getDist(const vector<vector<int>>& grid);
+        int getDist(const Board& board);
 };
 
 #endif // PARTIALDATABASE_H

@@ -24,7 +24,6 @@ void DisjointDatabase::setup() {
 }
 
 vector<Direction> DisjointDatabase::solve(vector<vector<int>> grid) {
-    typedef string ID;
     struct Node {
         ID id;
         int f;
@@ -38,7 +37,7 @@ vector<Direction> DisjointDatabase::solve(vector<vector<int>> grid) {
     Board start(grid);
     Board goal({{1,2,3,4},{5,6,7,8},{9,10,11,12},{13,14,15,0}});
 
-    Node startNode {start.getId(), getTotalDist(grid)};
+    Node startNode {start.getId(), getTotalDist(start)};
     ID goalID = goal.getId();
 
     // Nodes already evaluated
@@ -75,7 +74,7 @@ vector<Direction> DisjointDatabase::solve(vector<vector<int>> grid) {
         openSet.pop();
         closedSet.emplace(currId);
 
-        Board curr(currId, 4, 4);
+        Board curr(currId);
         Point blank = curr.getBlank();
 
         for (int i = 0; i < 4; i++) {
@@ -94,7 +93,7 @@ vector<Direction> DisjointDatabase::solve(vector<vector<int>> grid) {
                     if (nextG < gScore[nextId]) {
                         cameFrom[nextId] = make_pair(currId, dir);
                         gScore[nextId] = nextG;
-                        openSet.push(Node{nextId, nextG + getTotalDist(next.grid)});
+                        openSet.push(Node{nextId, nextG + getTotalDist(next)});
                     }
                 }
             }
@@ -104,20 +103,19 @@ vector<Direction> DisjointDatabase::solve(vector<vector<int>> grid) {
     return vector<Direction>{};
 }
 
-int DisjointDatabase::getTotalDist(const vector<vector<int>>& grid) {
-    vector<string> ids(databases.size(), "");
+int DisjointDatabase::getTotalDist(const Board& board) {
+    vector<unsigned long long int> ids(databases.size(), 0);
 
-    for (int y = 0; y < grid.size(); y++) {
-        for (int x = 0; x < grid[y].size(); x++) {
+    for (int y = 0; y < Board::SIZE; y++) {
+        for (int x = 0; x < Board::SIZE; x++) {
+            int n = board.getCell(x, y);
+
             for (int i = 0; i < databases.size(); i++) {
-                if (ids[i].length() > 0) {
-                    ids[i] += "_";
-                }
-                if (databases[i].cells.find(grid[y][x]) != databases[i].cells.end()) {
-                    ids[i] += to_string(grid[y][x]);
+                if (databases[i].cells.find(n) != databases[i].cells.end()) {
+                    ids[i] = ids[i] * 16 + n;
                 }
                 else {
-                    ids[i] += "0";
+                    ids[i] *= 16;
                 }
             }
         }
@@ -127,7 +125,7 @@ int DisjointDatabase::getTotalDist(const vector<vector<int>>& grid) {
         totalDist += databases[i].distMap[ids[i]];
     }
     // for (PartialDatabase& pd: databases) {
-    //     totalDist += pd.getDist(grid);
+    //     totalDist += pd.getDist(board);
     // }
     return totalDist;
 }

@@ -7,38 +7,31 @@
 
 using namespace std;
 
-Pattern::Pattern(vector<vector<int>> grid): grid(grid) {
-    for (int y = 0; y < grid.size(); y++) {
-        for (int x = 0; x < grid[y].size(); x++) {
-            if (grid[y][x] > 0) {
+Pattern::Pattern(vector<vector<int>> g) {
+    grid = 0;
+    for (int y = SIZE - 1; y >= 0; y--) {
+        for (int x = SIZE - 1; x >= 0; x--) {
+            if (g[y][x] > 0) {
                 cells.push_back({x, y});
             }
+            grid = grid * 16 + g[y][x];
         }
     }
 }
 
-string Pattern::getId() {
-    // string str = "";
-    //
-    // for (Point cell: cells) {
-    //     if (str.length() > 0) {
-    //         str += "_";
-    //     }
-    //     str += to_string(cell.x) + "_" + to_string(cell.y);
-    // }
-    //
-    // return str;
+int Pattern::getCell(int x, int y) const {
+    int i = 4 * (y * SIZE + x);
+    return ((grid & (0xfull << i)) >> i);
+}
 
-    string id = "";
-    for (int y = 0; y < grid.size(); y++) {
-        for (int x = 0; x < grid[y].size(); x++) {
-            if (id.length() > 0) {
-                id += "_";
-            }
-            id += to_string(grid[y][x]);
-        }
-    }
-    return id;
+void Pattern::setCell(int x, int y, int n) {
+    int i = 4 * (y * SIZE + x);
+    grid &= ~(0xfull << i);
+    grid |= (unsigned long long int) n << i;
+}
+
+unsigned long long int Pattern::getId() {
+    return grid;
 }
 
 bool Pattern::canShift(int index, Direction dir) {
@@ -46,45 +39,71 @@ bool Pattern::canShift(int index, Direction dir) {
     int cellY = cells[index].y;
 
     if (dir == Direction::N) {
-        return (cellY > 0 && grid[cellY - 1][cellX] == 0);
+        return (cellY > 0 && getCell(cellX, cellY - 1) == 0);
     }
     else if (dir == Direction::E) {
-        return (cellX < grid[cellY].size() - 1 && grid[cellY][cellX + 1] == 0);
+        return (cellX < SIZE - 1 && getCell(cellX + 1, cellY) == 0);
     }
     else if (dir == Direction::S) {
-        return (cellY < grid.size() - 1 && grid[cellY + 1][cellX] == 0);
+        return (cellY < SIZE - 1 && getCell(cellX, cellY + 1) == 0);
     }
     else {
-        return (cellX > 0 && grid[cellY][cellX - 1] == 0);
+        return (cellX > 0 && getCell(cellX - 1, cellY) == 0);
     }
 }
 
-string Pattern::getShiftId(int index, Direction dir) {
-    if (!canShift(index, dir)) return "";
+unsigned long long int Pattern::getShiftId(int index, Direction dir) {
+    if (!canShift(index, dir)) return 0;
 
     int cellX = cells[index].x;
     int cellY = cells[index].y;
-    string shiftId = "";
+    unsigned long long int shiftId = 0;
+
+    int temp = getCell(cellX, cellY);
 
     if (dir == Direction::N) {
-        swap(grid[cellY][cellX], grid[cellY - 1][cellX]);
+        int shift = getCell(cellX, cellY - 1);
+
+        setCell(cellX, cellY, shift);
+        setCell(cellX, cellY - 1, temp);
+
         shiftId = getId();
-        swap(grid[cellY][cellX], grid[cellY - 1][cellX]);
+
+        setCell(cellX, cellY, temp);
+        setCell(cellX, cellY - 1, shift);
     }
     else if (dir == Direction::E) {
-        swap(grid[cellY][cellX], grid[cellY][cellX + 1]);
+        int shift = getCell(cellX + 1, cellY);
+
+        setCell(cellX, cellY, shift);
+        setCell(cellX + 1, cellY, temp);
+
         shiftId = getId();
-        swap(grid[cellY][cellX], grid[cellY][cellX + 1]);
+
+        setCell(cellX, cellY, temp);
+        setCell(cellX + 1, cellY, shift);
     }
     else if (dir == Direction::S) {
-        swap(grid[cellY][cellX], grid[cellY + 1][cellX]);
+        int shift = getCell(cellX, cellY + 1);
+
+        setCell(cellX, cellY, shift);
+        setCell(cellX, cellY + 1, temp);
+
         shiftId = getId();
-        swap(grid[cellY][cellX], grid[cellY + 1][cellX]);
+
+        setCell(cellX, cellY, temp);
+        setCell(cellX, cellY + 1, shift);
     }
     else {
-        swap(grid[cellY][cellX], grid[cellY][cellX - 1]);
+        int shift = getCell(cellX - 1, cellY);
+
+        setCell(cellX, cellY, shift);
+        setCell(cellX - 1, cellY, temp);
+
         shiftId = getId();
-        swap(grid[cellY][cellX], grid[cellY][cellX - 1]);
+
+        setCell(cellX, cellY, temp);
+        setCell(cellX - 1, cellY, shift);
     }
 
     return shiftId;
@@ -95,30 +114,40 @@ void Pattern::shiftCell(int index, Direction dir) {
     int cellX = cells[index].x;
     int cellY = cells[index].y;
 
+    int temp = getCell(cellX, cellY);
+
     if (dir == Direction::N) {
+        setCell(cellX, cellY, getCell(cellX, cellY - 1));
+        setCell(cellX, cellY - 1, temp);
+
         cells[index].y--;
-        swap(grid[cellY][cellX], grid[cellY - 1][cellX]);
     }
     else if (dir == Direction::E) {
+        setCell(cellX, cellY, getCell(cellX + 1, cellY));
+        setCell(cellX + 1, cellY, temp);
+
         cells[index].x++;
-        swap(grid[cellY][cellX], grid[cellY][cellX + 1]);
     }
     else if (dir == Direction::S) {
+        setCell(cellX, cellY, getCell(cellX, cellY + 1));
+        setCell(cellX, cellY + 1, temp);
+
         cells[index].y++;
-        swap(grid[cellY][cellX], grid[cellY + 1][cellX]);
     }
     else {
+        setCell(cellX, cellY, getCell(cellX - 1, cellY));
+        setCell(cellX - 1, cellY, temp);
+
         cells[index].x--;
-        swap(grid[cellY][cellX], grid[cellY][cellX - 1]);
     }
 }
 
 Pattern::~Pattern() {}
 
 ostream& operator<<(ostream& out, const Pattern& pattern) {
-    for (vector<int> row: pattern.grid) {
-        for (int i: row) {
-            out << setw(3) << i;
+    for (int y = 0; y < Pattern::SIZE; y++) {
+        for (int x = 0; x < Pattern::SIZE; x++) {
+            out << setw(3) << pattern.getCell(x, y);
         }
         out << endl;
     }

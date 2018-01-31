@@ -2,49 +2,46 @@
 
 #include <iomanip>
 #include <iostream>
-#include <sstream>
 
 using namespace std;
 
-Board::Board(vector<vector<int>> grid): grid(grid) {
-    for (int y = 0; y < grid.size(); y++) {
-        for (int x = 0; x < grid[y].size(); x++) {
-            if (grid[y][x] == 0) {
+Board::Board(vector<vector<int>> g) {
+    grid = 0;
+    for (int y = SIZE - 1; y >= 0; y--) {
+        for (int x = SIZE - 1; x >= 0; x--) {
+            if (g[y][x] == 0) {
                 blank = {x, y};
             }
+            grid = grid * 16 + g[y][x];
         }
     }
 }
 
-Board::Board(string id, int width, int height) {
-    stringstream ss(id);
-
-    grid = vector<vector<int>>(height, vector<int>(width, 0));
-
-    int i;
-    for (int y = 0; y < grid.size(); y++) {
-        for (int x = 0; x < grid[y].size(); x++) {
-            if (ss >> i) {
-                grid[y][x] = i;
-                if (i == 0) {
-                    blank = {x, y};
-                }
+Board::Board(ID val): grid(val) {
+    for (int y = 0; y < SIZE; y++) {
+        for (int x = 0; x < SIZE; x++) {
+            int i = 4 * (y * SIZE + x);
+            if (((val & (0xfull << i)) >> i) == 0) {
+                blank = {x, y};
+                return;
             }
         }
     }
 }
 
-string Board::getId() {
-    string id = "";
-    for (int y = 0; y < grid.size(); y++) {
-        for (int x = 0; x < grid[y].size(); x++) {
-            if (id.length() > 0) {
-                id += " ";
-            }
-            id += to_string(grid[y][x]);
-        }
-    }
-    return id;
+int Board::getCell(int x, int y) const {
+    int i = 4 * (y * SIZE + x);
+    return ((grid & (0xfull << i)) >> i);
+}
+
+void Board::setCell(int x, int y, int n) {
+    int i = 4 * (y * SIZE + x);
+    grid &= ~(0xfull << i);
+    grid |= (ID) n << i;
+}
+
+ID Board::getId() {
+    return grid;
 }
 
 Point Board::getBlank() {
@@ -56,10 +53,10 @@ bool Board::canShiftBlank(Direction dir) {
         return blank.y > 0;
     }
     else if (dir == Direction::E) {
-        return blank.x < grid[blank.y].size() - 1;
+        return blank.x < SIZE - 1;
     }
     else if (dir == Direction::S) {
-        return blank.y < grid.size() - 1;
+        return blank.y < SIZE - 1;
     }
     else {
         return blank.x > 0;
@@ -67,20 +64,29 @@ bool Board::canShiftBlank(Direction dir) {
 }
 
 void Board::shiftBlank(Direction dir) {
+    int temp = getCell(blank.x, blank.y);
     if (dir == Direction::N) {
-        swap(grid[blank.y][blank.x], grid[blank.y - 1][blank.x]);
+        setCell(blank.x, blank.y, getCell(blank.x, blank.y - 1));
+        setCell(blank.x, blank.y - 1, temp);
+
         blank.y -= 1;
     }
     else if (dir == Direction::E) {
-        swap(grid[blank.y][blank.x], grid[blank.y][blank.x + 1]);
+        setCell(blank.x, blank.y, getCell(blank.x + 1, blank.y));
+        setCell(blank.x + 1, blank.y, temp);
+
         blank.x += 1;
     }
     else if (dir == Direction::S) {
-        swap(grid[blank.y][blank.x], grid[blank.y + 1][blank.x]);
+        setCell(blank.x, blank.y, getCell(blank.x, blank.y + 1));
+        setCell(blank.x, blank.y + 1, temp);
+
         blank.y += 1;
     }
     else {
-        swap(grid[blank.y][blank.x], grid[blank.y][blank.x - 1]);
+        setCell(blank.x, blank.y, getCell(blank.x - 1, blank.y));
+        setCell(blank.x - 1, blank.y, temp);
+
         blank.x -= 1;
     }
 }
@@ -88,9 +94,9 @@ void Board::shiftBlank(Direction dir) {
 Board::~Board() {}
 
 ostream& operator<<(ostream& out, const Board& board) {
-    for (vector<int> row: board.grid) {
-        for (int i: row) {
-            out << setw(3) << i;
+    for (int y = 0; y < Board::SIZE; y++) {
+        for (int x = 0; x < Board::SIZE; x++) {
+            out << setw(3) << board.getCell(x, y);
         }
         out << endl;
     }

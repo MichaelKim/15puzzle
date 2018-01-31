@@ -1,5 +1,6 @@
 #include "../include/PartialDatabase.h"
 
+#include "../include/Board.h"
 #include "../include/Pattern.h"
 
 #include <ctime>
@@ -39,7 +40,7 @@ void PartialDatabase::setup() {
             //cells.push_back({x, y});
         //}
 
-        string id;
+        unsigned long long int id;
         int dist;
 
         while (file >> id >> dist) {
@@ -97,8 +98,8 @@ void PartialDatabase::generateDists() {
         for (int i = 0; i < curr.board.cells.size(); i++) {
             for (int j = 0; j < 4; j++) {
                 Direction dir = static_cast<Direction>(j);
-                string shiftId = curr.board.getShiftId(i, dir);
-                if (shiftId.length() > 0 && distMap.find(shiftId) == distMap.end()) {
+                unsigned long long int shiftId = curr.board.getShiftId(i, dir);
+                if (shiftId > 0 && distMap.find(shiftId) == distMap.end()) {
                     State next = {curr.board, curr.dist + 1};
                     next.board.shiftCell(i, dir);
 
@@ -133,19 +134,16 @@ void PartialDatabase::saveDists() {
     }
 }
 
-int PartialDatabase::getDist(const vector<vector<int>>& grid) {
-    string id = "";
-    for (int y = 0; y < grid.size(); y++) {
-        for (int x = 0; x < grid[y].size(); x++) {
-            if (id.length() > 0) {
-                id += "_";
-            }
-
-            if (cells.find(grid[y][x]) != cells.end()) {
-                id += to_string(grid[y][x]);
+int PartialDatabase::getDist(const Board& board) {
+    unsigned long long int id = 0;
+    for (int y = 0; y < Board::SIZE; y++) {
+        for (int x = 0; x < Board::SIZE; x++) {
+            int i = board.getCell(x, y);
+            if (cells.find(i) != cells.end()) {
+                id = id * 16 + i;
             }
             else {
-                id += "0";
+                id *= 16;
             }
         }
     }

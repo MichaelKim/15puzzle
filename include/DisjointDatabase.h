@@ -1,6 +1,7 @@
 #ifndef DISJOINTDATABASE_H
 #define DISJOINTDATABASE_H
 
+#include "Board.h"
 #include "Direction.h"
 #include "PartialDatabase.h"
 
@@ -18,7 +19,7 @@ class DisjointDatabase {
 
         void setup();
         vector<Direction> solve(vector<vector<int>> grid);
-        int getTotalDist(const vector<vector<int>>& grid);
+        int getTotalDist(const Board& board);
 
 };
 

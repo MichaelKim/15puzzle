@@ -11,17 +11,22 @@ using namespace std;
 
 class Pattern {
     private:
-        vector<vector<int>> grid;
+        unsigned long long int grid;
+
+        int getCell(int x, int y) const;
+        void setCell(int x, int y, int n);
 
     public:
+        static const int SIZE = 4;
+
         vector<Point> cells;
-        
-        Pattern(vector<vector<int>> grid);
+
+        Pattern(vector<vector<int>> g);
         virtual ~Pattern();
 
-        string getId();
+        unsigned long long int getId();
         bool canShift(int index, Direction dir);
-        string getShiftId(int index, Direction dir);
+        unsigned long long int getShiftId(int index, Direction dir);
         void shiftCell(int index, Direction dir);
 
         friend ostream& operator<<(ostream& out, const Pattern& pattern);

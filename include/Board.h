@@ -9,18 +9,24 @@
 
 using namespace std;
 
+typedef unsigned long long int ID;
+
 class Board {
     private:
+        ID grid;
         Point blank;
 
-    public:
-        vector<vector<int>> grid;
+        void setCell(int x, int y, int n);
 
-        Board(vector<vector<int>> grid);
-        Board(string id, int width, int height);
+    public:
+        static const int SIZE = 4;
+
+        Board(vector<vector<int>> g);
+        Board(ID val);
         virtual ~Board();
 
-        string getId();
+        int getCell(int x, int y) const;
+        ID getId();
         Point getBlank();
         bool canShiftBlank(Direction dir);
         void shiftBlank(Direction dir);
