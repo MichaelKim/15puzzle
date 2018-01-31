@@ -106,8 +106,8 @@ vector<Direction> DisjointDatabase::solve(vector<vector<int>> grid) {
 int DisjointDatabase::getTotalDist(const Board& board) {
     vector<unsigned long long int> ids(databases.size(), 0);
 
-    for (int y = 0; y < Board::SIZE; y++) {
-        for (int x = 0; x < Board::SIZE; x++) {
+    for (int y = Board::SIZE - 1; y >= 0; y--) {
+        for (int x = Board::SIZE - 1; x >= 0; x--) {
             int n = board.getCell(x, y);
 
             for (int i = 0; i < databases.size(); i++) {

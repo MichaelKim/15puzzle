@@ -136,8 +136,8 @@ void PartialDatabase::saveDists() {
 
 int PartialDatabase::getDist(const Board& board) {
     unsigned long long int id = 0;
-    for (int y = 0; y < Board::SIZE; y++) {
-        for (int x = 0; x < Board::SIZE; x++) {
+    for (int y = Board::SIZE - 1; y >= 0; y--) {
+        for (int x = Board::SIZE - 1; x >= 0; x--) {
             int i = board.getCell(x, y);
             if (cells.find(i) != cells.end()) {
                 id = id * 16 + i;
