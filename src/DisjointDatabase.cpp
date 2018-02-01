@@ -85,12 +85,9 @@ vector<Direction> DisjointDatabase::solve(vector<vector<int>> grid) {
 
                 ID nextId = next.getId();
                 if (closedSet.find(nextId) == closedSet.end()) {
-                    if (gScore.find(nextId) == gScore.end()) {
-                        gScore[nextId] = INF;
-                    }
-
                     int nextG = gScore[currId] + 1;
-                    if (nextG < gScore[nextId]) {
+                    auto it = gScore.find(nextId);
+                    if (it == gScore.end() || nextG < it->second) {
                         cameFrom[nextId] = make_pair(currId, dir);
                         gScore[nextId] = nextG;
                         openSet.push(Node{nextId, nextG + getTotalDist(next)});
