@@ -19,9 +19,7 @@ PartialDatabase::PartialDatabase(vector<vector<int>> grid, string filename): pat
             }
         }
     }
-}
 
-void PartialDatabase::setup() {
     ifstream file("database/database-" + filename + ".txt");
     if (!file.good()) {
         // Database file missing, generate database
@@ -32,13 +30,6 @@ void PartialDatabase::setup() {
     else {
         // Read database from file
         cout << "Parsing database" << endl;
-        //int width, height, numCells;
-        //file >> width >> height >> numCells;
-        //vector<Point> cells(numCells);
-        //for (int i = 0, x, y; i < numCells; i++) {
-            //file >> x >> y;
-            //cells.push_back({x, y});
-        //}
 
         unsigned long long int id;
         int dist;
@@ -132,25 +123,6 @@ void PartialDatabase::saveDists() {
 
         file.close();
     }
-}
-
-int PartialDatabase::getDist(const Board& board) {
-    unsigned long long int id = 0;
-    for (int y = Board::SIZE - 1; y >= 0; y--) {
-        for (int x = Board::SIZE - 1; x >= 0; x--) {
-            int i = board.getCell(x, y);
-            if (cells.find(i) != cells.end()) {
-                id = id * 16 + i;
-            }
-            else {
-                id *= 16;
-            }
-        }
-    }
-
-    cout << "Getting dist: " << id << ": " << distMap[id] << endl;
-
-    return distMap[id];
 }
 
 PartialDatabase::~PartialDatabase() {}

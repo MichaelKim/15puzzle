@@ -21,10 +21,8 @@ class PartialDatabase {
         PartialDatabase(vector<vector<int>> grid, string filename);
         virtual ~PartialDatabase();
 
-        void setup();
         void generateDists();
         void saveDists();
-        int getDist(const Board& board);
 };
 
 #endif // PARTIALDATABASE_H

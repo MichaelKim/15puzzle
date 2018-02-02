@@ -11,14 +11,12 @@ using namespace std;
 
 class DisjointDatabase {
     private:
-        vector<PartialDatabase> databases;
+        vector<PartialDatabase*> databases;
 
     public:
         DisjointDatabase(vector<vector<vector<int>>> grids);
         virtual ~DisjointDatabase();
 
-        void setup();
-        vector<Direction> solve(vector<vector<int>> grid);
         int getTotalDist(const Board& board);
 
 };
