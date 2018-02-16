@@ -1,7 +1,6 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include "Direction.h"
 #include "Point.h"
 
 #include <ostream>
@@ -22,14 +21,14 @@ class Board {
         static const int SIZE = 4;
 
         Board(vector<vector<int>> g);
-        Board(ID val);
         virtual ~Board();
 
         int getCell(int x, int y) const;
         ID getId();
         Point getBlank();
-        bool canShiftBlank(Direction dir);
-        void shiftBlank(Direction dir);
+        vector<int> getMoves();
+        void applyMove(int dir);
+        void undoMove(int dir);
 
         friend ostream& operator<<(ostream& out, const Board& board);
 };

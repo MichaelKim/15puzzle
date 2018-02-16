@@ -17,18 +17,6 @@ Board::Board(vector<vector<int>> g) {
     }
 }
 
-Board::Board(ID val): grid(val) {
-    for (int y = 0; y < SIZE; y++) {
-        for (int x = 0; x < SIZE; x++) {
-            int i = 4 * (y * SIZE + x);
-            if (((val & (0xfull << i)) >> i) == 0) {
-                blank = {x, y};
-                return;
-            }
-        }
-    }
-}
-
 int Board::getCell(int x, int y) const {
     int i = 4 * (y * SIZE + x);
     return ((grid & (0xfull << i)) >> i);
@@ -48,46 +36,66 @@ Point Board::getBlank() {
     return blank;
 }
 
-bool Board::canShiftBlank(Direction dir) {
-    if (dir == Direction::N) {
-        return blank.y > 0;
-    }
-    else if (dir == Direction::E) {
-        return blank.x < SIZE - 1;
-    }
-    else if (dir == Direction::S) {
-        return blank.y < SIZE - 1;
-    }
-    else {
-        return blank.x > 0;
-    }
+vector<int> Board::getMoves() {
+    vector<int> moves;
+    if (blank.y > 0) moves.push_back(0);
+    if (blank.x < SIZE - 1) moves.push_back(1);
+    if (blank.y < SIZE - 1) moves.push_back(2);
+    if (blank.x > 0) moves.push_back(3);
+    return moves;
 }
 
-void Board::shiftBlank(Direction dir) {
-    int temp = getCell(blank.x, blank.y);
-    if (dir == Direction::N) {
+void Board::applyMove(int dir) {
+    if (dir == 0) {
         setCell(blank.x, blank.y, getCell(blank.x, blank.y - 1));
-        setCell(blank.x, blank.y - 1, temp);
+        setCell(blank.x, blank.y - 1, 0);
 
         blank.y -= 1;
     }
-    else if (dir == Direction::E) {
+    else if (dir == 1) {
         setCell(blank.x, blank.y, getCell(blank.x + 1, blank.y));
-        setCell(blank.x + 1, blank.y, temp);
+        setCell(blank.x + 1, blank.y, 0);
 
         blank.x += 1;
     }
-    else if (dir == Direction::S) {
+    else if (dir == 2) {
         setCell(blank.x, blank.y, getCell(blank.x, blank.y + 1));
-        setCell(blank.x, blank.y + 1, temp);
+        setCell(blank.x, blank.y + 1, 0);
 
         blank.y += 1;
     }
     else {
         setCell(blank.x, blank.y, getCell(blank.x - 1, blank.y));
-        setCell(blank.x - 1, blank.y, temp);
+        setCell(blank.x - 1, blank.y, 0);
 
         blank.x -= 1;
+    }
+}
+
+void Board::undoMove(int dir) {
+    if (dir == 0) {
+        setCell(blank.x, blank.y, getCell(blank.x, blank.y + 1));
+        setCell(blank.x, blank.y + 1, 0);
+
+        blank.y += 1;
+    }
+    else if (dir == 1) {
+        setCell(blank.x, blank.y, getCell(blank.x - 1, blank.y));
+        setCell(blank.x - 1, blank.y, 0);
+
+        blank.x -= 1;
+    }
+    else if (dir == 2) {
+        setCell(blank.x, blank.y, getCell(blank.x, blank.y - 1));
+        setCell(blank.x, blank.y - 1, 0);
+
+        blank.y -= 1;
+    }
+    else {
+        setCell(blank.x, blank.y, getCell(blank.x + 1, blank.y));
+        setCell(blank.x + 1, blank.y, 0);
+
+        blank.x += 1;
     }
 }
 
