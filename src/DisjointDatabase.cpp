@@ -12,7 +12,7 @@ DisjointDatabase::DisjointDatabase(vector<vector<vector<int>>> grids) {
     }
 }
 
-int DisjointDatabase::getTotalDist(const Board& board) {
+int DisjointDatabase::getHeuristic(const Board& board) {
     vector<ID> ids(databases.size(), 0);
 
     for (int y = Board::SIZE - 1; y >= 0; y--) {

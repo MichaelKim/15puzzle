@@ -17,7 +17,7 @@ class DisjointDatabase {
         DisjointDatabase(vector<vector<vector<int>>> grids);
         virtual ~DisjointDatabase();
 
-        int getTotalDist(const Board& board);
+        int getHeuristic(const Board& board);
 
 };
 

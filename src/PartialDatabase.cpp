@@ -20,7 +20,7 @@ PartialDatabase::PartialDatabase(vector<vector<int>> grid, string filename): pat
         }
     }
 
-    ifstream file("database/database-" + filename + ".txt");
+    ifstream file("/Users/michaelkim314/Documents/Github/15puzzle/database/database-" + filename + ".txt");
     if (!file.good()) {
         // Database file missing, generate database
         cout << "Generating database" << endl;
@@ -108,7 +108,7 @@ void PartialDatabase::generateDists() {
 
 void PartialDatabase::saveDists() {
     // Store file
-    ofstream file("database/database-" + filename + ".txt");
+    ofstream file("/Users/michaelkim314/Documents/Github/15puzzle/database/database-" + filename + ".txt");
     if (!file.good()) {
         cerr << "Could not generate database file: database-" + filename + ".txt" << endl;
     }
