@@ -12,6 +12,8 @@ using namespace std;
 class DisjointDatabase {
     private:
         vector<PartialDatabase*> databases;
+        int numDatabases;
+        vector<int> where;
 
     public:
         DisjointDatabase(vector<vector<vector<int>>> grids);

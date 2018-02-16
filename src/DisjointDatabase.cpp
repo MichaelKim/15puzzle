@@ -2,35 +2,48 @@
 
 #include "../include/Board.h"
 
+#include <iostream>
+
 #define INF 1000000
 
 using namespace std;
 
-DisjointDatabase::DisjointDatabase(vector<vector<vector<int>>> grids) {
+DisjointDatabase::DisjointDatabase(vector<vector<vector<int>>> grids): numDatabases(grids.size()) {
+    where = vector<int>(Board::SIZE * Board::SIZE, -1);
+
     for (int i = 0; i < grids.size(); i++) {
-        databases.push_back(new PartialDatabase(grids[i], to_string(i)));
+        PartialDatabase* pd = new PartialDatabase(grids[i], to_string(i));
+        databases.push_back(pd);
+
+        for (int j = 0; j < Board::SIZE * Board::SIZE; j++) {
+            if (pd->cells.find(j) != pd->cells.end()) {
+                where[j] = i;
+            }
+        }
     }
 }
 
 int DisjointDatabase::getHeuristic(const Board& board) {
-    vector<ID> ids(databases.size(), 0);
+    vector<ID> ids(numDatabases, 0);
+    ID temp = board.getId();
 
-    for (int y = Board::SIZE - 1; y >= 0; y--) {
-        for (int x = Board::SIZE - 1; x >= 0; x--) {
-            int n = board.getCell(x, y);
+    for (int i = 0; i < Board::SIZE * Board::SIZE; i++) {
+        int n = temp & 0xf;
+        temp >>= 4;
 
-            for (int i = 0; i < databases.size(); i++) {
-                if (databases[i]->cells.find(n) != databases[i]->cells.end()) {
-                    ids[i] = ids[i] * 16 + n;
-                }
-                else {
-                    ids[i] *= 16;
-                }
-            }
+        int j = where[n];
+        if (j >= 0 && j < numDatabases) {
+            ID grid = ids[j];
+            int k = 4 * (Board::SIZE * Board::SIZE - i - 1);
+            grid &= ~(0xfull << k);
+            grid |= (ID) n << k;
+
+            ids[j] = grid;
         }
     }
+
     int totalDist = 0;
-    for (int i = 0; i < databases.size(); i++) {
+    for (int i = 0; i < numDatabases; i++) {
         totalDist += databases[i]->distMap[ids[i]];
     }
 

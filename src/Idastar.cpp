@@ -17,12 +17,14 @@ vector<int> Idastar::solve(Board& start) {
 
     limit = db->getHeuristic(start);
     cout << "Limit:";
+
     do {
         minCost = INF;
         cout << " " << limit;
         dfs(start, 0);
         limit = minCost;
     } while (path.size() == 0);
+
     cout << endl;
     return path;
 }
@@ -30,7 +32,7 @@ vector<int> Idastar::solve(Board& start) {
 bool Idastar::dfs(Board &node, int g) {
     int f = g + db->getHeuristic(node);
 
-    if (f <= limit && node.getId() == 0xfedcba987654321) {
+    if (f <= limit && node.getId() == 0x123456789abcdef0) {
         return true;
     }
 

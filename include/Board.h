@@ -24,7 +24,7 @@ class Board {
         virtual ~Board();
 
         int getCell(int x, int y) const;
-        ID getId();
+        ID getId() const;
         Point getBlank();
         vector<int> getMoves();
         void applyMove(int dir);

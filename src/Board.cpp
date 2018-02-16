@@ -7,8 +7,8 @@ using namespace std;
 
 Board::Board(vector<vector<int>> g) {
     grid = 0;
-    for (int y = SIZE - 1; y >= 0; y--) {
-        for (int x = SIZE - 1; x >= 0; x--) {
+    for (int y = 0; y < SIZE; y++) {
+        for (int x = 0; x < SIZE; x++) {
             if (g[y][x] == 0) {
                 blank = {x, y};
             }
@@ -18,17 +18,17 @@ Board::Board(vector<vector<int>> g) {
 }
 
 int Board::getCell(int x, int y) const {
-    int i = 4 * (y * SIZE + x);
+    int i = 4 * ((SIZE - y - 1) * SIZE + (SIZE - x - 1));
     return ((grid & (0xfull << i)) >> i);
 }
 
 void Board::setCell(int x, int y, int n) {
-    int i = 4 * (y * SIZE + x);
+    int i = 4 * ((SIZE - y - 1) * SIZE + (SIZE - x - 1));
     grid &= ~(0xfull << i);
     grid |= (ID) n << i;
 }
 
-ID Board::getId() {
+ID Board::getId() const {
     return grid;
 }
 
