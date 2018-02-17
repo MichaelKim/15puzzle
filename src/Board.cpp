@@ -37,12 +37,19 @@ Point Board::getBlank() {
 }
 
 vector<int> Board::getMoves() {
-    vector<int> moves;
-    if (blank.y > 0) moves.push_back(0);
-    if (blank.x < SIZE - 1) moves.push_back(1);
-    if (blank.y < SIZE - 1) moves.push_back(2);
-    if (blank.x > 0) moves.push_back(3);
-    return moves;
+    if (blank.y == 0) {
+        if (blank.x == 0) return {1, 2};
+        if (blank.x == SIZE - 1) return {2, 3};
+        return {1, 2, 3};
+    }
+    if (blank.y == SIZE - 1) {
+        if (blank.x == 0) return {0, 1};
+        if (blank.x == SIZE - 1) return {0, 3};
+        return {0, 1, 3};
+    }
+    if (blank.x == 0) return {0, 1, 2};
+    if (blank.x == SIZE - 1) return {0, 2, 3};
+    return {0, 1, 2, 3};
 }
 
 void Board::applyMove(int dir) {

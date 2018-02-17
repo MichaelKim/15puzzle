@@ -19,7 +19,7 @@ class Idastar {
         Idastar(DisjointDatabase* d);
         virtual ~Idastar();
 
-        vector<int> solve(Board& start);
+        vector<int> solve(Board start);
         bool dfs(Board& root, int g);
 };
 

@@ -11,7 +11,7 @@ using namespace std;
 
 Idastar::Idastar(DisjointDatabase* d): db(d), path({}), minCost(INF), limit(0) {}
 
-vector<int> Idastar::solve(Board& start) {
+vector<int> Idastar::solve(Board start) {
     // Uses IDA* with additive pattern disjoint database heuristics
     path.clear();
 
@@ -20,7 +20,7 @@ vector<int> Idastar::solve(Board& start) {
 
     do {
         minCost = INF;
-        cout << " " << limit;
+        cout << " " << limit << endl;
         dfs(start, 0);
         limit = minCost;
     } while (path.size() == 0);
@@ -32,11 +32,12 @@ vector<int> Idastar::solve(Board& start) {
 bool Idastar::dfs(Board &node, int g) {
     int f = g + db->getHeuristic(node);
 
-    if (f <= limit && node.getId() == 0x123456789abcdef0) {
-        return true;
+    if (f <= limit) {
+        if (node.getId() == 0x123456789abcdef0) {
+            return true;
+        }
     }
-
-    if (f > limit) {
+    else {
         if (f < minCost) {
             minCost = f;
         }

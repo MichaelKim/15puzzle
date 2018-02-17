@@ -58,11 +58,15 @@ int main() {
         //     {0, 10, 7, 3},
         //     {13, 8, 5, 2}
         // })
-        // { 0, 12,  9,  13},
-        // {15, 11, 10, 14},
-        // { 7,  8,  5,  6},
-        // { 4,  3,  2,  1}
+        // ,Board({
+        //     { 0, 12,  9,  13},
+        //     {15, 11, 10, 14},
+        //     { 7,  8,  5,  6},
+        //     { 4,  3,  2,  1}
+        // })
     };
+
+    vector<vector<int>> answers;
 
     auto solveBegin = std::chrono::steady_clock::now();
 
@@ -79,10 +83,23 @@ int main() {
             }
             cout << endl;
         }
+
+        answers.push_back(solution);
     }
 
     auto solveEnd = std::chrono::steady_clock::now();
     cout << "Total solve time taken: " << (chrono::duration_cast<chrono::microseconds>(solveEnd - solveBegin).count()) / 1000000.0 << endl;
+
+    cout << "Checking solutions:" << endl;
+    for (int i = 0; i < startBoards.size(); i++) {
+        Board& b = startBoards[i];
+        vector<int>& solution = answers[i];
+
+        for (int j = solution.size() - 1; j >= 0; j--) {
+            b.applyMove(solution[j]);
+        }
+        cout << hex << b.getId() << dec << endl;
+    }
 
     delete db;
 
