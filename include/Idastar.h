@@ -20,7 +20,7 @@ class Idastar {
         virtual ~Idastar();
 
         vector<int> solve(Board start);
-        bool dfs(Board& root, int g);
+        bool dfs(Board& root, int g, int prevMove);
 };
 
 #endif

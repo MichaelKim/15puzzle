@@ -36,20 +36,55 @@ Point Board::getBlank() {
     return blank;
 }
 
-vector<int> Board::getMoves() {
+vector<int> Board::getMoves(int prevMove) {
     if (blank.y == 0) {
-        if (blank.x == 0) return {1, 2};
-        if (blank.x == SIZE - 1) return {2, 3};
+        if (blank.x == 0) {
+            if (prevMove == 3) return {2};
+            if (prevMove == 0) return {1};
+            return {1, 2};
+        }
+        if (blank.x == SIZE - 1) {
+            if (prevMove == 0) return {3};
+            if (prevMove == 1) return {2};
+            return {2, 3};
+        }
+        if (prevMove == 3) return {2, 3};
+        if (prevMove == 0) return {1, 3};
+        if (prevMove == 1) return {1, 2};
         return {1, 2, 3};
     }
     if (blank.y == SIZE - 1) {
-        if (blank.x == 0) return {0, 1};
-        if (blank.x == SIZE - 1) return {0, 3};
+        if (blank.x == 0) {
+            if (prevMove == 2) return {1};
+            if (prevMove == 3) return {0};
+            return {0, 1};
+        }
+        if (blank.x == SIZE - 1) {
+            if (prevMove == 2) return {3};
+            if (prevMove == 1) return {0};
+            return {0, 3};
+        }
+        if (prevMove == 2) return {1, 3};
+        if (prevMove == 3) return {0, 3};
+        if (prevMove == 1) return {0, 1};
         return {0, 1, 3};
     }
-    if (blank.x == 0) return {0, 1, 2};
-    if (blank.x == SIZE - 1) return {0, 2, 3};
-    return {0, 1, 2, 3};
+    if (blank.x == 0) {
+        if (prevMove == 2) return {1, 2};
+        if (prevMove == 3) return {0, 2};
+        if (prevMove == 0) return {0, 1};
+        return {0, 1, 2};
+    }
+    if (blank.x == SIZE - 1) {
+        if (prevMove == 2) return {2, 3};
+        if (prevMove == 0) return {0, 3};
+        if (prevMove == 1) return {0, 2};
+        return {0, 2, 3};
+    }
+    if (prevMove == 0) return {0, 1, 3};
+    if (prevMove == 1) return {0, 1, 2};
+    if (prevMove == 2) return {1, 2, 3};
+    return {0, 2, 3};
 }
 
 void Board::applyMove(int dir) {

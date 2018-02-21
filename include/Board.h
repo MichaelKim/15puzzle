@@ -26,7 +26,7 @@ class Board {
         int getCell(int x, int y) const;
         ID getId() const;
         Point getBlank();
-        vector<int> getMoves();
+        vector<int> getMoves(int prevMove);
         void applyMove(int dir);
         void undoMove(int dir);
 

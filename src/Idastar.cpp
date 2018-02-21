@@ -1,8 +1,5 @@
 #include "../include/Idastar.h"
 
-#include <unordered_map>
-#include <unordered_set>
-#include <queue>
 #include <iostream>
 
 #define INF 1000000
@@ -18,18 +15,19 @@ vector<int> Idastar::solve(Board start) {
     limit = db->getHeuristic(start);
     cout << "Limit:";
 
-    do {
+    int prevMove = -1;
+    while (path.size() == 0) {
         minCost = INF;
         cout << " " << limit << endl;
-        dfs(start, 0);
+        dfs(start, 0, prevMove);
         limit = minCost;
-    } while (path.size() == 0);
+    }
 
     cout << endl;
     return path;
 }
 
-bool Idastar::dfs(Board &node, int g) {
+bool Idastar::dfs(Board &node, int g, int prevMove) {
     int f = g + db->getHeuristic(node);
 
     if (f <= limit) {
@@ -43,13 +41,12 @@ bool Idastar::dfs(Board &node, int g) {
         }
         return false;
     }
-
-    vector<int> moves = node.getMoves();
+    vector<int> moves = node.getMoves(prevMove);
 
     for (int move: moves) {
         node.applyMove(move);
 
-        if (dfs(node, g + 1)) {
+        if (dfs(node, g + 1, move)) {
             path.push_back(move);
             return true;
         }
