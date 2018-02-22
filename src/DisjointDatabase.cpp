@@ -24,21 +24,19 @@ DisjointDatabase::DisjointDatabase(vector<vector<vector<int>>> grids): numDataba
 }
 
 int DisjointDatabase::getHeuristic(const Board& board) {
-    vector<ID> ids(numDatabases, 0);
-    ID temp = board.getId();
+    vector<uint64_t> ids(numDatabases, 0);
+    uint64_t temp = board.getId();
 
-    for (int i = 0; i < Board::SIZE * Board::SIZE; i++) {
+    int len = Board::SIZE * Board::SIZE;
+
+    for (int i = 0; i < len; i++) {
         int n = temp & 0xf;
-        temp >>= 4;
+        temp /= 16;
 
         int j = where[n];
         if (j >= 0 && j < numDatabases) {
-            ID grid = ids[j];
-            int k = 4 * (Board::SIZE * Board::SIZE - i - 1);
-            grid &= ~(0xfull << k);
-            grid |= (ID) n << k;
-
-            ids[j] = grid;
+            int k = 4 * (len - i - 1);
+            ids[j] = (ids[j] & ~(0xfull << k)) | ((uint64_t) n << k);
         }
     }
 

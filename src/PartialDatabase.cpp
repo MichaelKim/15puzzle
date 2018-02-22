@@ -31,7 +31,7 @@ PartialDatabase::PartialDatabase(vector<vector<int>> grid, string filename): pat
         // Read database from file
         cout << "Parsing database" << endl;
 
-        unsigned long long int id;
+        uint64_t id;
         int dist;
 
         while (file >> id >> dist) {
@@ -89,7 +89,7 @@ void PartialDatabase::generateDists() {
         for (int i = 0; i < curr.board.cells.size(); i++) {
             for (int j = 0; j < 4; j++) {
                 Direction dir = static_cast<Direction>(j);
-                unsigned long long int shiftId = curr.board.getShiftId(i, dir);
+                uint64_t shiftId = curr.board.getShiftId(i, dir);
                 if (shiftId > 0 && distMap.find(shiftId) == distMap.end()) {
                     State next = {curr.board, curr.dist + 1};
                     next.board.shiftCell(i, dir);

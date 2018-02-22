@@ -27,10 +27,10 @@ int Pattern::getCell(int x, int y) const {
 void Pattern::setCell(int x, int y, int n) {
     int i = 4 * (y * SIZE + x);
     grid &= ~(0xfull << i);
-    grid |= (unsigned long long int) n << i;
+    grid |= (uint64_t) n << i;
 }
 
-unsigned long long int Pattern::getId() {
+uint64_t Pattern::getId() {
     return grid;
 }
 
@@ -52,12 +52,12 @@ bool Pattern::canShift(int index, Direction dir) {
     }
 }
 
-unsigned long long int Pattern::getShiftId(int index, Direction dir) {
+uint64_t Pattern::getShiftId(int index, Direction dir) {
     if (!canShift(index, dir)) return 0;
 
     int cellX = cells[index].x;
     int cellY = cells[index].y;
-    unsigned long long int shiftId = 0;
+    uint64_t shiftId = 0;
 
     int temp = getCell(cellX, cellY);
 

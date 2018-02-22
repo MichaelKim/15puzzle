@@ -5,6 +5,12 @@
 
 using namespace std;
 
+const vector<vector<int>> Board::moves = {
+  {0}, {1}, {2}, {3},
+  {0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3},
+  {0, 1, 2}, {0, 1, 3}, {0, 2, 3}, {1, 2, 3}
+};
+
 Board::Board(vector<vector<int>> g) {
     grid = 0;
     for (int y = 0; y < SIZE; y++) {
@@ -24,11 +30,10 @@ int Board::getCell(int x, int y) const {
 
 void Board::setCell(int x, int y, int n) {
     int i = 4 * ((SIZE - y - 1) * SIZE + (SIZE - x - 1));
-    grid &= ~(0xfull << i);
-    grid |= (ID) n << i;
+    grid = (grid & ~(0xfull << i)) | ((uint64_t) n << i);
 }
 
-ID Board::getId() const {
+uint64_t Board::getId() const {
     return grid;
 }
 
@@ -36,55 +41,55 @@ Point Board::getBlank() {
     return blank;
 }
 
-vector<int> Board::getMoves(int prevMove) {
+const vector<int>& Board::getMoves(int prevMove) {
     if (blank.y == 0) {
         if (blank.x == 0) {
-            if (prevMove == 3) return {2};
-            if (prevMove == 0) return {1};
-            return {1, 2};
+            if (prevMove == 3) return moves[2]; // 2
+            if (prevMove == 0) return moves[1]; // 1
+            return moves[7]; // 1, 2
         }
         if (blank.x == SIZE - 1) {
-            if (prevMove == 0) return {3};
-            if (prevMove == 1) return {2};
-            return {2, 3};
+            if (prevMove == 0) return moves[3]; // 3
+            if (prevMove == 1) return moves[2]; // 2
+            return moves[9]; // 2, 3
         }
-        if (prevMove == 3) return {2, 3};
-        if (prevMove == 0) return {1, 3};
-        if (prevMove == 1) return {1, 2};
-        return {1, 2, 3};
+        if (prevMove == 3) return moves[9]; // 2, 3
+        if (prevMove == 0) return moves[8]; // 1, 3
+        if (prevMove == 1) return moves[7]; // 1, 2
+        return moves[13]; // 1, 2, 3
     }
     if (blank.y == SIZE - 1) {
         if (blank.x == 0) {
-            if (prevMove == 2) return {1};
-            if (prevMove == 3) return {0};
-            return {0, 1};
+            if (prevMove == 2) return moves[1]; // 1
+            if (prevMove == 3) return moves[0]; // 0
+            return moves[4]; // 0, 1
         }
         if (blank.x == SIZE - 1) {
-            if (prevMove == 2) return {3};
-            if (prevMove == 1) return {0};
-            return {0, 3};
+            if (prevMove == 2) return moves[3]; // 3;
+            if (prevMove == 1) return moves[0]; // 0
+            return moves[6]; // 0, 3
         }
-        if (prevMove == 2) return {1, 3};
-        if (prevMove == 3) return {0, 3};
-        if (prevMove == 1) return {0, 1};
-        return {0, 1, 3};
+        if (prevMove == 2) return moves[8]; // 1, 3
+        if (prevMove == 3) return moves[6]; // 0, 3
+        if (prevMove == 1) return moves[4]; // 0, 1
+        return moves[11]; // 0, 1, 3
     }
     if (blank.x == 0) {
-        if (prevMove == 2) return {1, 2};
-        if (prevMove == 3) return {0, 2};
-        if (prevMove == 0) return {0, 1};
-        return {0, 1, 2};
+        if (prevMove == 2) return moves[7]; // 1, 2
+        if (prevMove == 3) return moves[5]; // 0, 2
+        if (prevMove == 0) return moves[4]; // 0, 1
+        return moves[10]; // 0, 1, 2
     }
     if (blank.x == SIZE - 1) {
-        if (prevMove == 2) return {2, 3};
-        if (prevMove == 0) return {0, 3};
-        if (prevMove == 1) return {0, 2};
-        return {0, 2, 3};
+        if (prevMove == 2) return moves[9]; // 2, 3
+        if (prevMove == 0) return moves[6]; // 0, 3
+        if (prevMove == 1) return moves[5]; // 0, 2
+        return moves[12]; // 0, 2, 3
     }
-    if (prevMove == 0) return {0, 1, 3};
-    if (prevMove == 1) return {0, 1, 2};
-    if (prevMove == 2) return {1, 2, 3};
-    return {0, 2, 3};
+    if (prevMove == 0) return moves[11]; // 0, 1, 3
+    if (prevMove == 1) return moves[10]; // 0, 1, 2
+    if (prevMove == 2) return moves[13]; // 1, 2, 3
+    return moves[12]; // 0, 2, 3
 }
 
 void Board::applyMove(int dir) {

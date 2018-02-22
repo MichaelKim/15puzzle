@@ -41,8 +41,8 @@ bool Idastar::dfs(Board &node, int g, int prevMove) {
         }
         return false;
     }
-    vector<int> moves = node.getMoves(prevMove);
 
+    const vector<int>& moves = node.getMoves(prevMove);
     for (int move: moves) {
         node.applyMove(move);
 

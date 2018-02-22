@@ -16,7 +16,7 @@ class PartialDatabase {
 
     public:
         unordered_map<int, int> cells;
-        unordered_map<unsigned long long int, int> distMap;
+        unordered_map<uint64_t, int> distMap;
 
         PartialDatabase(vector<vector<int>> grid, string filename);
         virtual ~PartialDatabase();

@@ -11,7 +11,7 @@ using namespace std;
 
 class Pattern {
     private:
-        unsigned long long int grid;
+        uint64_t grid;
 
         int getCell(int x, int y) const;
         void setCell(int x, int y, int n);
@@ -24,9 +24,9 @@ class Pattern {
         Pattern(vector<vector<int>> g);
         virtual ~Pattern();
 
-        unsigned long long int getId();
+        uint64_t getId();
         bool canShift(int index, Direction dir);
-        unsigned long long int getShiftId(int index, Direction dir);
+        uint64_t getShiftId(int index, Direction dir);
         void shiftCell(int index, Direction dir);
 
         friend ostream& operator<<(ostream& out, const Pattern& pattern);

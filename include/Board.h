@@ -8,12 +8,12 @@
 
 using namespace std;
 
-typedef unsigned long long int ID;
-
 class Board {
     private:
-        ID grid;
+        uint64_t grid;
         Point blank;
+
+        static const vector<vector<int>> moves;
 
         void setCell(int x, int y, int n);
 
@@ -24,9 +24,9 @@ class Board {
         virtual ~Board();
 
         int getCell(int x, int y) const;
-        ID getId() const;
+        uint64_t getId() const;
         Point getBlank();
-        vector<int> getMoves(int prevMove);
+        const vector<int>& getMoves(int prevMove);
         void applyMove(int dir);
         void undoMove(int dir);
 
