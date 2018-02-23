@@ -14,6 +14,7 @@ class Idastar {
         vector<int> path;
         int minCost;
         int limit;
+        uint64_t nodes;
 
     public:
         Idastar(DisjointDatabase* d);
