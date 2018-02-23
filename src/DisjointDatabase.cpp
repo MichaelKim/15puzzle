@@ -35,8 +35,7 @@ int DisjointDatabase::getHeuristic(const Board& board) {
 
         int j = where[n];
         if (j >= 0 && j < numDatabases) {
-            int k = 4 * (len - i - 1);
-            ids[j] = (ids[j] & ~(0xfull << k)) | ((uint64_t) n << k);
+            ids[j] |= (uint64_t) n << (4 * (len - i - 1));
         }
     }
 

@@ -24,15 +24,16 @@ vector<int> Idastar::solve(Board start) {
     }
 
     cout << "Nodes expanded: " << nodes << endl;
-    
+
     return path;
 }
 
 bool Idastar::dfs(Board &node, int g, int prevMove) {
-    int f = g + db->getHeuristic(node);
+    int h = db->getHeuristic(node);
+    int f = g + h;
 
     if (f <= limit) {
-        if (node.getId() == 0x123456789abcdef0) {
+        if (h == 0) {
             return true;
         }
     }
