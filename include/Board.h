@@ -19,13 +19,14 @@ class Board {
 
     public:
         static const int SIZE = 4;
+        static const int LEN = SIZE * SIZE;
 
         Board(vector<vector<int>> g);
         virtual ~Board();
 
-        int getCell(int x, int y) const;
+        inline int getCell(int x, int y) const;
         uint64_t getId() const;
-        Point getBlank();
+        inline Point getBlank();
         const vector<int>& getMoves(int prevMove);
         void applyMove(int dir);
         void undoMove(int dir);

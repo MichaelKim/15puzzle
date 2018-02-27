@@ -8,14 +8,17 @@
 
 using namespace std;
 
-DisjointDatabase::DisjointDatabase(vector<vector<vector<int>>> grids): numDatabases(grids.size()) {
-    where = vector<int>(Board::SIZE * Board::SIZE, -1);
+DisjointDatabase::DisjointDatabase(vector<vector<vector<int>>> grids):
+    numDatabases(grids.size()),
+    ids(vector<uint64_t>(numDatabases, 0))
+{
+    where = vector<int>(Board::LEN, -1);
 
     for (int i = 0; i < grids.size(); i++) {
         PartialDatabase* pd = new PartialDatabase(grids[i], to_string(i));
         databases.push_back(pd);
 
-        for (int j = 0; j < Board::SIZE * Board::SIZE; j++) {
+        for (int j = 0; j < Board::LEN; j++) {
             if (pd->cells.find(j) != pd->cells.end()) {
                 where[j] = i;
             }
@@ -24,18 +27,15 @@ DisjointDatabase::DisjointDatabase(vector<vector<vector<int>>> grids): numDataba
 }
 
 int DisjointDatabase::getHeuristic(const Board& board) {
-    vector<uint64_t> ids(numDatabases, 0);
+    fill(ids.begin(), ids.end(), 0);
     uint64_t temp = board.getId();
 
-    int len = Board::SIZE * Board::SIZE;
-
-    for (int i = 0; i < len; i++) {
-        int n = temp & 0xf;
-        temp /= 16;
+    for (int i = 0; i < Board::LEN; i++) {
+        uint64_t n = (temp & (0xfull << (4 * i))) >> (4 * i);
 
         int j = where[n];
         if (j >= 0 && j < numDatabases) {
-            ids[j] |= (uint64_t) n << (4 * (len - i - 1));
+            ids[j] |= n << (4 * (Board::LEN - i - 1));
         }
     }
 

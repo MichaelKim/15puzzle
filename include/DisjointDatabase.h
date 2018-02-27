@@ -14,6 +14,7 @@ class DisjointDatabase {
         vector<PartialDatabase*> databases;
         int numDatabases;
         vector<int> where;
+        vector<uint64_t> ids;
 
     public:
         DisjointDatabase(vector<vector<vector<int>>> grids);
