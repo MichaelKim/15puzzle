@@ -3,15 +3,13 @@
 #include <iomanip>
 #include <iostream>
 
-using namespace std;
-
-const vector<vector<int>> Board::moves = {
+const std::vector<std::vector<int>> Board::moves = {
   {0}, {1}, {2}, {3},
   {0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3},
   {0, 1, 2}, {0, 1, 3}, {0, 2, 3}, {1, 2, 3}
 };
 
-Board::Board(vector<vector<int>> g) {
+Board::Board(std::vector<std::vector<int>> g) {
     grid = 0;
     for (int y = 0; y < SIZE; y++) {
         for (int x = 0; x < SIZE; x++) {
@@ -43,7 +41,7 @@ Point Board::getBlank() {
     return blank;
 }
 
-const vector<int>& Board::getMoves(int prevMove) {
+const std::vector<int>& Board::getMoves(int prevMove) {
     if (blank.y == 0) {
         if (blank.x == 0) {
             if (prevMove == 3) return moves[2]; // 2
@@ -138,17 +136,17 @@ void Board::undoMove(int dir) {
 
 Board::~Board() {}
 
-ostream& operator<<(ostream& out, const Board& board) {
+std::ostream& operator<<(std::ostream& out, const Board& board) {
     for (int y = 0; y < Board::SIZE; y++) {
         for (int x = 0; x < Board::SIZE; x++) {
             if (x == board.blank.x && y == board.blank.y) {
-                out << setw(3) << 0;
+                out << std::setw(3) << 0;
             }
             else {
-                out << setw(3) << board.getCell(x, y);
+                out << std::setw(3) << board.getCell(x, y);
             }
         }
-        out << endl;
+        out << std::endl;
     }
     return out;
 }

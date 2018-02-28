@@ -5,9 +5,7 @@
 #include <ostream>
 #include <vector>
 
-using namespace std;
-
-Pattern::Pattern(vector<vector<int>> g) {
+Pattern::Pattern(std::vector<std::vector<int>> g) {
     grid = 0;
     for (int y = SIZE - 1; y >= 0; y--) {
         for (int x = SIZE - 1; x >= 0; x--) {
@@ -144,12 +142,12 @@ void Pattern::shiftCell(int index, Direction dir) {
 
 Pattern::~Pattern() {}
 
-ostream& operator<<(ostream& out, const Pattern& pattern) {
+std::ostream& operator<<(std::ostream& out, const Pattern& pattern) {
     for (int y = 0; y < Pattern::SIZE; y++) {
         for (int x = 0; x < Pattern::SIZE; x++) {
-            out << setw(3) << pattern.getCell(x, y);
+            out << std::setw(3) << pattern.getCell(x, y);
         }
-        out << endl;
+        out << std::endl;
     }
     return out;
 }

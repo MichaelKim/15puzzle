@@ -4,26 +4,29 @@
 
 #define INF 1000000
 
-using namespace std;
+Idastar::Idastar(DisjointDatabase* d):
+    db(d),
+    path({}),
+    minCost(INF),
+    limit(0),
+    nodes(0) {}
 
-Idastar::Idastar(DisjointDatabase* d): db(d), path({}), minCost(INF), limit(0), nodes(0) {}
-
-vector<int> Idastar::solve(Board start) {
+std::vector<int> Idastar::solve(Board start) {
     // Uses IDA* with additive pattern disjoint database heuristics
     path.clear();
 
     limit = db->getHeuristic(start);
-    cout << "Limit, Nodes:";
+    std::cout << "Limit, Nodes:";
 
     int prevMove = -1;
     while (path.size() == 0) {
         minCost = INF;
-        cout << " " << limit << ", " << nodes << endl;
+        std::cout << " " << limit << ", " << nodes << std::endl;
         dfs(start, 0, prevMove);
         limit = minCost;
     }
 
-    cout << "Nodes expanded: " << nodes << endl;
+    std::cout << "Nodes expanded: " << nodes << std::endl;
 
     return path;
 }
@@ -44,7 +47,7 @@ bool Idastar::dfs(Board &node, int g, int prevMove) {
         return false;
     }
     nodes++;
-    const vector<int>& moves = node.getMoves(prevMove);
+    const std::vector<int>& moves = node.getMoves(prevMove);
     for (int move: moves) {
         node.applyMove(move);
 

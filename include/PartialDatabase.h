@@ -8,18 +8,16 @@
 #include <unordered_map>
 #include <vector>
 
-using namespace std;
-
 class PartialDatabase {
     private:
-        string filename;
+        std::string filename;
         Pattern pattern;
 
     public:
-        unordered_map<int, int> cells;
+        std::unordered_map<int, int> cells;
         ska::flat_hash_map<uint64_t, int> distMap;
 
-        PartialDatabase(vector<vector<int>> grid, string filename);
+        PartialDatabase(std::vector<std::vector<int>> grid, std::string filename);
         virtual ~PartialDatabase();
 
         void generateDists();

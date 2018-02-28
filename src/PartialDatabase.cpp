@@ -3,14 +3,16 @@
 #include "../include/Board.h"
 #include "../include/Pattern.h"
 
-#include <ctime>
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <queue>
 
-using namespace std;
-
-PartialDatabase::PartialDatabase(vector<vector<int>> grid, string filename): pattern(Pattern(grid)), filename(filename) {
+PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
+                                 std::string filename):
+    pattern(Pattern(grid)),
+    filename(filename)
+{
     int count = 0;
     for (int y = 0; y < grid.size(); y++) {
         for (int x = 0; x < grid[y].size(); x++) {
@@ -20,16 +22,16 @@ PartialDatabase::PartialDatabase(vector<vector<int>> grid, string filename): pat
         }
     }
 
-    ifstream file("/Users/michaelkim314/Documents/Github/15puzzle/database/database-" + filename + ".txt");
+    std::ifstream file("database/database-" + filename + ".txt");
     if (!file.good()) {
         // Database file missing, generate database
-        cout << "Generating database" << endl;
+        std::cout << "Generating database" << std::endl;
         generateDists();
         saveDists();
     }
     else {
         // Read database from file
-        cout << "Parsing database" << endl;
+        std::cout << "Parsing database" << std::endl;
 
         uint64_t id;
         int dist;
@@ -39,14 +41,14 @@ PartialDatabase::PartialDatabase(vector<vector<int>> grid, string filename): pat
         }
     }
 
-    cout << "Number of entries: " << distMap.size() << endl;
+    std::cout << "Number of entries: " << distMap.size() << std::endl;
 
-    cout << "Cells:" << endl;
+    std::cout << "Cells:" << std::endl;
     for (auto i: cells) {
-        cout << i.first << " " << i.second << endl;
+        std::cout << i.first << " " << i.second << std::endl;
     }
 
-    cout << "Pattern:" << endl << pattern << endl;
+    std::cout << "Pattern:" << std::endl << pattern << std::endl;
 }
 
 void PartialDatabase::generateDists() {
@@ -59,17 +61,14 @@ void PartialDatabase::generateDists() {
     int count = 0;
     int dist = 0;
 
-    cout << "Generating database for: " << endl;
-    cout << pattern << endl;
+    std::cout << "Generating database for: " << std::endl;
+    std::cout << pattern << std::endl;
 
-    clock_t startTime;
-    double duration;
-
-    startTime = clock();
+    auto startTime = std::chrono::steady_clock::now();
 
     // Start of algorithm
     distMap.clear();
-    queue<State> bfs;
+    std::queue<State> bfs;
 
     bfs.push({pattern, 0});
     distMap[pattern.getId()] = 0;
@@ -80,7 +79,7 @@ void PartialDatabase::generateDists() {
 
         // Logging
         if (curr.dist > dist) {
-            cout << dist << ": " << count << endl;
+            std::cout << dist << ": " << count << std::endl;
             dist = curr.dist;
             count = 1;
         }
@@ -102,15 +101,16 @@ void PartialDatabase::generateDists() {
         }
     }
 
-    duration = (clock() - startTime) / (double)CLOCKS_PER_SEC;
-    cout<< "Time taken: " << duration << endl;
+    auto endTime = std::chrono::steady_clock::now();
+    auto duration = (std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count()) / 1000000.0;
+    std::cout << "Time taken: " << duration << std::endl;
 }
 
 void PartialDatabase::saveDists() {
     // Store file
-    ofstream file("/Users/michaelkim314/Documents/Github/15puzzle/database/database-" + filename + ".txt");
+    std::ofstream file("database/database-" + filename + ".txt");
     if (!file.good()) {
-        cerr << "Could not generate database file: database-" + filename + ".txt" << endl;
+        std::cerr << "Could not generate database file: database-" + filename + ".txt" << std::endl;
     }
     else {
         // Board dimensions (width, height)
@@ -118,7 +118,7 @@ void PartialDatabase::saveDists() {
         // Number of cells, locations of cells (id)
         //file << board.cells.size() << " " << board.getId() << endl;
         for (auto it: distMap) {
-            file << it.first << " " << it.second << endl;
+            file << it.first << " " << it.second << std::endl;
         }
 
         file.close();

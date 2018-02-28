@@ -7,8 +7,6 @@
 #include <ostream>
 #include <vector>
 
-using namespace std;
-
 class Pattern {
     private:
         uint64_t grid;
@@ -19,9 +17,9 @@ class Pattern {
     public:
         static const int SIZE = 4;
 
-        vector<Point> cells;
+        std::vector<Point> cells;
 
-        Pattern(vector<vector<int>> g);
+        Pattern(std::vector<std::vector<int>> g);
         virtual ~Pattern();
 
         uint64_t getId();
@@ -29,7 +27,7 @@ class Pattern {
         uint64_t getShiftId(int index, Direction dir);
         void shiftCell(int index, Direction dir);
 
-        friend ostream& operator<<(ostream& out, const Pattern& pattern);
+        friend std::ostream& operator<<(std::ostream& out, const Pattern& pattern);
 };
 
 

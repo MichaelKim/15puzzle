@@ -6,32 +6,30 @@
 #include <ostream>
 #include <vector>
 
-using namespace std;
-
 class Board {
     private:
         uint64_t grid;
         Point blank;
 
-        static const vector<vector<int>> moves;
+        static const std::vector<std::vector<int>> moves;
 
-        void setCell(int x, int y, int n);
+        inline void setCell(int x, int y, int n);
+        inline int getCell(int x, int y) const;
+        inline Point getBlank();
 
     public:
         static const int SIZE = 4;
         static const int LEN = SIZE * SIZE;
 
-        Board(vector<vector<int>> g);
+        Board(std::vector<std::vector<int>> g);
         virtual ~Board();
 
-        inline int getCell(int x, int y) const;
         uint64_t getId() const;
-        inline Point getBlank();
-        const vector<int>& getMoves(int prevMove);
+        const std::vector<int>& getMoves(int prevMove);
         void applyMove(int dir);
         void undoMove(int dir);
 
-        friend ostream& operator<<(ostream& out, const Board& board);
+        friend std::ostream& operator<<(std::ostream& out, const Board& board);
 };
 
 

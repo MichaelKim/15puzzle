@@ -2,20 +2,14 @@
 
 #include "../include/Board.h"
 
-#include <iostream>
-
-#define INF 1000000
-
-using namespace std;
-
-DisjointDatabase::DisjointDatabase(vector<vector<vector<int>>> grids):
+DisjointDatabase::DisjointDatabase(std::vector<std::vector<std::vector<int>>> grids):
     numDatabases(grids.size()),
-    ids(vector<uint64_t>(numDatabases, 0))
+    where(std::vector<int>(Board::LEN, -1)),
+    ids(std::vector<uint64_t>(numDatabases, 0))
 {
-    where = vector<int>(Board::LEN, -1);
 
     for (int i = 0; i < grids.size(); i++) {
-        PartialDatabase* pd = new PartialDatabase(grids[i], to_string(i));
+        PartialDatabase* pd = new PartialDatabase(grids[i], std::to_string(i));
         databases.push_back(pd);
 
         for (int j = 0; j < Board::LEN; j++) {
@@ -24,18 +18,6 @@ DisjointDatabase::DisjointDatabase(vector<vector<vector<int>>> grids):
             }
         }
     }
-}
-
-template <size_t N> struct uint_{ };
-template <size_t N, typename Lambda, typename IterT>
-inline void unroller(const Lambda& f, const IterT& iter, uint_<N>) {
-    unroller(f, iter, uint_<N-1>());
-    f(iter + N);
-}
-
-template <typename Lambda, typename IterT>
-inline void unroller(const Lambda& f, const IterT& iter, uint_<0>) {
-	 f(iter);
 }
 
 int DisjointDatabase::getHeuristic(const Board& board) {

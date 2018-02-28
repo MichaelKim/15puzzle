@@ -38,12 +38,14 @@
 		<Unit filename="include/Direction.h" />
 		<Unit filename="include/DisjointDatabase.h" />
 		<Unit filename="include/PartialDatabase.h" />
+		<Unit filename="include/Pattern.h" />
 		<Unit filename="include/Point.h" />
 		<Unit filename="include/State.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="src/Board.cpp" />
 		<Unit filename="src/DisjointDatabase.cpp" />
 		<Unit filename="src/PartialDatabase.cpp" />
+		<Unit filename="src/Pattern.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
