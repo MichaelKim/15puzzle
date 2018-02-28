@@ -95,40 +95,44 @@ const vector<int>& Board::getMoves(int prevMove) {
 }
 
 void Board::applyMove(int dir) {
-    if (dir == 0) {
-        setCell(blank.x, blank.y, getCell(blank.x, blank.y - 1));
-        blank.y -= 1;
-    }
-    else if (dir == 1) {
-        setCell(blank.x, blank.y, getCell(blank.x + 1, blank.y));
-        blank.x += 1;
-    }
-    else if (dir == 2) {
-        setCell(blank.x, blank.y, getCell(blank.x, blank.y + 1));
-        blank.y += 1;
-    }
-    else {
-        setCell(blank.x, blank.y, getCell(blank.x - 1, blank.y));
-        blank.x -= 1;
+    switch (dir) {
+        case 0:
+            setCell(blank.x, blank.y, getCell(blank.x, blank.y - 1));
+            blank.y -= 1;
+            break;
+        case 1:
+            setCell(blank.x, blank.y, getCell(blank.x + 1, blank.y));
+            blank.x += 1;
+            break;
+        case 2:
+            setCell(blank.x, blank.y, getCell(blank.x, blank.y + 1));
+            blank.y += 1;
+            break;
+        default:
+            setCell(blank.x, blank.y, getCell(blank.x - 1, blank.y));
+            blank.x -= 1;
+            break;
     }
 }
 
 void Board::undoMove(int dir) {
-    if (dir == 0) {
-        setCell(blank.x, blank.y, getCell(blank.x, blank.y + 1));
-        blank.y += 1;
-    }
-    else if (dir == 1) {
-        setCell(blank.x, blank.y, getCell(blank.x - 1, blank.y));
-        blank.x -= 1;
-    }
-    else if (dir == 2) {
-        setCell(blank.x, blank.y, getCell(blank.x, blank.y - 1));
-        blank.y -= 1;
-    }
-    else {
-        setCell(blank.x, blank.y, getCell(blank.x + 1, blank.y));
-        blank.x += 1;
+    switch (dir) {
+        case 0:
+            setCell(blank.x, blank.y, getCell(blank.x, blank.y + 1));
+            blank.y += 1;
+            break;
+        case 1:
+            setCell(blank.x, blank.y, getCell(blank.x - 1, blank.y));
+            blank.x -= 1;
+            break;
+        case 2:
+            setCell(blank.x, blank.y, getCell(blank.x, blank.y - 1));
+            blank.y -= 1;
+            break;
+        default:
+            setCell(blank.x, blank.y, getCell(blank.x + 1, blank.y));
+            blank.x += 1;
+            break;
     }
 }
 
@@ -137,7 +141,12 @@ Board::~Board() {}
 ostream& operator<<(ostream& out, const Board& board) {
     for (int y = 0; y < Board::SIZE; y++) {
         for (int x = 0; x < Board::SIZE; x++) {
-            out << setw(3) << board.getCell(x, y);
+            if (x == board.blank.x && y == board.blank.y) {
+                out << setw(3) << 0;
+            }
+            else {
+                out << setw(3) << board.getCell(x, y);
+            }
         }
         out << endl;
     }
