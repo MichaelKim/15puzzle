@@ -17,7 +17,7 @@ class PartialDatabase {
         std::unordered_map<int, int> cells;
         ska::flat_hash_map<uint64_t, int> distMap;
 
-        PartialDatabase(std::vector<std::vector<int>> grid, std::string filename);
+        PartialDatabase(std::vector<std::vector<int>> grid, std::string dbName, int index);
         virtual ~PartialDatabase();
 
         void generateDists();

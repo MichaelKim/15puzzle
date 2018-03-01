@@ -14,7 +14,7 @@ class DisjointDatabase {
         std::vector<uint64_t> ids;
 
     public:
-        DisjointDatabase(std::vector<std::vector<std::vector<int>>> grids);
+        DisjointDatabase(std::string name, std::vector<std::vector<std::vector<int>>> grids);
         virtual ~DisjointDatabase();
 
         int getHeuristic(const Board& board);

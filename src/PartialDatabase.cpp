@@ -9,9 +9,11 @@
 #include <queue>
 
 PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
-                                 std::string filename):
+                                 std::string dbName,
+                                 int index):
     pattern(Pattern(grid)),
-    filename(filename)
+    filename("database-" +
+        dbName + "/database-" + std::to_string(index) + ".txt")
 {
     int count = 0;
     for (int y = 0; y < grid.size(); y++) {
@@ -22,7 +24,7 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
         }
     }
 
-    std::ifstream file("database/database-" + filename + ".txt");
+    std::ifstream file(filename);
     if (!file.good()) {
         // Database file missing, generate database
         std::cout << "Generating database" << std::endl;
@@ -108,9 +110,9 @@ void PartialDatabase::generateDists() {
 
 void PartialDatabase::saveDists() {
     // Store file
-    std::ofstream file("database/database-" + filename + ".txt");
+    std::ofstream file(filename);
     if (!file.good()) {
-        std::cerr << "Could not generate database file: database-" + filename + ".txt" << std::endl;
+        std::cerr << "Could not generate database file: " + filename << std::endl;
     }
     else {
         // Board dimensions (width, height)

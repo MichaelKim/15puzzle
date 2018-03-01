@@ -1,98 +1,118 @@
-#include <iostream>
-#include <vector>
 #include <chrono>
+#include <fstream>
+#include <iostream>
+#include <unordered_map>
+#include <vector>
 
 #include "../include/DisjointDatabase.h"
 #include "../include/Idastar.h"
+#include "../include/InputParser.h"
 
 using namespace std;
 
-int main() {
+void usage() {
+    cout << "puzzle - An optimal 15 Puzzle solver\n"
+            "\n"
+            "Syntax:\n"
+            "    puzzle [OPTIONS]\n"
+            "\n"
+            "Options:\n"
+            "    -b <file>\n"
+            "        Board files\n"
+            "    -d <file>\n"
+            "        Use database file\n"
+            "    -h, --help\n"
+            "        Print this help\n"
+    << endl;
+}
 
-    auto dbBegin = std::chrono::steady_clock::now();
+int main(int argc, const char* argv[]) {
+    InputParser ip (argc, argv);
 
-    DisjointDatabase* db = new DisjointDatabase({{
-         {1, 2, 3, 0},
-         {5, 6, 0, 0},
-         {0, 0, 0, 0},
-         {0, 0, 0, 0}
-    },{
-         {0, 0, 0, 4},
-         {0, 0, 7, 8},
-         {0, 0, 11, 12},
-         {0, 0, 0, 0}
-    },{
-         {0, 0, 0, 0},
-         {0, 0, 0, 0},
-         {9, 10, 0, 0},
-         {13, 14, 15, 0}
-    }});
+    // Help output
+    if (ip.optionExists("-h") || ip.optionExists("--help")) {
+        usage();
+        return 0;
+    }
 
-    // DisjointDatabase* db = new DisjointDatabase({{
-    //       {0, 2, 3, 4},
-    //       {0, 0, 0, 0},
-    //       {0, 0, 0, 0},
-    //       {0, 0, 0, 0}
-    //   },{
-    //       {1, 0, 0, 0},
-    //       {5, 6, 0, 0},
-    //       {9, 10, 0, 0},
-    //       {13, 0, 0, 0}
-    //   },{
-    //       {0, 0, 0, 0},
-    //       {0, 0, 7, 8},
-    //       {0, 0, 11, 12},
-    //       {0, 0, 14, 15}
-    //   }
-    // });
+    // Reading database file
+    istream* input = &cin;
+    ifstream in;
+    string dbName = "def";
 
-    auto dbEnd = std::chrono::steady_clock::now();
+    if (ip.optionExists("-d")) {
+        vector<string> args = ip.getArgs("-d");
+        if (args.size() != 1) {
+            cout << "Invalid number of database files; got " << args.size() << ", expected 1" << endl;
+            return 1;
+        }
+
+        in = ifstream (args[0]);
+
+        size_t it = args[0].find_last_of("/");
+        dbName = args[0].substr(it + 1);
+        input = &in;
+    }
+
+    int databaseNum;
+    *input >> databaseNum;
+
+    vector<vector<vector<int>>> grids(databaseNum, vector<vector<int>>(Board::SIZE, vector<int>(Board::SIZE, 0)));
+
+    for (int i = 0; i < databaseNum; i++) {
+        for (int y = 0; y < Board::SIZE; y++) {
+            for (int x = 0; x < Board::SIZE; x++) {
+                *input >> grids[i][y][x];
+            }
+        }
+    }
+    in.close();
+    input = &cin;
+
+    // Reading board file
+    if (ip.optionExists("-b")) {
+        vector<string> args = ip.getArgs("-b");
+        if (args.size() != 1) {
+            cout << "Invalid number of board files; got " << args.size() << ", expected 1" << endl;
+            return 1;
+        }
+
+      in = ifstream (args[0]);
+        input = &in;
+    }
+
+    int boardNum;
+    *input >> boardNum;
+
+    vector<Board> startBoards;
+    for (int i = 0; i < boardNum; i++) {
+        vector<vector<int>> board (Board::SIZE, vector<int>(Board::SIZE, 0));
+        for (int y = 0; y < Board::SIZE; y++) {
+            for (int x = 0; x < Board::SIZE; x++) {
+                *input >> board[y][x];
+            }
+        }
+        startBoards.push_back(Board(board));
+    }
+    in.close();
+    input = &in;
+
+    // Reg: 5, 36, 40, 52, 56, 60, 80
+    // Rev: 3, 56, 68, 65
+
+    // Start solving
+    auto dbBegin = chrono::steady_clock::now();
+
+    DisjointDatabase* db = new DisjointDatabase(dbName, grids);
+
+    auto dbEnd = chrono::steady_clock::now();
     cout << "Database time taken: " << (chrono::duration_cast<chrono::microseconds>(dbEnd - dbBegin).count()) / 1000000.0 << endl;
 
     Idastar* search = new Idastar(db);
 
-    vector<Board> startBoards {
-        Board ({ // Solution: 5
-            {1, 2, 3, 4},
-            {5, 6, 8, 12},
-            {9, 10, 7, 0},
-            {13, 14, 11, 15}
-        }),
-        Board({ // Solution: 36
-            { 1,  9, 11,  4},
-            {14,  8,  2,  7},
-            {10,  6,  3, 12},
-            { 5,  0, 13, 15}
-        }),
-        Board({ // Solution: 40
-            {2, 7, 11, 5},
-            {13, 0, 9, 4},
-            {14, 1, 8, 6},
-            {10, 3, 12, 15}
-        }),
-        Board({ // Solution: 52
-            {15, 14, 1, 6},
-            {9, 11, 4, 12},
-            {0, 10, 7, 3},
-            {13, 8, 5, 2}
-        }),
-        Board({ // Solution: 56
-            {5, 6, 13, 4},
-            {10, 0, 12, 14},
-            {11, 8, 9, 2},
-            {15, 7, 3, 1}
-        })
-        // Board({
-        //     { 0, 12,  9,  13},
-        //     {15, 11, 10, 14},
-        //     { 7,  8,  5,  6},
-        //     { 4,  3,  2,  1}
-        // })
-    };
-
     vector<vector<int>> answers;
 
-    auto solveBegin = std::chrono::steady_clock::now();
+    auto solveBegin = chrono::steady_clock::now();
 
     for (Board& startBoard: startBoards) {
         vector<int> solution = search->solve(startBoard);
@@ -111,7 +131,7 @@ int main() {
         answers.push_back(solution);
     }
 
-    auto solveEnd = std::chrono::steady_clock::now();
+    auto solveEnd = chrono::steady_clock::now();
     cout << "Total solve time taken: " << (chrono::duration_cast<chrono::microseconds>(solveEnd - solveBegin).count()) / 1000000.0 << endl;
 
     cout << "Checking solutions:" << endl;

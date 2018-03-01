@@ -2,14 +2,14 @@
 
 #include "../include/Board.h"
 
-DisjointDatabase::DisjointDatabase(std::vector<std::vector<std::vector<int>>> grids):
+DisjointDatabase::DisjointDatabase(std::string name, std::vector<std::vector<std::vector<int>>> grids):
     numDatabases(grids.size()),
     where(std::vector<int>(Board::LEN, -1)),
     ids(std::vector<uint64_t>(numDatabases, 0))
 {
 
     for (int i = 0; i < grids.size(); i++) {
-        PartialDatabase* pd = new PartialDatabase(grids[i], std::to_string(i));
+        PartialDatabase* pd = new PartialDatabase(grids[i], name, i);
         databases.push_back(pd);
 
         for (int j = 0; j < Board::LEN; j++) {
