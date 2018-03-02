@@ -1,21 +1,21 @@
-#include "../include/Idastar.h"
-
 #include <iostream>
 
 #define INF 1000000
 
-Idastar::Idastar(DisjointDatabase* d):
-    db(d),
+template<class THeuristic, class TState>
+Idastar<THeuristic, TState>::Idastar(THeuristic* h):
+    heuristic(h),
     path({}),
     minCost(INF),
     limit(0),
     nodes(0) {}
 
-std::vector<int> Idastar::solve(Board start) {
+template<class THeuristic, class TState>
+std::vector<int> Idastar<THeuristic, TState>::solve(TState start) {
     // Uses IDA* with additive pattern disjoint database heuristics
     path.clear();
 
-    limit = db->getHeuristic(start);
+    limit = heuristic->getHeuristic(start);
     std::cout << "Limit, Nodes:";
 
     int prevMove = -1;
@@ -31,8 +31,9 @@ std::vector<int> Idastar::solve(Board start) {
     return path;
 }
 
-bool Idastar::dfs(Board &node, int g, int prevMove) {
-    int h = db->getHeuristic(node);
+template<class THeuristic, class TState>
+bool Idastar<THeuristic, TState>::dfs(TState& node, int g, int prevMove) {
+    int h = heuristic->getHeuristic(node);
     int f = g + h;
 
     if (f <= limit) {
@@ -62,6 +63,7 @@ bool Idastar::dfs(Board &node, int g, int prevMove) {
     return false;
 }
 
-Idastar::~Idastar() {
-    delete db;
+template<class THeuristic, class TState>
+Idastar<THeuristic, TState>::~Idastar() {
+    delete heuristic;
 }

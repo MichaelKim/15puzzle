@@ -1,6 +1,7 @@
 #ifndef INPUTPARSER_H
 #define INPUTPARSER_H
 
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -22,6 +23,37 @@ class InputParser {
         }
         ~InputParser() {}
 
+        bool showHelp() {
+            return optionExists("-h") || optionExists("--help");
+        }
+
+        bool databaseExists() {
+            return optionExists("-d") || optionExists("--database");
+        }
+
+        bool boardExists() {
+            return optionExists("-b") || optionExists("--board");
+        }
+
+        std::string getDatabase() {
+            auto args = getMultipleArgs({"-d", "--database"});
+            if (args.size() > 0) {
+                return args[0];
+            }
+            return "";
+        }
+
+        std::string getBoard() {
+            auto args = getMultipleArgs({"-b", "--board"});
+            if (args.size() > 0) {
+                return args[0];
+            }
+            return "";
+        }
+
+    private:
+        std::unordered_map<std::string, std::vector<std::string>> tokens;
+
         bool optionExists(std::string option) {
             return tokens.find(option) != tokens.end();
         }
@@ -29,8 +61,15 @@ class InputParser {
         std::vector<std::string> getArgs(std::string option) {
             return tokens[option];
         }
-    private:
-        std::unordered_map<std::string, std::vector<std::string>> tokens;
+
+        std::vector<std::string> getMultipleArgs(std::vector<std::string> options) {
+            std::vector<std::string> args;
+            for (auto option: options) {
+                auto nextArgs = getArgs(option);
+                args.insert(args.end(), nextArgs.begin(), nextArgs.end());
+            }
+            return args;
+        }
 };
 
 #endif

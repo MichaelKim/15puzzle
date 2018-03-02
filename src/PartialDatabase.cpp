@@ -11,9 +11,9 @@
 PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
                                  std::string dbName,
                                  int index):
-    pattern(Pattern(grid)),
     filename("database-" +
-        dbName + "/database-" + std::to_string(index) + ".txt")
+        dbName + "/database-" + std::to_string(index) + ".txt"),
+    pattern(Pattern(grid))
 {
     int count = 0;
     for (int y = 0; y < grid.size(); y++) {

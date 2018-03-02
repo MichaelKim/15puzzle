@@ -4,9 +4,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "../include/DisjointDatabase.h"
-#include "../include/Idastar.h"
-#include "../include/InputParser.h"
+#include "./include/Board.h"
+#include "./include/DisjointDatabase.h"
+#include "./include/Idastar.h"
+#include "./include/InputParser.h"
 
 using namespace std;
 
@@ -27,10 +28,10 @@ void usage() {
 }
 
 int main(int argc, const char* argv[]) {
-    InputParser ip (argc, argv);
+    InputParser ip(argc, argv);
 
     // Help output
-    if (ip.optionExists("-h") || ip.optionExists("--help")) {
+    if (ip.showHelp()) {
         usage();
         return 0;
     }
@@ -40,25 +41,20 @@ int main(int argc, const char* argv[]) {
     ifstream in;
     string dbName = "def";
 
-    if (ip.optionExists("-d")) {
-        vector<string> args = ip.getArgs("-d");
-        if (args.size() != 1) {
-            cout << "Invalid number of database files; got " << args.size() << ", expected 1" << endl;
-            return 1;
-        }
+    if (ip.databaseExists()) {
+        string arg = ip.getDatabase();
+        in = ifstream(arg);
 
-        in = ifstream (args[0]);
-
-        size_t it = args[0].find_last_of("/");
-        dbName = args[0].substr(it + 1);
+        dbName = arg.substr(arg.find_last_of("/") + 1);
         input = &in;
     }
 
     int databaseNum;
     *input >> databaseNum;
 
-    vector<vector<vector<int>>> grids(databaseNum, vector<vector<int>>(Board::SIZE, vector<int>(Board::SIZE, 0)));
-
+    vector<vector<vector<int>>> grids(
+        databaseNum,
+        vector<vector<int>>(Board::SIZE, vector<int>(Board::SIZE, 0)));
     for (int i = 0; i < databaseNum; i++) {
         for (int y = 0; y < Board::SIZE; y++) {
             for (int x = 0; x < Board::SIZE; x++) {
@@ -70,14 +66,8 @@ int main(int argc, const char* argv[]) {
     input = &cin;
 
     // Reading board file
-    if (ip.optionExists("-b")) {
-        vector<string> args = ip.getArgs("-b");
-        if (args.size() != 1) {
-            cout << "Invalid number of board files; got " << args.size() << ", expected 1" << endl;
-            return 1;
-        }
-
-      in = ifstream (args[0]);
+    if (ip.boardExists()) {
+        in = ifstream(ip.getBoard());
         input = &in;
     }
 
@@ -108,7 +98,7 @@ int main(int argc, const char* argv[]) {
     auto dbEnd = chrono::steady_clock::now();
     cout << "Database time taken: " << (chrono::duration_cast<chrono::microseconds>(dbEnd - dbBegin).count()) / 1000000.0 << endl;
 
-    Idastar* search = new Idastar(db);
+    Idastar<DisjointDatabase, Board>* search = new Idastar<DisjointDatabase, Board>(db);
 
     vector<vector<int>> answers;
 

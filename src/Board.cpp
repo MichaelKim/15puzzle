@@ -44,52 +44,52 @@ Point Board::getBlank() {
 const std::vector<int>& Board::getMoves(int prevMove) {
     if (blank.y == 0) {
         if (blank.x == 0) {
-            if (prevMove == 3) return moves[2]; // 2
-            if (prevMove == 0) return moves[1]; // 1
-            return moves[7]; // 1, 2
+            if (prevMove == 3) return moves[2];  // 2
+            if (prevMove == 0) return moves[1];  // 1
+            return moves[7];                     // 1, 2
         }
         if (blank.x == SIZE - 1) {
-            if (prevMove == 0) return moves[3]; // 3
-            if (prevMove == 1) return moves[2]; // 2
-            return moves[9]; // 2, 3
+            if (prevMove == 0) return moves[3];  // 3
+            if (prevMove == 1) return moves[2];  // 2
+            return moves[9];                     // 2, 3
         }
-        if (prevMove == 3) return moves[9]; // 2, 3
-        if (prevMove == 0) return moves[8]; // 1, 3
-        if (prevMove == 1) return moves[7]; // 1, 2
-        return moves[13]; // 1, 2, 3
+        if (prevMove == 3) return moves[9];  // 2, 3
+        if (prevMove == 0) return moves[8];  // 1, 3
+        if (prevMove == 1) return moves[7];  // 1, 2
+        return moves[13];                    // 1, 2, 3
     }
     if (blank.y == SIZE - 1) {
         if (blank.x == 0) {
-            if (prevMove == 2) return moves[1]; // 1
-            if (prevMove == 3) return moves[0]; // 0
-            return moves[4]; // 0, 1
+            if (prevMove == 2) return moves[1];  // 1
+            if (prevMove == 3) return moves[0];  // 0
+            return moves[4];                     // 0, 1
         }
         if (blank.x == SIZE - 1) {
-            if (prevMove == 2) return moves[3]; // 3;
-            if (prevMove == 1) return moves[0]; // 0
-            return moves[6]; // 0, 3
+            if (prevMove == 2) return moves[3];  // 3;
+            if (prevMove == 1) return moves[0];  // 0
+            return moves[6];                     // 0, 3
         }
-        if (prevMove == 2) return moves[8]; // 1, 3
-        if (prevMove == 3) return moves[6]; // 0, 3
-        if (prevMove == 1) return moves[4]; // 0, 1
-        return moves[11]; // 0, 1, 3
+        if (prevMove == 2) return moves[8];  // 1, 3
+        if (prevMove == 3) return moves[6];  // 0, 3
+        if (prevMove == 1) return moves[4];  // 0, 1
+        return moves[11];                    // 0, 1, 3
     }
     if (blank.x == 0) {
-        if (prevMove == 2) return moves[7]; // 1, 2
-        if (prevMove == 3) return moves[5]; // 0, 2
-        if (prevMove == 0) return moves[4]; // 0, 1
-        return moves[10]; // 0, 1, 2
+        if (prevMove == 2) return moves[7];  // 1, 2
+        if (prevMove == 3) return moves[5];  // 0, 2
+        if (prevMove == 0) return moves[4];  // 0, 1
+        return moves[10];                    // 0, 1, 2
     }
     if (blank.x == SIZE - 1) {
-        if (prevMove == 2) return moves[9]; // 2, 3
-        if (prevMove == 0) return moves[6]; // 0, 3
-        if (prevMove == 1) return moves[5]; // 0, 2
-        return moves[12]; // 0, 2, 3
+        if (prevMove == 2) return moves[9];  // 2, 3
+        if (prevMove == 0) return moves[6];  // 0, 3
+        if (prevMove == 1) return moves[5];  // 0, 2
+        return moves[12];                    // 0, 2, 3
     }
-    if (prevMove == 0) return moves[11]; // 0, 1, 3
-    if (prevMove == 1) return moves[10]; // 0, 1, 2
-    if (prevMove == 2) return moves[13]; // 1, 2, 3
-    return moves[12]; // 0, 2, 3
+    if (prevMove == 0) return moves[11];  // 0, 1, 3
+    if (prevMove == 1) return moves[10];  // 0, 1, 2
+    if (prevMove == 2) return moves[13];  // 1, 2, 3
+    return moves[12];                     // 0, 2, 3
 }
 
 void Board::applyMove(int dir) {
