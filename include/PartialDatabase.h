@@ -9,19 +9,20 @@
 #include <vector>
 
 class PartialDatabase {
-    private:
-        std::string filename;
-        Pattern pattern;
+private:
+    std::string filename;
+    Pattern pattern;
 
-    public:
-        std::unordered_map<int, int> cells;
-        ska::flat_hash_map<uint64_t, int> distMap;
+public:
+    std::unordered_map<int, int> cells;
+    ska::flat_hash_map<uint64_t, int> distMap;
 
-        PartialDatabase(std::vector<std::vector<int>> grid, std::string dbName, int index);
-        virtual ~PartialDatabase();
+    PartialDatabase(std::vector<std::vector<int>> grid, std::string dbName,
+                    int index);
+    virtual ~PartialDatabase();
 
-        void generateDists();
-        void saveDists();
+    void generateDists();
+    void saveDists();
 };
 
-#endif // PARTIALDATABASE_H
+#endif  // PARTIALDATABASE_H

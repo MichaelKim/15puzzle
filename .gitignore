@@ -2,6 +2,14 @@ bin/
 obj/
 *.layout
 *.depend
-*.txt
 
 database-*.txt
+puzzle
+.DS_Store
+
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+compile_commands.json
+.clang-format
+Makefile

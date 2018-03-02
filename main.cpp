@@ -24,7 +24,7 @@ void usage() {
             "        Use database file\n"
             "    -h, --help\n"
             "        Print this help\n"
-    << endl;
+         << endl;
 }
 
 int main(int argc, const char* argv[]) {
@@ -76,7 +76,7 @@ int main(int argc, const char* argv[]) {
 
     vector<Board> startBoards;
     for (int i = 0; i < boardNum; i++) {
-        vector<vector<int>> board (Board::SIZE, vector<int>(Board::SIZE, 0));
+        vector<vector<int>> board(Board::SIZE, vector<int>(Board::SIZE, 0));
         for (int y = 0; y < Board::SIZE; y++) {
             for (int x = 0; x < Board::SIZE; x++) {
                 *input >> board[y][x];
@@ -96,15 +96,20 @@ int main(int argc, const char* argv[]) {
     DisjointDatabase* db = new DisjointDatabase(dbName, grids);
 
     auto dbEnd = chrono::steady_clock::now();
-    cout << "Database time taken: " << (chrono::duration_cast<chrono::microseconds>(dbEnd - dbBegin).count()) / 1000000.0 << endl;
+    cout << "Database time taken: "
+         << (chrono::duration_cast<chrono::microseconds>(dbEnd - dbBegin)
+                 .count()) /
+                1000000.0
+         << endl;
 
-    Idastar<DisjointDatabase, Board>* search = new Idastar<DisjointDatabase, Board>(db);
+    Idastar<DisjointDatabase, Board>* search =
+        new Idastar<DisjointDatabase, Board>(db);
 
     vector<vector<int>> answers;
 
     auto solveBegin = chrono::steady_clock::now();
 
-    for (Board& startBoard: startBoards) {
+    for (Board& startBoard : startBoards) {
         vector<int> solution = search->solve(startBoard);
 
         if (solution.size() == 0) {
@@ -112,7 +117,7 @@ int main(int argc, const char* argv[]) {
         }
         else {
             cout << "Solution: " << solution.size() << " steps" << endl;
-            for (int dir: solution) {
+            for (int dir : solution) {
                 cout << dir << " ";
             }
             cout << endl;
@@ -122,7 +127,11 @@ int main(int argc, const char* argv[]) {
     }
 
     auto solveEnd = chrono::steady_clock::now();
-    cout << "Total solve time taken: " << (chrono::duration_cast<chrono::microseconds>(solveEnd - solveBegin).count()) / 1000000.0 << endl;
+    cout << "Total solve time taken: "
+         << (chrono::duration_cast<chrono::microseconds>(solveEnd - solveBegin)
+                 .count()) /
+                1000000.0
+         << endl;
 
     cout << "Checking solutions:" << endl;
     for (int i = 0; i < startBoards.size(); i++) {

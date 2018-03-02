@@ -4,10 +4,8 @@
 #include <iostream>
 
 const std::vector<std::vector<int>> Board::moves = {
-  {0}, {1}, {2}, {3},
-  {0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3},
-  {0, 1, 2}, {0, 1, 3}, {0, 2, 3}, {1, 2, 3}
-};
+    {0},    {1},    {2},    {3},       {0, 1},    {0, 2},    {0, 3},
+    {1, 2}, {1, 3}, {2, 3}, {0, 1, 2}, {0, 1, 3}, {0, 2, 3}, {1, 2, 3}};
 
 Board::Board(std::vector<std::vector<int>> g) {
     grid = 0;
@@ -29,7 +27,7 @@ int Board::getCell(int x, int y) const {
 
 void Board::setCell(int x, int y, int n) {
     int i = 4 * (SIZE * (SIZE - y) - x - 1);
-    grid = (grid & ~(0xfull << i)) | ((uint64_t) n << i);
+    grid = (grid & ~(0xfull << i)) | ((uint64_t)n << i);
 }
 
 uint64_t Board::getId() const {

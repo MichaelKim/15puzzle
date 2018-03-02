@@ -3,21 +3,21 @@
 
 #include <vector>
 
-template<class THeuristic, class TState>
+template <class THeuristic, class TState>
 class Idastar {
-    private:
-        THeuristic* heuristic;
-        std::vector<int> path;
-        int minCost;
-        int limit;
-        uint64_t nodes;
+private:
+    THeuristic* heuristic;
+    std::vector<int> path;
+    int minCost;
+    int limit;
+    uint64_t nodes;
 
-    public:
-        Idastar(THeuristic* h);
-        virtual ~Idastar();
+public:
+    Idastar(THeuristic* h);
+    virtual ~Idastar();
 
-        std::vector<int> solve(TState start);
-        bool dfs(TState& root, int g, int prevMove);
+    std::vector<int> solve(TState start);
+    bool dfs(TState& root, int g, int prevMove);
 };
 
 #include "Idastar-inl.h"

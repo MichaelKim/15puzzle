@@ -1,16 +1,14 @@
+#include "Idastar.h"
+
 #include <iostream>
 
 #define INF 1000000
 
-template<class THeuristic, class TState>
-Idastar<THeuristic, TState>::Idastar(THeuristic* h):
-    heuristic(h),
-    path({}),
-    minCost(INF),
-    limit(0),
-    nodes(0) {}
+template <class THeuristic, class TState>
+Idastar<THeuristic, TState>::Idastar(THeuristic* h)
+    : heuristic(h), path({}), minCost(INF), limit(0), nodes(0) {}
 
-template<class THeuristic, class TState>
+template <class THeuristic, class TState>
 std::vector<int> Idastar<THeuristic, TState>::solve(TState start) {
     // Uses IDA* with additive pattern disjoint database heuristics
     path.clear();
@@ -31,7 +29,7 @@ std::vector<int> Idastar<THeuristic, TState>::solve(TState start) {
     return path;
 }
 
-template<class THeuristic, class TState>
+template <class THeuristic, class TState>
 bool Idastar<THeuristic, TState>::dfs(TState& node, int g, int prevMove) {
     int h = heuristic->getHeuristic(node);
     int f = g + h;
@@ -49,7 +47,7 @@ bool Idastar<THeuristic, TState>::dfs(TState& node, int g, int prevMove) {
     }
     nodes++;
     const std::vector<int>& moves = node.getMoves(prevMove);
-    for (int move: moves) {
+    for (int move : moves) {
         node.applyMove(move);
 
         if (dfs(node, g + 1, move)) {
@@ -63,7 +61,7 @@ bool Idastar<THeuristic, TState>::dfs(TState& node, int g, int prevMove) {
     return false;
 }
 
-template<class THeuristic, class TState>
+template <class THeuristic, class TState>
 Idastar<THeuristic, TState>::~Idastar() {
     delete heuristic;
 }

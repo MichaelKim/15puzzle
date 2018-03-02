@@ -25,7 +25,7 @@ int Pattern::getCell(int x, int y) const {
 void Pattern::setCell(int x, int y, int n) {
     int i = 4 * (y * SIZE + x);
     grid &= ~(0xfull << i);
-    grid |= (uint64_t) n << i;
+    grid |= (uint64_t)n << i;
 }
 
 uint64_t Pattern::getId() {
