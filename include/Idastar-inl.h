@@ -9,14 +9,15 @@ Idastar<THeuristic, TState>::Idastar(THeuristic* h)
     : heuristic(h), path({}), minCost(INF), limit(0), nodes(0) {}
 
 template <class THeuristic, class TState>
-std::vector<int> Idastar<THeuristic, TState>::solve(TState start) {
+std::vector<typename TState::Move> Idastar<THeuristic, TState>::solve(
+    TState start) {
     // Uses IDA* with additive pattern disjoint database heuristics
     path.clear();
 
     limit = heuristic->getHeuristic(start);
     std::cout << "Limit, Nodes:";
 
-    int prevMove = -1;
+    Move prevMove = Move::Null;
     while (path.size() == 0) {
         minCost = INF;
         std::cout << " " << limit << ", " << nodes << std::endl;
@@ -30,7 +31,7 @@ std::vector<int> Idastar<THeuristic, TState>::solve(TState start) {
 }
 
 template <class THeuristic, class TState>
-bool Idastar<THeuristic, TState>::dfs(TState& node, int g, int prevMove) {
+bool Idastar<THeuristic, TState>::dfs(TState& node, int g, Move prevMove) {
     int h = heuristic->getHeuristic(node);
     int f = g + h;
 
@@ -46,16 +47,17 @@ bool Idastar<THeuristic, TState>::dfs(TState& node, int g, int prevMove) {
         return false;
     }
     nodes++;
-    const std::vector<int>& moves = node.getMoves(prevMove);
-    for (int move : moves) {
-        node.applyMove(move);
+
+    const auto& moves = node.getMoves(prevMove);
+    for (auto move : moves) {
+        Move undo = node.applyMove(move);
 
         if (dfs(node, g + 1, move)) {
             path.push_back(move);
             return true;
         }
 
-        node.undoMove(move);
+        node.applyMove(undo);
     }
 
     return false;

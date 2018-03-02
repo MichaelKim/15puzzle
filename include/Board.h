@@ -7,11 +7,14 @@
 #include <vector>
 
 class Board {
+public:
+    enum class Move : int { Null, N, E, W, S };
+
 private:
     uint64_t grid;
     Point blank;
 
-    static const std::vector<std::vector<int>> moves;
+    static const std::vector<std::vector<Move>> moves;
 
     inline void setCell(int x, int y, int n);
     inline int getCell(int x, int y) const;
@@ -25,10 +28,10 @@ public:
     virtual ~Board();
 
     uint64_t getId() const;
-    const std::vector<int>& getMoves(int prevMove);
-    void applyMove(int dir);
-    void undoMove(int dir);
+    const std::vector<Move>& getMoves(Move prevMove);
+    Move applyMove(Move dir);
 
+    friend std::ostream& operator<<(std::ostream& out, const Move& move);
     friend std::ostream& operator<<(std::ostream& out, const Board& board);
 };
 

@@ -115,20 +115,20 @@ int main(int argc, const char* argv[]) {
     Idastar<DisjointDatabase, Board>* search =
         new Idastar<DisjointDatabase, Board>(db);
 
-    vector<vector<int>> answers;
+    vector<vector<Board::Move>> answers;
 
     // Start search
     auto solveBegin = chrono::steady_clock::now();
 
-    for (Board& startBoard : startBoards) {
-        vector<int> solution = search->solve(startBoard);
+    for (const Board& startBoard : startBoards) {
+        vector<Board::Move> solution = search->solve(startBoard);
 
         if (solution.size() == 0) {
             cout << "No solution found!" << endl;
         }
         else {
             cout << "Solution: " << solution.size() << " steps" << endl;
-            for (int dir : solution) {
+            for (auto dir : solution) {
                 cout << dir << " ";
             }
             cout << endl;
@@ -147,8 +147,8 @@ int main(int argc, const char* argv[]) {
     // Check solutions
     cout << "Checking solutions:" << endl;
     for (int i = 0; i < startBoards.size(); i++) {
-        Board& b = startBoards[i];
-        vector<int>& solution = answers[i];
+        Board b = startBoards[i];
+        auto solution = answers[i];
 
         for (int j = solution.size() - 1; j >= 0; j--) {
             b.applyMove(solution[j]);

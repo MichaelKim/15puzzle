@@ -6,8 +6,10 @@
 template <class THeuristic, class TState>
 class Idastar {
 private:
+    using Move = typename TState::Move;
+
     THeuristic* heuristic;
-    std::vector<int> path;
+    std::vector<Move> path;
     int minCost;
     int limit;
     uint64_t nodes;
@@ -16,8 +18,8 @@ public:
     Idastar(THeuristic* h);
     virtual ~Idastar();
 
-    std::vector<int> solve(TState start);
-    bool dfs(TState& root, int g, int prevMove);
+    std::vector<Move> solve(TState start);
+    bool dfs(TState& root, int g, Move prevMove);
 };
 
 #include "Idastar-inl.h"
