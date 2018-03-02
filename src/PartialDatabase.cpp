@@ -11,7 +11,7 @@
 PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
                                  std::string dbName, int index)
     : filename("database-" + dbName + "/database-" + std::to_string(index) +
-               ".txt"),
+               ".dat"),
       pattern(Pattern(grid)) {
     int count = 0;
     for (int y = 0; y < grid.size(); y++) {
@@ -22,7 +22,7 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
         }
     }
 
-    std::ifstream file(filename);
+    std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (!file.good()) {
         // Database file missing, generate database
         std::cout << "Generating database" << std::endl;
@@ -36,7 +36,8 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
         uint64_t id;
         int dist;
 
-        while (file >> id >> dist) {
+        while (file.read((char*)&id, sizeof(id)) &&
+               file.read((char*)&dist, sizeof(dist))) {
             distMap[id] = dist;
         }
     }
@@ -112,7 +113,7 @@ void PartialDatabase::generateDists() {
 
 void PartialDatabase::saveDists() {
     // Store file
-    std::ofstream file(filename);
+    std::ofstream file(filename, std::ios::out | std::ios::binary);
     if (!file.good()) {
         std::cerr << "Could not generate database file: " + filename
                   << std::endl;
@@ -122,8 +123,9 @@ void PartialDatabase::saveDists() {
         // file << board.grid[0].size() << " " << board.grid.size() << endl;
         // Number of cells, locations of cells (id)
         // file << board.cells.size() << " " << board.getId() << endl;
-        for (auto it : distMap) {
-            file << it.first << " " << it.second << std::endl;
+        for (const auto& it : distMap) {
+            file.write((char*)&(it.first), sizeof(it.first));
+            file.write((char*)&(it.second), sizeof(it.second));
         }
 
         file.close();

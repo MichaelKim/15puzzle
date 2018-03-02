@@ -4,6 +4,7 @@ obj/
 *.depend
 
 database-*.txt
+database-*.dat
 puzzle
 .DS_Store
 
