@@ -24,8 +24,7 @@ int Pattern::getCell(int x, int y) const {
 
 void Pattern::setCell(int x, int y, int n) {
     int i = 4 * (y * SIZE + x);
-    grid &= ~(0xfull << i);
-    grid |= (uint64_t)n << i;
+    grid = (grid & ~(0xfull << i)) | ((uint64_t)n << i);
 }
 
 uint64_t Pattern::getId() {
@@ -55,88 +54,57 @@ uint64_t Pattern::getShiftId(int index, Direction dir) {
 
     int cellX = cells[index].x;
     int cellY = cells[index].y;
-    uint64_t shiftId = 0;
 
-    int temp = getCell(cellX, cellY);
+    int i = 4 * (cellY * SIZE + cellX);
+    int j = 0;
 
-    if (dir == Direction::N) {
-        int shift = getCell(cellX, cellY - 1);
-
-        setCell(cellX, cellY, shift);
-        setCell(cellX, cellY - 1, temp);
-
-        shiftId = getId();
-
-        setCell(cellX, cellY, temp);
-        setCell(cellX, cellY - 1, shift);
-    }
-    else if (dir == Direction::E) {
-        int shift = getCell(cellX + 1, cellY);
-
-        setCell(cellX, cellY, shift);
-        setCell(cellX + 1, cellY, temp);
-
-        shiftId = getId();
-
-        setCell(cellX, cellY, temp);
-        setCell(cellX + 1, cellY, shift);
-    }
-    else if (dir == Direction::S) {
-        int shift = getCell(cellX, cellY + 1);
-
-        setCell(cellX, cellY, shift);
-        setCell(cellX, cellY + 1, temp);
-
-        shiftId = getId();
-
-        setCell(cellX, cellY, temp);
-        setCell(cellX, cellY + 1, shift);
-    }
-    else {
-        int shift = getCell(cellX - 1, cellY);
-
-        setCell(cellX, cellY, shift);
-        setCell(cellX - 1, cellY, temp);
-
-        shiftId = getId();
-
-        setCell(cellX, cellY, temp);
-        setCell(cellX - 1, cellY, shift);
+    switch (dir) {
+        case Direction::N:
+            j = 4 * ((cellY - 1) * SIZE + cellX);
+            break;
+        case Direction::E:
+            j = 4 * (cellY * SIZE + (cellX + 1));
+            break;
+        case Direction::S:
+            j = 4 * ((cellY + 1) * SIZE + cellX);
+            break;
+        case Direction::W:
+            j = 4 * (cellY * SIZE + (cellX - 1));
+            break;
+        default:
+            return 0;
     }
 
-    return shiftId;
+    int temp = (grid & (0xfull << i)) >> i;
+    return (grid & ~(0xfull << i) & ~(0xfull << j)) | ((uint64_t)temp << j);
 }
 
 // Assumes canShift(index, dir)
 void Pattern::shiftCell(int index, Direction dir) {
     int cellX = cells[index].x;
     int cellY = cells[index].y;
-
     int temp = getCell(cellX, cellY);
+    setCell(cellX, cellY, 0);
 
-    if (dir == Direction::N) {
-        setCell(cellX, cellY, getCell(cellX, cellY - 1));
-        setCell(cellX, cellY - 1, temp);
-
-        cells[index].y--;
-    }
-    else if (dir == Direction::E) {
-        setCell(cellX, cellY, getCell(cellX + 1, cellY));
-        setCell(cellX + 1, cellY, temp);
-
-        cells[index].x++;
-    }
-    else if (dir == Direction::S) {
-        setCell(cellX, cellY, getCell(cellX, cellY + 1));
-        setCell(cellX, cellY + 1, temp);
-
-        cells[index].y++;
-    }
-    else {
-        setCell(cellX, cellY, getCell(cellX - 1, cellY));
-        setCell(cellX - 1, cellY, temp);
-
-        cells[index].x--;
+    switch (dir) {
+        case Direction::N:
+            setCell(cellX, cellY - 1, temp);
+            cells[index].y--;
+            break;
+        case Direction::E:
+            setCell(cellX + 1, cellY, temp);
+            cells[index].x++;
+            break;
+        case Direction::S:
+            setCell(cellX, cellY + 1, temp);
+            cells[index].y++;
+            break;
+        case Direction::W:
+            setCell(cellX - 1, cellY, temp);
+            cells[index].x--;
+            break;
+        default:
+            break;
     }
 }
 

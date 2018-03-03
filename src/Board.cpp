@@ -23,8 +23,8 @@ const std::vector<std::vector<Move>> Board::moves = {
 
 Board::Board(std::vector<std::vector<int>> g) {
     grid = 0;
-    for (int y = 0; y < SIZE; y++) {
-        for (int x = 0; x < SIZE; x++) {
+    for (int y = SIZE - 1; y >= 0; y--) {
+        for (int x = SIZE - 1; x >= 0; x--) {
             if (g[y][x] == 0) {
                 blank = {x, y};
             }
@@ -34,19 +34,18 @@ Board::Board(std::vector<std::vector<int>> g) {
 }
 
 int Board::getCell(int x, int y) const {
-    // i = 4 * ((SIZE - y - 1) * SIZE + (SIZE - x - 1))
-    int i = 4 * (SIZE * (SIZE - y) - x - 1);
+    int i = 4 * (y * SIZE + x);
     return ((grid & (0xfull << i)) >> i);
 }
 
 void Board::setCell(int x, int y, int n) {
-    int i = 4 * (SIZE * (SIZE - y) - x - 1);
+    int i = 4 * (y * SIZE + x);
     grid = (grid & ~(0xfull << i)) | ((uint64_t)n << i);
 }
 
 uint64_t Board::getId() const {
     // Set blank point to 0
-    return grid & ~(0xfull << (4 * (SIZE * (SIZE - blank.y) - blank.x - 1)));
+    return grid & ~(0xfull << (4 * (blank.y * SIZE + blank.x)));
 }
 
 Point Board::getBlank() {

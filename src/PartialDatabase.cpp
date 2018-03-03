@@ -1,6 +1,5 @@
 #include "../include/PartialDatabase.h"
 
-#include "../include/Board.h"
 #include "../include/Pattern.h"
 
 #include <chrono>
@@ -14,8 +13,8 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
                ".dat"),
       pattern(Pattern(grid)) {
     int count = 0;
-    for (int y = 0; y < grid.size(); y++) {
-        for (int x = 0; x < grid[y].size(); x++) {
+    for (int y = 0; y < Pattern::SIZE; y++) {
+        for (int x = 0; x < Pattern::SIZE; x++) {
             if (grid[y][x] > 0) {
                 cells[grid[y][x]] = count++;
             }

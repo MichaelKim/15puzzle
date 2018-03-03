@@ -29,7 +29,7 @@ int DisjointDatabase::getHeuristic(const Board& board) {
 
             int j = where[n];
             if (j >= 0 && j < numDatabases) {
-                ids[j] |= n << (4 * (Board::LEN - i - 1));
+                ids[j] |= n << (4 * i);
             }
         },
         0, uint_<Board::LEN - 1>());
