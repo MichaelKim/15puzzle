@@ -11,12 +11,11 @@ class Pattern {
 private:
     uint64_t grid;
 
-    int getCell(int x, int y) const;
-    void setCell(int x, int y, int n);
+    inline int getCell(int x, int y) const;
+    inline void setCell(int x, int y, int n);
 
 public:
-    static const int SIZE = 4;
-
+    const int WIDTH, HEIGHT;
     std::vector<Point> cells;
 
     Pattern(std::vector<std::vector<int>> g);

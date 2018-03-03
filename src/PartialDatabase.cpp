@@ -9,12 +9,11 @@
 
 PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
                                  std::string dbName, int index)
-    : filename("database-" + dbName + "/database-" + std::to_string(index) +
-               ".dat"),
+    : filename("databases/" + dbName + "-" + std::to_string(index) + ".dat"),
       pattern(Pattern(grid)) {
     int count = 0;
-    for (int y = 0; y < Pattern::SIZE; y++) {
-        for (int x = 0; x < Pattern::SIZE; x++) {
+    for (int y = 0; y < pattern.HEIGHT; y++) {
+        for (int x = 0; x < pattern.WIDTH; x++) {
             if (grid[y][x] > 0) {
                 cells[grid[y][x]] = count++;
             }

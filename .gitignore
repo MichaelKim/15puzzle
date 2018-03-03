@@ -3,8 +3,7 @@ obj/
 *.layout
 *.depend
 
-database-*.txt
-database-*.dat
+databases/*.dat
 puzzle
 .DS_Store
 

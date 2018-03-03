@@ -21,8 +21,7 @@ private:
     inline Point getBlank();
 
 public:
-    static const int SIZE = 4;
-    static const int LEN = SIZE * SIZE;
+    const int WIDTH, HEIGHT;
 
     Board(std::vector<std::vector<int>> g);
     virtual ~Board();

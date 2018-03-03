@@ -21,10 +21,11 @@ const std::vector<std::vector<Move>> Board::moves = {
     {Move::N, Move::S, Move::W},
     {Move::E, Move::S, Move::W}};
 
-Board::Board(std::vector<std::vector<int>> g) {
+Board::Board(std::vector<std::vector<int>> g)
+    : WIDTH(g[0].size()), HEIGHT(g.size()) {
     grid = 0;
-    for (int y = SIZE - 1; y >= 0; y--) {
-        for (int x = SIZE - 1; x >= 0; x--) {
+    for (int y = HEIGHT - 1; y >= 0; y--) {
+        for (int x = WIDTH - 1; x >= 0; x--) {
             if (g[y][x] == 0) {
                 blank = {x, y};
             }
@@ -34,18 +35,18 @@ Board::Board(std::vector<std::vector<int>> g) {
 }
 
 int Board::getCell(int x, int y) const {
-    int i = 4 * (y * SIZE + x);
+    int i = 4 * (y * WIDTH + x);
     return ((grid & (0xfull << i)) >> i);
 }
 
 void Board::setCell(int x, int y, int n) {
-    int i = 4 * (y * SIZE + x);
+    int i = 4 * (y * WIDTH + x);
     grid = (grid & ~(0xfull << i)) | ((uint64_t)n << i);
 }
 
 uint64_t Board::getId() const {
     // Set blank point to 0
-    return grid & ~(0xfull << (4 * (blank.y * SIZE + blank.x)));
+    return grid & ~(0xfull << (4 * (blank.y * WIDTH + blank.x)));
 }
 
 Point Board::getBlank() {
@@ -59,7 +60,7 @@ const std::vector<Move>& Board::getMoves(Move prevMove) {
             if (prevMove == Move::N) return moves[1];  // 1
             return moves[7];                           // 1, 2
         }
-        if (blank.x == SIZE - 1) {
+        if (blank.x == WIDTH - 1) {
             if (prevMove == Move::N) return moves[3];  // 3
             if (prevMove == Move::E) return moves[2];  // 2
             return moves[9];                           // 2, 3
@@ -69,13 +70,13 @@ const std::vector<Move>& Board::getMoves(Move prevMove) {
         if (prevMove == Move::E) return moves[7];  // 1, 2
         return moves[13];                          // 1, 2, 3
     }
-    if (blank.y == SIZE - 1) {
+    if (blank.y == HEIGHT - 1) {
         if (blank.x == 0) {
             if (prevMove == Move::S) return moves[1];  // 1
             if (prevMove == Move::W) return moves[0];  // 0
             return moves[4];                           // 0, 1
         }
-        if (blank.x == SIZE - 1) {
+        if (blank.x == WIDTH - 1) {
             if (prevMove == Move::S) return moves[3];  // 3;
             if (prevMove == Move::E) return moves[0];  // 0
             return moves[6];                           // 0, 3
@@ -91,7 +92,7 @@ const std::vector<Move>& Board::getMoves(Move prevMove) {
         if (prevMove == Move::N) return moves[4];  // 0, 1
         return moves[10];                          // 0, 1, 2
     }
-    if (blank.x == SIZE - 1) {
+    if (blank.x == WIDTH - 1) {
         if (prevMove == Move::S) return moves[9];  // 2, 3
         if (prevMove == Move::N) return moves[6];  // 0, 3
         if (prevMove == Move::E) return moves[5];  // 0, 2
@@ -149,8 +150,8 @@ std::ostream& operator<<(std::ostream& out, const Move& move) {
 }
 
 std::ostream& operator<<(std::ostream& out, const Board& board) {
-    for (int y = 0; y < Board::SIZE; y++) {
-        for (int x = 0; x < Board::SIZE; x++) {
+    for (int y = 0; y < board.HEIGHT; y++) {
+        for (int x = 0; x < board.WIDTH; x++) {
             if (x == board.blank.x && y == board.blank.y) {
                 out << std::setw(3) << 0;
             }

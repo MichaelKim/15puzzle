@@ -9,11 +9,11 @@ class InputParser {
 public:
     InputParser(int argc, const char* argv[]) {
         if (argc > 1 && argv[1][0] == '-') {
-            std::string option = argv[1];
-            tokens[option] = std::vector<std::string>();
-            for (int i = 2; i < argc; i++) {
+            std::string option;
+            for (int i = 1; i < argc; i++) {
                 if (argv[i][0] == '-') {  // new option
                     option = argv[i];
+                    tokens[option] = std::vector<std::string>();
                 }
                 else {  // option argument
                     tokens[option].push_back(std::string(argv[i]));
@@ -33,6 +33,10 @@ public:
 
     bool boardExists() {
         return optionExists("-b") || optionExists("--board");
+    }
+
+    bool showInteractive() {
+        return optionExists("-i") || optionExists("--interactive");
     }
 
     std::string getDatabase() {

@@ -1,6 +1,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -24,19 +25,20 @@ void usage() {
             "        Use database file\n"
             "    -h, --help\n"
             "        Print this help\n"
+            "    -i, --interactive\n"
+            "        Show a playback of each solution"
          << endl;
 }
 
 vector<vector<vector<int>>> readDatabase(istream& input) {
-    int databaseNum;
-    input >> databaseNum;
+    int width, height, databaseNum;
+    input >> width >> height >> databaseNum;
 
     vector<vector<vector<int>>> grids(
-        databaseNum,
-        vector<vector<int>>(Board::SIZE, vector<int>(Board::SIZE, 0)));
+        databaseNum, vector<vector<int>>(height, vector<int>(width, 0)));
     for (int i = 0; i < databaseNum; i++) {
-        for (int y = 0; y < Board::SIZE; y++) {
-            for (int x = 0; x < Board::SIZE; x++) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
                 input >> grids[i][y][x];
             }
         }
@@ -45,14 +47,14 @@ vector<vector<vector<int>>> readDatabase(istream& input) {
 }
 
 vector<Board> readBoards(istream& input) {
-    int boardNum;
-    input >> boardNum;
+    int width, height, boardNum;
+    input >> width >> height >> boardNum;
 
     vector<Board> boards;
     for (int i = 0; i < boardNum; i++) {
-        vector<vector<int>> board(Board::SIZE, vector<int>(Board::SIZE, 0));
-        for (int y = 0; y < Board::SIZE; y++) {
-            for (int x = 0; x < Board::SIZE; x++) {
+        vector<vector<int>> board(height, vector<int>(width, 0));
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
                 input >> board[y][x];
             }
         }
@@ -84,6 +86,12 @@ int main(int argc, const char* argv[]) {
     else {
         grids = readDatabase(cin);
     }
+    if (grids.size() == 0) {
+        cout << "Error: must have at least one database" << endl;
+        return 1;
+    }
+
+    const int WIDTH = grids[0][0].size(), HEIGHT = grids[0].size();
 
     // Reading board file
     vector<Board> startBoards;
@@ -102,7 +110,7 @@ int main(int argc, const char* argv[]) {
     // Setup database
     auto dbBegin = chrono::steady_clock::now();
 
-    DisjointDatabase* db = new DisjointDatabase(dbName, grids);
+    DisjointDatabase* db = new DisjointDatabase(WIDTH * HEIGHT, dbName, grids);
 
     auto dbEnd = chrono::steady_clock::now();
     cout << "Database time taken: "
@@ -152,6 +160,11 @@ int main(int argc, const char* argv[]) {
 
         for (int j = solution.size() - 1; j >= 0; j--) {
             b.applyMove(solution[j]);
+            if (ip.showInteractive()) {
+                cout << (solution.size() - j) << endl;
+                cout << b << endl;
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+            }
         }
         cout << hex << b.getId() << dec << endl;
     }

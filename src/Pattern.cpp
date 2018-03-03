@@ -5,10 +5,11 @@
 #include <ostream>
 #include <vector>
 
-Pattern::Pattern(std::vector<std::vector<int>> g) {
+Pattern::Pattern(std::vector<std::vector<int>> g)
+    : WIDTH(g[0].size()), HEIGHT(g.size()) {
     grid = 0;
-    for (int y = SIZE - 1; y >= 0; y--) {
-        for (int x = SIZE - 1; x >= 0; x--) {
+    for (int y = HEIGHT - 1; y >= 0; y--) {
+        for (int x = WIDTH - 1; x >= 0; x--) {
             if (g[y][x] > 0) {
                 cells.push_back({x, y});
             }
@@ -18,12 +19,12 @@ Pattern::Pattern(std::vector<std::vector<int>> g) {
 }
 
 int Pattern::getCell(int x, int y) const {
-    int i = 4 * (y * SIZE + x);
+    int i = 4 * (y * WIDTH + x);
     return ((grid & (0xfull << i)) >> i);
 }
 
 void Pattern::setCell(int x, int y, int n) {
-    int i = 4 * (y * SIZE + x);
+    int i = 4 * (y * WIDTH + x);
     grid = (grid & ~(0xfull << i)) | ((uint64_t)n << i);
 }
 
@@ -39,10 +40,10 @@ bool Pattern::canShift(int index, Direction dir) {
         return (cellY > 0 && getCell(cellX, cellY - 1) == 0);
     }
     else if (dir == Direction::E) {
-        return (cellX < SIZE - 1 && getCell(cellX + 1, cellY) == 0);
+        return (cellX < WIDTH - 1 && getCell(cellX + 1, cellY) == 0);
     }
     else if (dir == Direction::S) {
-        return (cellY < SIZE - 1 && getCell(cellX, cellY + 1) == 0);
+        return (cellY < HEIGHT - 1 && getCell(cellX, cellY + 1) == 0);
     }
     else {
         return (cellX > 0 && getCell(cellX - 1, cellY) == 0);
@@ -55,21 +56,21 @@ uint64_t Pattern::getShiftId(int index, Direction dir) {
     int cellX = cells[index].x;
     int cellY = cells[index].y;
 
-    int i = 4 * (cellY * SIZE + cellX);
+    int i = 4 * (cellY * WIDTH + cellX);
     int j = 0;
 
     switch (dir) {
         case Direction::N:
-            j = 4 * ((cellY - 1) * SIZE + cellX);
+            j = 4 * ((cellY - 1) * WIDTH + cellX);
             break;
         case Direction::E:
-            j = 4 * (cellY * SIZE + (cellX + 1));
+            j = 4 * (cellY * WIDTH + (cellX + 1));
             break;
         case Direction::S:
-            j = 4 * ((cellY + 1) * SIZE + cellX);
+            j = 4 * ((cellY + 1) * WIDTH + cellX);
             break;
         case Direction::W:
-            j = 4 * (cellY * SIZE + (cellX - 1));
+            j = 4 * (cellY * WIDTH + (cellX - 1));
             break;
         default:
             return 0;
@@ -111,8 +112,8 @@ void Pattern::shiftCell(int index, Direction dir) {
 Pattern::~Pattern() {}
 
 std::ostream& operator<<(std::ostream& out, const Pattern& pattern) {
-    for (int y = 0; y < Pattern::SIZE; y++) {
-        for (int x = 0; x < Pattern::SIZE; x++) {
+    for (int y = 0; y < pattern.HEIGHT; y++) {
+        for (int x = 0; x < pattern.WIDTH; x++) {
             out << std::setw(3) << pattern.getCell(x, y);
         }
         out << std::endl;
