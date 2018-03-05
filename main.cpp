@@ -104,9 +104,6 @@ int main(int argc, const char* argv[]) {
         startBoards = readBoards(cin);
     }
 
-    // Reg: 5, 36, 40, 52, 56, 60, 80
-    // Rev: 3, 56, 68, 65
-
     // Setup database
     auto dbBegin = chrono::steady_clock::now();
 
