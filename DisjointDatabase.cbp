@@ -10,7 +10,8 @@
 				<Option output="bin/Debug/DisjointDatabase" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
-				<Option compiler="gcc" />
+				<Option compiler="tdm-gcc-64" />
+				<Option parameters="-d databases/555-reg -b boards/15-reg" />
 				<Compiler>
 					<Add option="-g" />
 					<Add directory="include" />
@@ -37,10 +38,14 @@
 		<Unit filename="include/Board.h" />
 		<Unit filename="include/Direction.h" />
 		<Unit filename="include/DisjointDatabase.h" />
+		<Unit filename="include/Idastar-inl.h" />
+		<Unit filename="include/Idastar.h" />
+		<Unit filename="include/InputParser.h" />
 		<Unit filename="include/PartialDatabase.h" />
 		<Unit filename="include/Pattern.h" />
 		<Unit filename="include/Point.h" />
 		<Unit filename="include/State.h" />
+		<Unit filename="include/flat_hash_map.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="src/Board.cpp" />
 		<Unit filename="src/DisjointDatabase.cpp" />
