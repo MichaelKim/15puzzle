@@ -50,9 +50,9 @@ bool Idastar<THeuristic, TState>::dfs(TState& node, int g, Move prevMove) {
 
     const auto& moves = node.getMoves(prevMove);
     for (auto move : moves) {
-        node.applyMove(move);
+        int cost = node.applyMove(move);
 
-        if (dfs(node, g + 1, move)) {
+        if (dfs(node, g + cost, move)) {
             path.push_back(move);
             return true;
         }

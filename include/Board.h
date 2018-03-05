@@ -29,7 +29,7 @@ public:
 
     uint64_t getId() const;
     const std::vector<Move>& getMoves(Move prevMove);
-    void applyMove(Move dir);
+    int applyMove(Move dir);
     void undoMove(Move dir);
 
     friend std::ostream& operator<<(std::ostream& out, const Move& move);

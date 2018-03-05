@@ -104,26 +104,26 @@ const std::vector<Move>& Board::getMoves(Move prevMove) {
     return moves[12];                           // 0, 2, 3
 }
 
-void Board::applyMove(Move dir) {
+int Board::applyMove(Move dir) {
     switch (dir) {
         case Move::N:
             setCell(blank.x, blank.y, getCell(blank.x, blank.y - 1));
             blank.y -= 1;
-            return;
+            return 1;
         case Move::E:
             setCell(blank.x, blank.y, getCell(blank.x + 1, blank.y));
             blank.x += 1;
-            return;
+            return 1;
         case Move::S:
             setCell(blank.x, blank.y, getCell(blank.x, blank.y + 1));
             blank.y += 1;
-            return;
+            return 1;
         case Move::W:
             setCell(blank.x, blank.y, getCell(blank.x - 1, blank.y));
             blank.x -= 1;
-            return;
+            return 1;
         default:
-            return;
+            return 0;
     }
 }
 
