@@ -23,14 +23,16 @@ int DisjointDatabase::getHeuristic(const Board& board) {
     fill(ids.begin(), ids.end(), 0);
     uint64_t temp = board.getId();
 
-    for (int i = 0; i < board.WIDTH * board.HEIGHT; i++) {
-        uint64_t n = (temp & (0xfull << (4 * i))) >> (4 * i);
+    unroller(
+        [&](const int& i) {
+            uint64_t n = (temp & (0xfull << (4 * i))) >> (4 * i);
 
-        int j = where[n];
-        if (j >= 0 && j < numDatabases) {
-            ids[j] |= n << (4 * i);
-        }
-    }
+            int j = where[n];
+            if (j >= 0 && j < numDatabases) {
+                ids[j] |= n << (4 * i);
+            }
+        },
+        0, uint_<Board::MAX_LENGTH - 1>());
 
     int totalDist = 0;
     for (int i = 0; i < numDatabases; i++) {

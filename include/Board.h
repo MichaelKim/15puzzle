@@ -21,6 +21,7 @@ private:
     inline Point getBlank();
 
 public:
+    static const int MAX_LENGTH = 16;
     const int WIDTH, HEIGHT;
 
     Board(std::vector<std::vector<int>> g);
