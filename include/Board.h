@@ -1,6 +1,7 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include "DisjointDatabase.h"
 #include "Point.h"
 
 #include <ostream>
@@ -10,30 +11,44 @@ class Board {
 public:
     enum class Move : int { Null, N, E, W, S };
 
-private:
-    uint64_t grid;
-    Point blank;
+    class State {
+    public:
+        uint64_t getID() const {
+            return grid;
+        }
+        Point getBlank() {
+            return blank;
+        }
+        int getHeuristic() {
+            return h;
+        }
+        uint64_t grid;
+        Point blank;
+        int h;
+    };
 
+private:
     static const std::vector<std::vector<Move>> moves;
 
-    inline void setCell(int x, int y, int n);
-    inline int getCell(int x, int y) const;
-    inline Point getBlank();
+    DisjointDatabase* db;
+
+    inline void setCell(State& state, int x, int y, int n);
+    inline int getCell(const State& state, int x, int y) const;
 
 public:
     static const int MAX_LENGTH = 16;
     const int WIDTH, HEIGHT;
 
-    Board(std::vector<std::vector<int>> g);
+    Board(DisjointDatabase* db, int w, int h);
     virtual ~Board();
 
-    uint64_t getId() const;
-    const std::vector<Move>& getMoves(Move prevMove);
-    int applyMove(Move dir);
-    void undoMove(Move dir);
+    State init(std::vector<std::vector<int>> g);
+    const std::vector<Move>& getMoves(const State& state, Move prevMove);
+    int applyMove(State& state, Move dir);
+    void undoMove(State& state, Move dir);
 
     friend std::ostream& operator<<(std::ostream& out, const Move& move);
-    friend std::ostream& operator<<(std::ostream& out, const Board& board);
+    friend std::ostream& operator<<(std::ostream& out, const State& state);
 };
 
 #endif  // BOARD_H

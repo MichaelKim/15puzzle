@@ -46,19 +46,19 @@ vector<vector<vector<int>>> readDatabase(istream& input) {
     return grids;
 }
 
-vector<Board> readBoards(istream& input) {
+vector<Board::State> readBoards(Board& domain, istream& input) {
     int width, height, boardNum;
     input >> width >> height >> boardNum;
 
-    vector<Board> boards;
+    vector<Board::State> boards;
     for (int i = 0; i < boardNum; i++) {
-        vector<vector<int>> board(height, vector<int>(width, 0));
+        vector<vector<int>> grid(height, vector<int>(width, 0));
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                input >> board[y][x];
+                input >> grid[y][x];
             }
         }
-        boards.push_back(Board(board));
+        boards.push_back(domain.init(grid));
     }
     return boards;
 }
@@ -93,21 +93,11 @@ int main(int argc, const char* argv[]) {
 
     const int WIDTH = grids[0][0].size(), HEIGHT = grids[0].size();
 
-    // Reading board file
-    vector<Board> startBoards;
-    if (ip.boardExists()) {
-        ifstream input = ifstream(ip.getBoard());
-        startBoards = readBoards(input);
-        input.close();
-    }
-    else {
-        startBoards = readBoards(cin);
-    }
-
     // Setup database
     auto dbBegin = chrono::steady_clock::now();
 
     DisjointDatabase* db = new DisjointDatabase(WIDTH * HEIGHT, dbName, grids);
+    Board domain(db, WIDTH, HEIGHT);
 
     auto dbEnd = chrono::steady_clock::now();
     cout << "Database time taken: "
@@ -116,16 +106,26 @@ int main(int argc, const char* argv[]) {
                 1000000.0
          << endl;
 
+    // Reading board file
+    vector<Board::State> startBoards;
+    if (ip.boardExists()) {
+        ifstream input = ifstream(ip.getBoard());
+        startBoards = readBoards(domain, input);
+        input.close();
+    }
+    else {
+        startBoards = readBoards(domain, cin);
+    }
+
     // Setup search
-    Idastar<DisjointDatabase, Board>* search =
-        new Idastar<DisjointDatabase, Board>(db);
+    Idastar<Board>* search = new Idastar<Board>(domain);
 
     vector<vector<Board::Move>> answers;
 
     // Start search
     auto solveBegin = chrono::steady_clock::now();
 
-    for (const Board& startBoard : startBoards) {
+    for (const Board::State& startBoard : startBoards) {
         vector<Board::Move> solution = search->solve(startBoard);
 
         if (solution.size() == 0) {
@@ -152,18 +152,18 @@ int main(int argc, const char* argv[]) {
     // Check solutions
     cout << "Checking solutions:" << endl;
     for (int i = 0; i < startBoards.size(); i++) {
-        Board b = startBoards[i];
+        Board::State b = startBoards[i];
         auto solution = answers[i];
 
         for (int j = solution.size() - 1; j >= 0; j--) {
-            b.applyMove(solution[j]);
+            domain.applyMove(b, solution[j]);
             if (ip.showInteractive()) {
                 cout << (solution.size() - j) << endl;
                 cout << b << endl;
                 std::this_thread::sleep_for(std::chrono::milliseconds(200));
             }
         }
-        cout << hex << b.getId() << dec << endl;
+        cout << hex << b.getID() << dec << endl;
     }
 
     delete db;

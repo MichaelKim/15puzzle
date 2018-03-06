@@ -18,7 +18,7 @@ public:
                      std::vector<std::vector<std::vector<int>>> grids);
     virtual ~DisjointDatabase();
 
-    int getHeuristic(const Board& board);
+    int getHeuristic(const Board::State& state);
 };
 
 template <size_t N>

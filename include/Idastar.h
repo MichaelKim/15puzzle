@@ -3,23 +3,24 @@
 
 #include <vector>
 
-template <class THeuristic, class TState>
+template <class TDomain>
 class Idastar {
 private:
-    using Move = typename TState::Move;
+    using Move = typename TDomain::Move;
+    using State = typename TDomain::State;
 
-    THeuristic* heuristic;
+    TDomain& domain;
     std::vector<Move> path;
     int minCost;
     int limit;
     uint64_t nodes;
 
 public:
-    Idastar(THeuristic* h);
+    Idastar(TDomain d);
     virtual ~Idastar();
 
-    std::vector<Move> solve(TState start);
-    bool dfs(TState& root, int g, Move prevMove);
+    std::vector<Move> solve(State start);
+    bool dfs(State& root, int g, Move prevMove);
 };
 
 #include "Idastar-inl.h"

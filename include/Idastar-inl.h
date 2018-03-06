@@ -4,17 +4,16 @@
 
 #define INF 1000000
 
-template <class THeuristic, class TState>
-Idastar<THeuristic, TState>::Idastar(THeuristic* h)
-    : heuristic(h), path({}), minCost(INF), limit(0), nodes(0) {}
+template <class TDomain>
+Idastar<TDomain>::Idastar(TDomain d)
+    : domain(d), path({}), minCost(INF), limit(0), nodes(0) {}
 
-template <class THeuristic, class TState>
-std::vector<typename TState::Move> Idastar<THeuristic, TState>::solve(
-    TState start) {
+template <class TDomain>
+std::vector<typename TDomain::Move> Idastar<TDomain>::solve(State start) {
     // Uses IDA* with additive pattern disjoint database heuristics
     path.clear();
 
-    limit = heuristic->getHeuristic(start);
+    limit = start.getHeuristic();
     std::cout << "Limit, Nodes:";
 
     Move prevMove = Move::Null;
@@ -30,9 +29,9 @@ std::vector<typename TState::Move> Idastar<THeuristic, TState>::solve(
     return path;
 }
 
-template <class THeuristic, class TState>
-bool Idastar<THeuristic, TState>::dfs(TState& node, int g, Move prevMove) {
-    int h = heuristic->getHeuristic(node);
+template <class TDomain>
+bool Idastar<TDomain>::dfs(State& node, int g, Move prevMove) {
+    int h = node.getHeuristic();
     int f = g + h;
 
     if (f <= limit) {
@@ -48,22 +47,20 @@ bool Idastar<THeuristic, TState>::dfs(TState& node, int g, Move prevMove) {
     }
     nodes++;
 
-    const auto& moves = node.getMoves(prevMove);
+    const auto& moves = domain.getMoves(node, prevMove);
     for (auto move : moves) {
-        int cost = node.applyMove(move);
+        int cost = domain.applyMove(node, move);
 
         if (dfs(node, g + cost, move)) {
             path.push_back(move);
             return true;
         }
 
-        node.undoMove(move);
+        domain.undoMove(node, move);
     }
 
     return false;
 }
 
-template <class THeuristic, class TState>
-Idastar<THeuristic, TState>::~Idastar() {
-    delete heuristic;
-}
+template <class TDomain>
+Idastar<TDomain>::~Idastar() {}
