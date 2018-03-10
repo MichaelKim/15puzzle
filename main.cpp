@@ -27,6 +27,8 @@ void usage() {
             "        Print this help\n"
             "    -i, --interactive\n"
             "        Show a playback of each solution"
+            "    -p, --parallel\n"
+            "        Run multithreaded IDA*"
          << endl;
 }
 
@@ -64,10 +66,10 @@ vector<Board> readBoards(istream& input) {
 }
 
 int main(int argc, const char* argv[]) {
-    InputParser ip(argc, argv);
+    InputParser::parse(argc, argv);
 
     // Help output
-    if (ip.showHelp()) {
+    if (InputParser::showHelp()) {
         usage();
         return 0;
     }
@@ -75,8 +77,8 @@ int main(int argc, const char* argv[]) {
     // Reading database file
     string dbName = "def";
     vector<vector<vector<int>>> grids;
-    if (ip.databaseExists()) {
-        string dbPath = ip.getDatabase();
+    if (InputParser::databaseExists()) {
+        string dbPath = InputParser::getDatabase();
         dbName = dbPath.substr(dbPath.find_last_of("/") + 1);
 
         ifstream input = ifstream(dbPath);
@@ -90,13 +92,18 @@ int main(int argc, const char* argv[]) {
         cout << "Error: must have at least one database" << endl;
         return 1;
     }
+    else if (grids.size() > DisjointDatabase::MAX_DATABASE) {
+        cout << "Error: maximum number of databases is "
+             << DisjointDatabase::MAX_DATABASE << endl;
+        return 1;
+    }
 
     const int WIDTH = grids[0][0].size(), HEIGHT = grids[0].size();
 
     // Reading board file
     vector<Board> startBoards;
-    if (ip.boardExists()) {
-        ifstream input = ifstream(ip.getBoard());
+    if (InputParser::boardExists()) {
+        ifstream input = ifstream(InputParser::getBoard());
         startBoards = readBoards(input);
         input.close();
     }
@@ -157,7 +164,7 @@ int main(int argc, const char* argv[]) {
 
         for (int j = solution.size() - 1; j >= 0; j--) {
             b.applyMove(solution[j]);
-            if (ip.showInteractive()) {
+            if (InputParser::showInteractive()) {
                 cout << (solution.size() - j) << endl;
                 cout << b << endl;
                 std::this_thread::sleep_for(std::chrono::milliseconds(200));

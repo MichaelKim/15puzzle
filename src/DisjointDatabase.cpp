@@ -4,9 +4,7 @@
 
 DisjointDatabase::DisjointDatabase(
     int len, std::string name, std::vector<std::vector<std::vector<int>>> grids)
-    : numDatabases(grids.size()),
-      where(std::vector<int>(len, -1)),
-      ids(std::vector<uint64_t>(numDatabases, 0)) {
+    : numDatabases(grids.size()), where(std::vector<int>(len, -1)) {
     for (int i = 0; i < grids.size(); i++) {
         PartialDatabase* pd = new PartialDatabase(grids[i], name, i);
         databases.push_back(pd);
@@ -20,7 +18,7 @@ DisjointDatabase::DisjointDatabase(
 }
 
 int DisjointDatabase::getHeuristic(const Board& board) {
-    fill(ids.begin(), ids.end(), 0);
+    uint64_t ids[MAX_DATABASE] = {};
     uint64_t temp = board.getId();
 
     unroller(

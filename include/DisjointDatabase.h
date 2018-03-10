@@ -11,9 +11,9 @@ private:
     std::vector<PartialDatabase*> databases;
     int numDatabases;
     std::vector<int> where;
-    std::vector<uint64_t> ids;
 
 public:
+    static const int MAX_DATABASE = 4;
     DisjointDatabase(int len, std::string name,
                      std::vector<std::vector<std::vector<int>>> grids);
     virtual ~DisjointDatabase();

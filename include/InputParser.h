@@ -7,73 +7,25 @@
 
 class InputParser {
 public:
-    InputParser(int argc, const char* argv[]) {
-        if (argc > 1 && argv[1][0] == '-') {
-            std::string option;
-            for (int i = 1; i < argc; i++) {
-                if (argv[i][0] == '-') {  // new option
-                    option = argv[i];
-                    tokens[option] = std::vector<std::string>();
-                }
-                else {  // option argument
-                    tokens[option].push_back(std::string(argv[i]));
-                }
-            }
-        }
-    }
-    ~InputParser() {}
+    static void parse(int argc, const char* argv[]);
+    static bool showHelp();
+    static bool databaseExists();
+    static bool boardExists();
+    static bool showInteractive();
+    static bool runParallel();
 
-    bool showHelp() {
-        return optionExists("-h") || optionExists("--help");
-    }
-
-    bool databaseExists() {
-        return optionExists("-d") || optionExists("--database");
-    }
-
-    bool boardExists() {
-        return optionExists("-b") || optionExists("--board");
-    }
-
-    bool showInteractive() {
-        return optionExists("-i") || optionExists("--interactive");
-    }
-
-    std::string getDatabase() {
-        auto args = getMultipleArgs({"-d", "--database"});
-        if (args.size() > 0) {
-            return args[0];
-        }
-        return "";
-    }
-
-    std::string getBoard() {
-        auto args = getMultipleArgs({"-b", "--board"});
-        if (args.size() > 0) {
-            return args[0];
-        }
-        return "";
-    }
+    static std::string getDatabase();
+    static std::string getBoard();
 
 private:
-    std::unordered_map<std::string, std::vector<std::string>> tokens;
+    static std::unordered_map<std::string, std::vector<std::string>> tokens;
 
-    bool optionExists(std::string option) {
-        return tokens.find(option) != tokens.end();
-    }
+    InputParser() {}
 
-    std::vector<std::string> getArgs(std::string option) {
-        return tokens[option];
-    }
-
-    std::vector<std::string> getMultipleArgs(std::vector<std::string> options) {
-        std::vector<std::string> args;
-        for (auto option : options) {
-            auto nextArgs = getArgs(option);
-            args.insert(args.end(), nextArgs.begin(), nextArgs.end());
-        }
-        return args;
-    }
+    static bool optionExists(std::string option);
+    static std::vector<std::string> getArgs(std::string option);
+    static std::vector<std::string> getMultipleArgs(
+        std::vector<std::string> options);
 };
 
 #endif
