@@ -26,9 +26,9 @@ void usage() {
             "    -h, --help\n"
             "        Print this help\n"
             "    -i, --interactive\n"
-            "        Show a playback of each solution"
+            "        Show a playback of each solution\n"
             "    -p, --parallel\n"
-            "        Run multithreaded IDA*"
+            "        Run multithreaded IDA* (experimental)"
          << endl;
 }
 
@@ -121,7 +121,7 @@ int main(int argc, const char* argv[]) {
          << (chrono::duration_cast<chrono::microseconds>(dbEnd - dbBegin)
                  .count()) /
                 1000000.0
-         << endl;
+         << endl << endl;
 
     // Setup search
     Idastar<DisjointDatabase, Board>* search =
@@ -145,6 +145,13 @@ int main(int argc, const char* argv[]) {
             }
             cout << endl;
         }
+
+        auto singleSolveEnd = chrono::steady_clock::now();
+        cout << "Solve time taken: "
+             << (chrono::duration_cast<chrono::microseconds>(singleSolveEnd - solveBegin)
+                    .count()) /
+                    1000000.0
+             << endl << endl;
 
         answers.push_back(solution);
     }
