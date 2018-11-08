@@ -35,17 +35,23 @@ std::vector<typename TState::Move> Idastar<THeuristic, TState>::solve(
     }
 
     limit = heuristic->getHeuristic(start);
-    std::cout << "Limit, Nodes:";
 
-    Move prevMove = Move::Null;
-    while (path.size() == 0) {
-        minCost = INF;
-        std::cout << " " << limit << ", " << nodes << std::endl;
-        dfs(start, 0, prevMove, runParallel);
-        limit = minCost;
+    if (limit > 0) {
+        std::cout << "Limit, Nodes:";
+
+        Move prevMove = Move::Null;
+        while (path.size() == 0) {
+            minCost = INF;
+            std::cout << " " << limit << ", " << nodes << std::endl;
+            dfs(start, 0, prevMove, runParallel);
+            limit = minCost;
+        }
+
+        std::cout << "Nodes expanded: " << nodes << std::endl;
     }
-
-    std::cout << "Nodes expanded: " << nodes << std::endl;
+    else {
+        std::cout << "Already solved" << std::endl;
+    }
 
     return path;
 }
