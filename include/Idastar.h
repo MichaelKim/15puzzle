@@ -3,7 +3,6 @@
 
 #include "ctpl_stl.h"
 
-#include <mutex>
 #include <vector>
 
 template <class THeuristic, class TState>
@@ -11,7 +10,6 @@ class Idastar {
 private:
     using Move = typename TState::Move;
 
-    std::mutex mutex;
     ctpl::thread_pool pool;
     THeuristic* heuristic;
     std::vector<Move> path;
