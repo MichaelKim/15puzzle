@@ -5,10 +5,10 @@
 #include <unordered_map>
 #include <vector>
 
-#include "./include/Board.h"
-#include "./include/DisjointDatabase.h"
-#include "./include/Idastar.h"
-#include "./include/InputParser.h"
+#include "../include/Board.h"
+#include "../include/DisjointDatabase.h"
+#include "../include/Idastar.h"
+#include "../include/InputParser.h"
 
 using namespace std;
 
