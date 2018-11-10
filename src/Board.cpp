@@ -19,7 +19,8 @@ const std::vector<std::vector<Move>> Board::moves = {
 /* 10 */ {Move::U, Move::R, Move::D},
 /* 11 */ {Move::U, Move::R, Move::L},
 /* 12 */ {Move::U, Move::D, Move::L},
-/* 13 */ {Move::R, Move::D, Move::L}};
+/* 13 */ {Move::R, Move::D, Move::L},
+/* 14 */ {Move::U, Move::R, Move::D, Move::L}};
 
 Board::Board(std::vector<std::vector<int>> g)
     : WIDTH(g[0].size()), HEIGHT(g.size()) {
@@ -101,7 +102,8 @@ const std::vector<Move>& Board::getMoves(Move prevMove) {
     if (prevMove == Move::U) return moves[11];  // 0, 1, 3
     if (prevMove == Move::R) return moves[10];  // 0, 1, 2
     if (prevMove == Move::D) return moves[13];  // 1, 2, 3
-    return moves[12];                           // 0, 2, 3
+    if (prevMove == Move::L) return moves[12];  // 0, 2, 3
+    return moves[14];                           // 0, 1, 2, 3
 }
 
 int Board::applyMove(Move dir) {
