@@ -51,6 +51,8 @@ The parallel option is experimental, and will probably not speed up the solver. 
 
 Install the Emscripten SDK, then run `make web`.
 
+To run the demo webpage, serve `wbin/index.html` with your tool of choice.
+
 ### API
 
 TBD

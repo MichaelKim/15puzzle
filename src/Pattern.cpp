@@ -36,13 +36,13 @@ bool Pattern::canShift(int index, Direction dir) {
     int cellX = cells[index].x;
     int cellY = cells[index].y;
 
-    if (dir == Direction::N) {
+    if (dir == Direction::U) {
         return (cellY > 0 && getCell(cellX, cellY - 1) == 0);
     }
-    else if (dir == Direction::E) {
+    else if (dir == Direction::R) {
         return (cellX < WIDTH - 1 && getCell(cellX + 1, cellY) == 0);
     }
-    else if (dir == Direction::S) {
+    else if (dir == Direction::D) {
         return (cellY < HEIGHT - 1 && getCell(cellX, cellY + 1) == 0);
     }
     else {
@@ -60,16 +60,16 @@ uint64_t Pattern::getShiftId(int index, Direction dir) {
     int j = 0;
 
     switch (dir) {
-        case Direction::N:
+        case Direction::U:
             j = 4 * ((cellY - 1) * WIDTH + cellX);
             break;
-        case Direction::E:
+        case Direction::R:
             j = 4 * (cellY * WIDTH + (cellX + 1));
             break;
-        case Direction::S:
+        case Direction::D:
             j = 4 * ((cellY + 1) * WIDTH + cellX);
             break;
-        case Direction::W:
+        case Direction::L:
             j = 4 * (cellY * WIDTH + (cellX - 1));
             break;
         default:
@@ -88,19 +88,19 @@ void Pattern::shiftCell(int index, Direction dir) {
     setCell(cellX, cellY, 0);
 
     switch (dir) {
-        case Direction::N:
+        case Direction::U:
             setCell(cellX, cellY - 1, temp);
             cells[index].y--;
             break;
-        case Direction::E:
+        case Direction::R:
             setCell(cellX + 1, cellY, temp);
             cells[index].x++;
             break;
-        case Direction::S:
+        case Direction::D:
             setCell(cellX, cellY + 1, temp);
             cells[index].y++;
             break;
-        case Direction::W:
+        case Direction::L:
             setCell(cellX - 1, cellY, temp);
             cells[index].x--;
             break;

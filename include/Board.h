@@ -8,7 +8,7 @@
 
 class Board {
 public:
-    enum class Move : int { Null, N, E, W, S };
+    enum class Move : int { Null, U, R, D, L };
 
 private:
     uint64_t grid;
