@@ -5,34 +5,44 @@
 #include "../include/DisjointDatabase.h"
 #include "Idastar.h"
 
-typedef std::vector<std::vector<std::vector<int>>> Vec3Int;
+typedef std::vector<std::vector<int>> Vec2Int;
+typedef std::vector<Vec2Int> Vec3Int;
 
-std::vector<int> solve(Vec3Int grids, Vec3Int boards) {
-    std::vector<Board> startBoards;
-    for (int i = 0; i < boards.size(); i++) {
-        startBoards.push_back(Board(boards[i]));
-    }
+DisjointDatabase* db = nullptr;
+Idastar<DisjointDatabase, Board>* search = nullptr;
 
+void setup(Vec3Int grids) {
     const int WIDTH = grids[0][0].size(), HEIGHT = grids[0].size();
 
-    DisjointDatabase* db = new DisjointDatabase(WIDTH * HEIGHT, "def", grids);
-    Idastar<DisjointDatabase, Board>* search =
-        new Idastar<DisjointDatabase, Board>(db);
+    db = new DisjointDatabase(WIDTH * HEIGHT, "def", grids);
+    search = new Idastar<DisjointDatabase, Board>(db);
+}
 
-    std::vector<Board::Move> moves = search->solve(startBoards[0]);
+std::vector<int> solve(Vec2Int board) {
+    Board startBoard(board);
+
+    std::vector<Board::Move> moves = search->solve(startBoard);
     std::vector<int> solution;
 
-    for (auto& move: moves) {
-        solution.push_back(static_cast<int>(move));
-    }
 
-    delete search;
+    std::cout << "Solved: ";
+    for (auto it = moves.rbegin(); it != moves.rend(); ++it) {
+        std::cout << *it << " ";
+        solution.push_back(static_cast<int>(*it));
+    }
+    std::cout << std::endl;
 
     return solution;
 }
 
+void clean() {
+  delete search;
+}
+
 EMSCRIPTEN_BINDINGS(puzzle) {
+    emscripten::function("setup", &setup);
     emscripten::function("solve", &solve);
+    emscripten::function("clean", &clean);
     emscripten::register_vector<int>("VecInt");
     emscripten::register_vector<std::vector<int>>("Vec2Int");
     emscripten::register_vector<std::vector<std::vector<int>>>("Vec3Int");
