@@ -3,7 +3,7 @@ CXXFLAGS = -std=c++14 -Wall -Werror
 export EMCC_DEBUG=1
 
 puzzle: obj/main.o obj/Board.o obj/DisjointDatabase.o obj/InputParser.o obj/PartialDatabase.o obj/Pattern.o
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o bin/puzzle $^
 
 obj/main.o: src/main.cpp include/Board.h include/DisjointDatabase.h include/Idastar.h include/Idastar-inl.h include/ctpl_stl.h include/InputParser.h
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
@@ -20,7 +20,7 @@ obj/Pattern.o: src/Pattern.cpp include/Pattern.h include/Direction.h
 
 
 web: wobj/wasm.o wobj/Board.o wobj/DisjointDatabase.o wobj/PartialDatabase.o wobj/Pattern.o
-	em++ --bind --std=c++14 -o puzzle.js $^ \
+	em++ --bind --std=c++14 -o wbin/puzzle.js $^ \
 		-s WASM=1 -s ALLOW_MEMORY_GROWTH=1 \
 		-s "EXTRA_EXPORTED_RUNTIME_METHODS=['addOnPostRun']"
 
