@@ -3,21 +3,23 @@ function toMoves(sol) {
   return sol.map(m => MOVES[m]);
 }
 
-function Tile(x, y, num) {
+function Tile(x, y, num, width, height) {
   this.x = x;
   this.y = y;
 
   const el = document.createElement("div");
   el.className = "tile";
-  el.innerHTML = num;
-  el.style.gridColumnStart = x + 1;
-  el.style.gridRowStart = y + 1;
+  el.innerHTML = `<div class="inner">${num}</div>`;
+  el.style.width = width + "%";
+  el.style.height = height + "%";
+  el.style.top = y * width + "%";
+  el.style.left = x * height + "%";
 
   this.setPosition = (newX, newY) => {
     this.x = newX;
     this.y = newY;
-    el.style.gridColumnStart = newX + 1;
-    el.style.gridRowStart = newY + 1;
+    el.style.top = newY * width + "%";
+    el.style.left = newX * height + "%";
   };
 
   this.onClick = callback => {
@@ -39,10 +41,19 @@ function Board(width, height, direction) {
     ? [...Array(length - 1).keys()].map(i => i + 1).concat(0)
     : [...Array(length).keys()];
 
+  const tileWidth = 100 / width;
+  const tileHeight = 100 / height;
+
   const tiles = nums.reduce((acc, num) => {
     if (num === 0) return acc;
     const index = direction ? num - 1 : num;
-    const tile = new Tile(index % width, 0 | (index / width), num);
+    const tile = new Tile(
+      index % width,
+      0 | (index / width),
+      num,
+      tileWidth,
+      tileHeight
+    );
 
     tile.onClick(() => {
       const { x, y } = tile;
@@ -131,18 +142,17 @@ function Board(width, height, direction) {
     return chunked;
   };
 
-  this.applyMoves = soln => {
-    const moves = toMoves(soln);
+  this.applyMoves = moves => {
     let index = 0;
 
     const applyMove = () => {
       setTimeout(() => {
         const move = moves[index];
 
-        if (move === "D") this.moveDown();
-        else if (move === "L") this.moveLeft();
-        else if (move === "U") this.moveUp();
-        else if (move === "R") this.moveRight();
+        if (move === 1) this.moveDown();
+        else if (move === 2) this.moveLeft();
+        else if (move === 3) this.moveUp();
+        else if (move === 4) this.moveRight();
 
         if (++index < moves.length) applyMove();
       }, 500);
@@ -151,7 +161,7 @@ function Board(width, height, direction) {
   };
 }
 
-const board = new Board(3, 3, false);
+const board = new Board(4, 4, true);
 board.attach(document.getElementById("root"));
 
 const setupBtn = document.getElementById("setup-btn");
@@ -192,17 +202,16 @@ Module.addOnPostRun(() => {
     return arr;
   }
 
-  // const database555Reg = vec3([
-  //   [[1, 2, 3, 0], [5, 6, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
-  //   [[0, 0, 0, 4], [0, 0, 7, 8], [0, 0, 11, 12], [0, 0, 0, 0]],
-  //   [[0, 0, 0, 0], [0, 0, 0, 0], [9, 10, 0, 0], [13, 14, 15, 0]]
-  // ]);
-  // const database8reg = vec3([[[1, 2, 3], [4, 5, 6], [7, 8, 0]]]);
-
+  const database555Reg = vec3([
+    [[1, 2, 3, 0], [5, 6, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]],
+    [[0, 0, 0, 4], [0, 0, 7, 8], [0, 0, 11, 12], [0, 0, 0, 0]],
+    [[0, 0, 0, 0], [0, 0, 0, 0], [9, 10, 0, 0], [13, 14, 15, 0]]
+  ]);
+  const database8reg = vec3([[[1, 2, 3], [4, 5, 6], [7, 8, 0]]]);
   const database8rev = vec3([[[0, 1, 2], [3, 4, 5], [6, 7, 8]]]);
 
   setupBtn.addEventListener("click", () => {
-    Module.setup(database8rev);
+    Module.setup(database555Reg);
     solveBtn.disabled = false;
   });
 
