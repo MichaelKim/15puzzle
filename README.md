@@ -4,7 +4,7 @@ This is a solver for the generalized 15-puzzle written in C++. It can optimally 
 
 To solve a puzzle, it uses the IDA\* algorithm with an [additive disjoint pattern database](https://www.sciencedirect.com/science/article/pii/S0004370201000923).
 
-This can be built either as an executable or a WebAssembly file for the web.
+This solver has also been ported to WebAssembly using Emscripten [here](https://github.com/LenKagamine/15puzzle.js).
 
 ## Executable
 
@@ -12,8 +12,10 @@ This can be built either as an executable or a WebAssembly file for the web.
 
 ``` sh
 make
+
 # or
-make puzzle
+
+g++ -std=c++14 src/*.cpp -o bin/puzzle
 ```
 
 ### Usage
@@ -44,18 +46,6 @@ cat databases/8-reg boards/8-reg | ./puzzle
 ```
 
 The parallel option is experimental, and will probably not speed up the solver. If anything, it might be slower than running normally.
-
-## WebAssembly
-
-### Build
-
-Install the Emscripten SDK, then run `make web`.
-
-To run the demo webpage, serve `wbin/index.html` with your tool of choice.
-
-### API
-
-TBD
 
 ## File Formats
 

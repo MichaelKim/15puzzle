@@ -89,11 +89,11 @@ int main(int argc, const char* argv[]) {
         grids = readDatabase(cin);
     }
     if (grids.size() == 0) {
-        cout << "Error: must have at least one database" << endl;
+        cerr << "Error: must have at least one database" << endl;
         return 1;
     }
     else if (grids.size() > DisjointDatabase::MAX_DATABASE) {
-        cout << "Error: maximum number of databases is "
+        cerr << "Error: maximum number of databases is "
              << DisjointDatabase::MAX_DATABASE << endl;
         return 1;
     }
@@ -133,7 +133,9 @@ int main(int argc, const char* argv[]) {
     auto solveBegin = chrono::steady_clock::now();
 
     for (const Board& startBoard : startBoards) {
+        auto singleSolveBegin = chrono::steady_clock::now();
         vector<Board::Move> solution = search->solve(startBoard);
+        auto singleSolveEnd = chrono::steady_clock::now();
 
         if (solution.size() == 0) {
             cout << "No solution found!" << endl;
@@ -146,9 +148,8 @@ int main(int argc, const char* argv[]) {
             cout << endl;
         }
 
-        auto singleSolveEnd = chrono::steady_clock::now();
         cout << "Solve time taken: "
-             << (chrono::duration_cast<chrono::microseconds>(singleSolveEnd - solveBegin)
+             << (chrono::duration_cast<chrono::microseconds>(singleSolveEnd - singleSolveBegin)
                     .count()) /
                     1000000.0
              << endl << endl;
