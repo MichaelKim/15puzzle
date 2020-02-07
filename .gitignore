@@ -7,3 +7,4 @@ wobj/
 
 databases/*.dat
 .DS_Store
+.vscode/
