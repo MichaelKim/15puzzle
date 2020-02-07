@@ -58,71 +58,83 @@ const std::vector<Move>& Board::generateMoveList(int x, int y, Move prevMove) {
 }
 
 Board::Board(std::vector<std::vector<int>> g)
-    : WIDTH(g[0].size()), HEIGHT(g.size()) {
-    grid = 0;
+    : grid(0), positions(0), WIDTH(g[0].size()), HEIGHT(g.size()) {
     for (int y = HEIGHT - 1; y >= 0; y--) {
         for (int x = WIDTH - 1; x >= 0; x--) {
-            if (g[y][x] == 0) {
-                blank = {x, y};
-            }
+            positions |= (uint64_t)(y * WIDTH + x) << (4 * g[y][x]);
             grid = grid * 16 + g[y][x];
         }
     }
 
     // x, y, prevMove, moves[]
-    moveList = std::vector<std::vector<std::vector<std::vector<Move>>>>(
-        HEIGHT, std::vector<std::vector<std::vector<Move>>>(
-                    WIDTH, std::vector<std::vector<Move>>(5)));
+    moveList = std::vector<std::vector<std::vector<Move>>>(
+        WIDTH * HEIGHT, std::vector<std::vector<Move>>(5));
 
     for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {
             for (int m = 0; m < 5; m++) {
-                moveList[y][x][m] =
+                moveList[y * WIDTH + x][m] =
                     generateMoveList(x, y, static_cast<Move>(m));
             }
         }
     }
+
+    // {0, 0}, {0, -1}, {1, 0}, {0, 1}, {-1, 0}};
+    deltas = std::vector<int>{0, -4 * WIDTH, 4, 4 * WIDTH, -4};
 }
 
-int Board::getCell(int x, int y) const {
-    int i = 4 * (y * WIDTH + x);
-    return ((grid & (0xfull << i)) >> i);
-}
+int Board::getBlank() const { return positions & 0xf; }
 
-void Board::setCell(int x, int y, int n) {
-    int i = 4 * (y * WIDTH + x);
-    grid = (grid & ~(0xfull << i)) | ((uint64_t)n << i);
-}
-
-uint64_t Board::getId() const {
-    // Set blank point to 0
-    return grid & ~(0xfull << (4 * (blank.y * WIDTH + blank.x)));
-}
-
-Point Board::getBlank() { return blank; }
+uint64_t Board::getPositions() const { return positions; }
 
 const std::vector<Move>& Board::getMoves(Move prevMove) {
     // Branchless lookup for moves
-    return moveList[blank.y][blank.x][static_cast<int>(prevMove)];
+    const int blank = getBlank();
+    return moveList[blank][static_cast<int>(prevMove)];
 }
 
 int Board::applyMove(Move dir) {
     // Will never be NULL
+    // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
-    setCell(blank.x, blank.y,
-            getCell(blank.x + delta.first, blank.y + delta.second));
-    blank.x += delta.first;
-    blank.y += delta.second;
+    const int blank = 4 * getBlank();
+    // Position of sliding tile
+    const int slidingPos = blank + delta;
+    // Value of sliding tile
+    const int slidingValue = (grid & (0xfull << slidingPos)) >> slidingPos;
+
+    // Set value of slid tile
+    grid = (grid & ~(0xfull << blank)) | ((uint64_t)slidingValue << blank);
+
+    // Set position of slid tile
+    positions = (positions & ~(0xfull << (4 * slidingValue))) |
+                ((uint64_t)(blank / 4) << (4 * slidingValue));
+
+    // Set position of blank tile
+    positions = (positions & ~0xf) | (slidingPos / 4);
+
     return 1;
 }
 
 void Board::undoMove(Move dir) {
     // Will never be NULL
+    // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
-    setCell(blank.x, blank.y,
-            getCell(blank.x - delta.first, blank.y - delta.second));
-    blank.x -= delta.first;
-    blank.y -= delta.second;
+    const int blank = 4 * getBlank();
+    // Position of sliding tile
+    const int slidingPos = blank - delta;
+    // Value of sliding tile
+    const int slidingValue = (grid & (0xfull << slidingPos)) >> slidingPos;
+
+    // Set value of slid tile
+    grid = (grid & ~(0xfull << blank)) | ((uint64_t)slidingValue << blank);
+
+    // Set position of slid tile
+    positions = (positions & ~(0xfull << (4 * slidingValue))) |
+                ((uint64_t)(blank / 4) << (4 * slidingValue));
+
+    // Set position of blank tile
+    positions = (positions & ~0xf) | (slidingPos / 4);
 }
 
 Board::~Board() {}
@@ -148,12 +160,15 @@ std::ostream& operator<<(std::ostream& out, const Move& move) {
 }
 
 std::ostream& operator<<(std::ostream& out, const Board& board) {
+    const int blank = board.positions & 0xf;
     for (int y = 0; y < board.HEIGHT; y++) {
         for (int x = 0; x < board.WIDTH; x++) {
-            if (x == board.blank.x && y == board.blank.y) {
+            const int i = y * board.WIDTH + x;
+            if (i == blank) {
                 out << std::setw(3) << 0;
             } else {
-                out << std::setw(3) << board.getCell(x, y);
+                out << std::setw(3)
+                    << ((board.grid & (0xfull << (4 * i))) >> (4 * i));
             }
         }
         out << std::endl;

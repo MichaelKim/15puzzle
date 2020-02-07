@@ -2,19 +2,23 @@
 
 #include "../include/Board.h"
 
+#include <numeric>
+
 DisjointDatabase::DisjointDatabase(
-    int len, std::string name, std::vector<std::vector<std::vector<int>>> grids)
-    : numDatabases(grids.size()), where(std::vector<int>(len, -1)) {
+    int len, std::string name,
+    std::vector<std::vector<std::vector<int>>> grids) {
+    std::vector<int> where(len, -1);
+
     for (int i = 0; i < grids.size(); i++) {
         PartialDatabase* pd = new PartialDatabase(grids[i], name, i);
         databases.push_back(pd);
 
-        for (auto it : pd->cells) {
-            if (where[it.first] != -1) {
+        for (auto tile : pd->tiles) {
+            if (where[tile] != -1) {
                 throw "Error: patterns overlapping";
             }
 
-            where[it.first] = i;
+            where[tile] = i;
         }
     }
 
@@ -35,26 +39,14 @@ DisjointDatabase::DisjointDatabase(
 }
 
 int DisjointDatabase::getHeuristic(const Board& board) {
-    uint64_t ids[MAX_DATABASE] = {};
-    uint64_t temp = board.getId();
+    uint64_t positions = board.getPositions();
 
-    for (int i = 0; i < 16; i++) {
-        int n = temp & 0xf;
-        temp >>= 4;
-
-        int j = where[n];
-
-        // If n is the blank tile, n = 0
-        // The blank tile (or any tile that isn't covered by a pattern)
-        // has where[n] = 0. So, performing this operation
-        // is safe for the blank tile, and a noop.
-        ids[j] |= (uint64_t)n << (4 * i);
-    }
-
-    int totalDist = 0;
-    for (int i = 0; i < numDatabases; i++) {
-        totalDist += databases[i]->distMap[ids[i]];
-    }
+    int totalDist =
+        std::transform_reduce(databases.begin(), databases.end(), 0,
+                              [](int a, int b) { return a + b; },
+                              [positions](const auto& partial) {
+                                  return partial->getHeuristic(positions);
+                              });
 
     return totalDist;
 }

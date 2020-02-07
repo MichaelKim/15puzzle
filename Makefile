@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++14 -Wall -Werror
+CXXFLAGS = -std=c++17 -Wall -O3 -g
 
 puzzle: obj/main.o obj/Board.o obj/DisjointDatabase.o obj/InputParser.o obj/PartialDatabase.o obj/Pattern.o | bin
 	$(CXX) $(CXXFLAGS) -o bin/puzzle $^

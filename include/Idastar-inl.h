@@ -29,8 +29,7 @@ std::vector<typename TState::Move> Idastar<THeuristic, TState>::solve(
 
     if (runParallel) {
         std::cout << "Running with " << pool.size() << " threads" << std::endl;
-    }
-    else {
+    } else {
         std::cout << "Running single threaded" << std::endl;
     }
 
@@ -48,8 +47,7 @@ std::vector<typename TState::Move> Idastar<THeuristic, TState>::solve(
         }
 
         std::cout << "Nodes expanded: " << nodes << std::endl;
-    }
-    else {
+    } else {
         std::cout << "Already solved" << std::endl;
     }
 
@@ -69,8 +67,7 @@ bool Idastar<THeuristic, TState>::dfs(TState& node, int g, Move prevMove,
             found = true;
             return true;
         }
-    }
-    else {
+    } else {
         if (f < minCost) {
             minCost = f;
         }
@@ -81,8 +78,7 @@ bool Idastar<THeuristic, TState>::dfs(TState& node, int g, Move prevMove,
         if (dfsParallel(node, g, prevMove)) {
             return true;
         }
-    }
-    else {
+    } else {
         const auto& moves = node.getMoves(prevMove);
         for (auto move : moves) {
             int cost = node.applyMove(move);

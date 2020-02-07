@@ -12,10 +12,12 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
     : filename("databases/" + dbName + "-" + std::to_string(index) + ".dat"),
       pattern(Pattern(grid)) {
     int count = 0;
+    std::unordered_map<int, int> cells;
     for (int y = 0; y < pattern.HEIGHT; y++) {
         for (int x = 0; x < pattern.WIDTH; x++) {
             if (grid[y][x] > 0) {
                 cells[grid[y][x]] = count++;
+                tiles.push_back(grid[y][x]);
             }
         }
     }
@@ -26,8 +28,7 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
         std::cout << "Generating database" << std::endl;
         generateDists();
         saveDists();
-    }
-    else {
+    } else {
         // Read database from file
         std::cout << "Parsing database" << std::endl;
 
@@ -81,8 +82,7 @@ void PartialDatabase::generateDists() {
             std::cout << dist << ": " << count << std::endl;
             dist = curr.dist;
             count = 1;
-        }
-        else
+        } else
             count++;
 
         for (int i = 0; i < curr.board.cells.size(); i++) {
@@ -115,8 +115,7 @@ void PartialDatabase::saveDists() {
     if (!file.good()) {
         std::cerr << "Could not generate database file: " + filename
                   << std::endl;
-    }
-    else {
+    } else {
         // Board dimensions (width, height)
         // file << board.grid[0].size() << " " << board.grid.size() << endl;
         // Number of cells, locations of cells (id)
@@ -128,6 +127,17 @@ void PartialDatabase::saveDists() {
 
         file.close();
     }
+}
+
+int PartialDatabase::getHeuristic(const uint64_t& positions) {
+    uint64_t partialPos = 0;
+
+    for (auto tile : tiles) {
+        int pos = (positions >> (4 * tile)) & 0xf;
+        partialPos |= (uint64_t)tile << (4 * pos);
+    }
+
+    return distMap[partialPos];
 }
 
 PartialDatabase::~PartialDatabase() {}

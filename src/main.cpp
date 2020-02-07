@@ -84,17 +84,11 @@ int main(int argc, const char* argv[]) {
         ifstream input = ifstream(dbPath);
         grids = readDatabase(input);
         input.close();
-    }
-    else {
+    } else {
         grids = readDatabase(cin);
     }
     if (grids.size() == 0) {
         cerr << "Error: must have at least one database" << endl;
-        return 1;
-    }
-    else if (grids.size() > DisjointDatabase::MAX_DATABASE) {
-        cerr << "Error: maximum number of databases is "
-             << DisjointDatabase::MAX_DATABASE << endl;
         return 1;
     }
 
@@ -106,8 +100,7 @@ int main(int argc, const char* argv[]) {
         ifstream input = ifstream(InputParser::getBoard());
         startBoards = readBoards(input);
         input.close();
-    }
-    else {
+    } else {
         startBoards = readBoards(cin);
     }
 
@@ -121,7 +114,8 @@ int main(int argc, const char* argv[]) {
          << (chrono::duration_cast<chrono::microseconds>(dbEnd - dbBegin)
                  .count()) /
                 1000000.0
-         << endl << endl;
+         << endl
+         << endl;
 
     // Setup search
     Idastar<DisjointDatabase, Board>* search =
@@ -139,8 +133,7 @@ int main(int argc, const char* argv[]) {
 
         if (solution.size() == 0) {
             cout << "No solution found!" << endl;
-        }
-        else {
+        } else {
             cout << "Solution: " << solution.size() << " steps" << endl;
             for (auto dir : solution) {
                 cout << dir << " ";
@@ -149,10 +142,12 @@ int main(int argc, const char* argv[]) {
         }
 
         cout << "Solve time taken: "
-             << (chrono::duration_cast<chrono::microseconds>(singleSolveEnd - singleSolveBegin)
-                    .count()) /
+             << (chrono::duration_cast<chrono::microseconds>(singleSolveEnd -
+                                                             singleSolveBegin)
+                     .count()) /
                     1000000.0
-             << endl << endl;
+             << endl
+             << endl;
 
         answers.push_back(solution);
     }
@@ -178,7 +173,7 @@ int main(int argc, const char* argv[]) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(200));
             }
         }
-        cout << hex << b.getId() << dec << endl;
+        cout << b << endl;
     }
 
     delete db;
