@@ -9,10 +9,27 @@ DisjointDatabase::DisjointDatabase(
         PartialDatabase* pd = new PartialDatabase(grids[i], name, i);
         databases.push_back(pd);
 
-        for (int j = 0; j < len; j++) {
-            if (pd->cells.find(j) != pd->cells.end()) {
-                where[j] = i;
+        for (auto it : pd->cells) {
+            if (where[it.first] != -1) {
+                throw "Error: patterns overlapping";
             }
+
+            where[it.first] = i;
+        }
+    }
+
+    // Check that the patterns perfectly cover the board
+    // (except for the blank tile)
+    bool foundBlank = false;
+    for (auto& i : where) {
+        if (i == -1) {
+            if (foundBlank) {
+                throw "Error: found multiple blank tiles";
+            }
+
+            // Assume blank tile
+            foundBlank = true;
+            i = 0;
         }
     }
 }
@@ -21,16 +38,18 @@ int DisjointDatabase::getHeuristic(const Board& board) {
     uint64_t ids[MAX_DATABASE] = {};
     uint64_t temp = board.getId();
 
-    unroller(
-        [&](const int& i) {
-            uint64_t n = (temp & (0xfull << (4 * i))) >> (4 * i);
+    for (int i = 0; i < 16; i++) {
+        int n = temp & 0xf;
+        temp >>= 4;
 
-            int j = where[n];
-            if (j >= 0 && j < numDatabases) {
-                ids[j] |= n << (4 * i);
-            }
-        },
-        0, uint_<Board::MAX_LENGTH - 1>());
+        int j = where[n];
+
+        // If n is the blank tile, n = 0
+        // The blank tile (or any tile that isn't covered by a pattern)
+        // has where[n] = 0. So, performing this operation
+        // is safe for the blank tile, and a noop.
+        ids[j] |= (uint64_t)n << (4 * i);
+    }
 
     int totalDist = 0;
     for (int i = 0; i < numDatabases; i++) {
