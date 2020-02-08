@@ -1,5 +1,7 @@
 #include "../include/DisjointDatabase.h"
 
+#include <iostream>
+
 DisjointDatabase::DisjointDatabase(
     int len, std::string name, std::vector<std::vector<std::vector<int>>> grids)
     : where(len, -1) {
@@ -9,7 +11,8 @@ DisjointDatabase::DisjointDatabase(
 
         for (auto tile : pd->tiles) {
             if (where[tile] != -1) {
-                throw "Error: patterns overlapping";
+                std::cout << "Error: patterns overlapping" << std::endl;
+                throw;
             }
 
             where[tile] = i;
@@ -22,7 +25,8 @@ DisjointDatabase::DisjointDatabase(
     for (auto& i : where) {
         if (i == -1) {
             if (foundBlank) {
-                throw "Error: found multiple blank tiles";
+                std::cout << "Error: found multiple blank tiles" << std::endl;
+                throw;
             }
 
             // Assume blank tile

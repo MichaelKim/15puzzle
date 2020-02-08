@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <queue>
+#include <unordered_map>
 
 PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
                                  std::string dbName, int index)
@@ -32,12 +33,16 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
         // Read database from file
         std::cout << "Parsing database" << std::endl;
 
-        uint64_t id;
+        uint64_t id = 0;
         int dist;
-
-        while (file.read((char*)&id, sizeof(id)) &&
-               file.read((char*)&dist, sizeof(dist))) {
+        while (file.read((char*)&dist, sizeof(dist))) {
             distMap[id] = dist;
+            id++;
+        }
+
+        if (id != pattern.size()) {
+            std::cout << "Error: incorrectly sized database!" << std::endl;
+            throw;
         }
     }
 
@@ -78,11 +83,11 @@ void PartialDatabase::generateDists() {
     auto startTime = std::chrono::steady_clock::now();
 
     // Start of algorithm
-    distMap.clear();
+    distMap = std::vector<int>(pattern.size(), 1000000);
     std::queue<State> bfs;
 
     bfs.push({pattern, 0});
-    distMap[pattern.getId()] = 0;
+    distMap[pattern.id] = 0;
 
     while (!bfs.empty()) {
         State curr = bfs.front();
@@ -97,17 +102,18 @@ void PartialDatabase::generateDists() {
             count++;
         }
 
-        for (int i = 0; i < curr.board.cells.size(); i++) {
+        for (int i = 0; i < curr.board.tiles.size(); i++) {
             for (int j = 0; j < 4; j++) {
                 Direction dir = static_cast<Direction>(j);
-                uint64_t shiftId = curr.board.getShiftId(i, dir);
-                if (shiftId > 0 && distMap.find(shiftId) == distMap.end()) {
+                if (curr.board.canShift(i, dir)) {
                     State next = {curr.board, curr.dist + 1};
                     next.board.shiftCell(i, dir);
 
-                    distMap[shiftId] = next.dist;
-
-                    bfs.push(next);
+                    // Haven't found this board yet
+                    if (distMap[next.board.id] == 1000000) {
+                        distMap[next.board.id] = next.dist;
+                        bfs.push(next);
+                    }
                 }
             }
         }
@@ -132,9 +138,12 @@ void PartialDatabase::saveDists() {
         // file << board.grid[0].size() << " " << board.grid.size() << endl;
         // Number of cells, locations of cells (id)
         // file << board.cells.size() << " " << board.getId() << endl;
-        for (const auto& it : distMap) {
-            file.write((char*)&(it.first), sizeof(it.first));
-            file.write((char*)&(it.second), sizeof(it.second));
+        for (auto dist : distMap) {
+            if (dist == 1000000) {
+                std::cout << "Error: missing entries!" << std::endl;
+                throw;
+            }
+            file.write((char*)&dist, sizeof(dist));
         }
 
         file.close();

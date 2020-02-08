@@ -2,9 +2,7 @@
 #define PARTIALDATABASE_H
 
 #include "Pattern.h"
-#include "flat_hash_map.h"
 
-#include <unordered_map>
 #include <vector>
 
 class PartialDatabase {
@@ -22,7 +20,7 @@ public:
     virtual ~PartialDatabase();
 
     std::vector<int> tiles;
-    ska::flat_hash_map<uint64_t, int> distMap;
+    std::vector<int> distMap;
 };
 
 #endif  // PARTIALDATABASE_H
