@@ -97,15 +97,12 @@ Board::Board(std::vector<std::vector<int>> g, const DisjointDatabase& d)
     }
 }
 
-int Board::getBlank() const { return blank; }
-
 int Board::getHeuristic() const {
     return database.getHeuristic(partialPositions);
 }
 
 const std::vector<Move>& Board::getMoves(Move prevMove) {
     // Branchless lookup for moves
-    const int blank = getBlank();
     return moveList[blank][static_cast<int>(prevMove)];
 }
 
@@ -113,7 +110,7 @@ int Board::applyMove(Move dir) {
     // Will never be NULL
     // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
-    const int blank = 4 * getBlank();
+    const int blank = 4 * this->blank;
     // Position of sliding tile
     const int slidingPos = blank + delta;
     // Value of sliding tile
@@ -143,7 +140,7 @@ void Board::undoMove(Move dir) {
     // Will never be NULL
     // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
-    const int blank = 4 * getBlank();
+    const int blank = 4 * this->blank;
     // Position of sliding tile
     const int slidingPos = blank - delta;
     // Value of sliding tile
@@ -190,11 +187,10 @@ std::ostream& operator<<(std::ostream& out, const Move& move) {
 }
 
 std::ostream& operator<<(std::ostream& out, const Board& board) {
-    const int blank = board.getBlank();
     for (int y = 0; y < board.HEIGHT; y++) {
         for (int x = 0; x < board.WIDTH; x++) {
             const int i = y * board.WIDTH + x;
-            if (i == blank) {
+            if (i == board.blank) {
                 out << std::setw(3) << 0;
             } else {
                 out << std::setw(3)

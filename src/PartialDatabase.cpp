@@ -51,17 +51,6 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
     std::cout << "Pattern:" << std::endl << pattern << std::endl;
 }
 
-// template <typename T>
-// std::vector<T> make_vector(std::size_t size) {
-//     return std::vector<T>(size);
-// }
-
-// template <typename T, typename... Args>
-// auto make_vector(std::size_t first, Args... sizes) {
-//     auto inner = make_vector<T>(sizes...);
-//     return std::vector<decltype(inner)>(first, inner);
-// }
-
 void PartialDatabase::generateDists() {
     struct State {
         Pattern board;
@@ -104,8 +93,9 @@ void PartialDatabase::generateDists() {
             std::cout << dist << ": " << count << std::endl;
             dist = curr.dist;
             count = 1;
-        } else
+        } else {
             count++;
+        }
 
         for (int i = 0; i < curr.board.cells.size(); i++) {
             for (int j = 0; j < 4; j++) {

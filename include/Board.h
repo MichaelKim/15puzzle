@@ -39,9 +39,6 @@ private:
     const std::vector<Move>& generateMoveList(int x, int y, Move prevMove);
     std::vector<std::vector<std::vector<Move>>> moveList;
 
-    inline int getBlank() const;
-    uint64_t getPositions() const;
-
 public:
     const int WIDTH, HEIGHT;
 
