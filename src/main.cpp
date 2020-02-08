@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "../include/Board.h"
-#include "../include/DisjointDatabase.h"
 #include "../include/Idastar.h"
 #include "../include/InputParser.h"
 
@@ -48,7 +47,7 @@ vector<vector<vector<int>>> readDatabase(istream& input) {
     return grids;
 }
 
-vector<Board> readBoards(istream& input) {
+vector<Board> readBoards(istream& input, shared_ptr<DisjointDatabase> db) {
     int width, height, boardNum;
     input >> width >> height >> boardNum;
 
@@ -60,7 +59,7 @@ vector<Board> readBoards(istream& input) {
                 input >> board[y][x];
             }
         }
-        boards.push_back(Board(board));
+        boards.push_back(Board(board, db));
     }
     return boards;
 }
@@ -94,20 +93,10 @@ int main(int argc, const char* argv[]) {
 
     const int WIDTH = grids[0][0].size(), HEIGHT = grids[0].size();
 
-    // Reading board file
-    vector<Board> startBoards;
-    if (InputParser::boardExists()) {
-        ifstream input = ifstream(InputParser::getBoard());
-        startBoards = readBoards(input);
-        input.close();
-    } else {
-        startBoards = readBoards(cin);
-    }
-
     // Setup database
     auto dbBegin = chrono::steady_clock::now();
 
-    DisjointDatabase* db = new DisjointDatabase(WIDTH * HEIGHT, dbName, grids);
+    auto db = make_shared<DisjointDatabase>(WIDTH * HEIGHT, dbName, grids);
 
     auto dbEnd = chrono::steady_clock::now();
     cout << "Database time taken: "
@@ -117,18 +106,26 @@ int main(int argc, const char* argv[]) {
          << endl
          << endl;
 
-    // Setup search
-    Idastar<DisjointDatabase, Board>* search =
-        new Idastar<DisjointDatabase, Board>(db);
+    // Reading board file
+    vector<Board> startBoards;
+    if (InputParser::boardExists()) {
+        ifstream input = ifstream(InputParser::getBoard());
+        startBoards = readBoards(input, db);
+        input.close();
+    } else {
+        startBoards = readBoards(cin, db);
+    }
 
-    vector<vector<Board::Move>> answers;
+    // Setup search
+    Idastar<Board> search;
 
     // Start search
+    vector<vector<Board::Move>> answers;
     auto solveBegin = chrono::steady_clock::now();
 
     for (const Board& startBoard : startBoards) {
         auto singleSolveBegin = chrono::steady_clock::now();
-        vector<Board::Move> solution = search->solve(startBoard);
+        vector<Board::Move> solution = search.solve(startBoard);
         auto singleSolveEnd = chrono::steady_clock::now();
 
         if (solution.size() == 0) {
@@ -175,8 +172,6 @@ int main(int argc, const char* argv[]) {
         }
         cout << b << endl;
     }
-
-    delete db;
 
     return 0;
 }

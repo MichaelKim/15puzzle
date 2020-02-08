@@ -51,11 +51,33 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
     std::cout << "Pattern:" << std::endl << pattern << std::endl;
 }
 
+// template <typename T>
+// std::vector<T> make_vector(std::size_t size) {
+//     return std::vector<T>(size);
+// }
+
+// template <typename T, typename... Args>
+// auto make_vector(std::size_t first, Args... sizes) {
+//     auto inner = make_vector<T>(sizes...);
+//     return std::vector<decltype(inner)>(first, inner);
+// }
+
 void PartialDatabase::generateDists() {
     struct State {
         Pattern board;
         int dist;
     };
+
+    // The pattern database consists of all possible permutations
+    // of the pattern's tiles placed in the board. Any tile that
+    // isn't part of the pattern are treated as blanks, so that
+    // the board only contains the pattern's tiles.
+    // To generate the database, it starts from the solved state
+    // and runs BFS, sliding the pattern's tiles around
+    // to generate all pattern states with heuristic 1,
+    // then 2, etc. This ensures that if the search encounters
+    // a new pattern state, it was reached with the minimum
+    // number of slides.
 
     // board has 0 for irrelevant cells, non-0 for those part of the database
     int count = 0;
@@ -127,17 +149,6 @@ void PartialDatabase::saveDists() {
 
         file.close();
     }
-}
-
-int PartialDatabase::getHeuristic(const uint64_t& positions) {
-    uint64_t partialPos = 0;
-
-    for (auto tile : tiles) {
-        int pos = (positions >> (4 * tile)) & 0xf;
-        partialPos |= (uint64_t)tile << (4 * pos);
-    }
-
-    return distMap[partialPos];
 }
 
 PartialDatabase::~PartialDatabase() {}

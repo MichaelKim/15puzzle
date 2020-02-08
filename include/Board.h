@@ -1,6 +1,7 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include "DisjointDatabase.h"
 #include "Point.h"
 
 #include <ostream>
@@ -13,6 +14,7 @@ public:
 private:
     uint64_t grid;       // Value to position mapping
     uint64_t positions;  // Position to value mapping
+    std::shared_ptr<DisjointDatabase> database;
 
     std::vector<int> deltas;
 
@@ -36,13 +38,14 @@ private:
     std::vector<std::vector<std::vector<Move>>> moveList;
 
     inline int getBlank() const;
+    uint64_t getPositions() const;
 
 public:
     const int WIDTH, HEIGHT;
 
-    Board(std::vector<std::vector<int>> g);
+    Board(std::vector<std::vector<int>> g, std::shared_ptr<DisjointDatabase> h);
 
-    uint64_t getPositions() const;
+    int getHeuristic() const;
     const std::vector<Move>& getMoves(Move prevMove);
     int applyMove(Move dir);
     void undoMove(Move dir);

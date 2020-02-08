@@ -1,16 +1,10 @@
 #include "../include/DisjointDatabase.h"
 
-#include "../include/Board.h"
-
-#include <numeric>
-
 DisjointDatabase::DisjointDatabase(
-    int len, std::string name,
-    std::vector<std::vector<std::vector<int>>> grids) {
-    std::vector<int> where(len, -1);
-
+    int len, std::string name, std::vector<std::vector<std::vector<int>>> grids)
+    : where(len, -1) {
     for (int i = 0; i < grids.size(); i++) {
-        PartialDatabase* pd = new PartialDatabase(grids[i], name, i);
+        auto pd = std::make_shared<PartialDatabase>(grids[i], name, i);
         databases.push_back(pd);
 
         for (auto tile : pd->tiles) {
@@ -38,21 +32,14 @@ DisjointDatabase::DisjointDatabase(
     }
 }
 
-int DisjointDatabase::getHeuristic(const Board& board) {
-    uint64_t positions = board.getPositions();
+int DisjointDatabase::numPatterns() { return databases.size(); }
 
-    int totalDist =
-        std::transform_reduce(databases.begin(), databases.end(), 0,
-                              [](int a, int b) { return a + b; },
-                              [positions](const auto& partial) {
-                                  return partial->getHeuristic(positions);
-                              });
-
+int DisjointDatabase::getHeuristic(const std::vector<uint64_t>& positions) {
+    int totalDist = 0;
+    for (int i = 0; i < positions.size(); i++) {
+        totalDist += databases[i]->distMap[positions[i]];
+    }
     return totalDist;
 }
 
-DisjointDatabase::~DisjointDatabase() {
-    for (PartialDatabase* pd : databases) {
-        delete pd;
-    }
-}
+DisjointDatabase::~DisjointDatabase() {}

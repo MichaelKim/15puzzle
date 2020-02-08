@@ -57,8 +57,9 @@ const std::vector<Move>& Board::generateMoveList(int x, int y, Move prevMove) {
     return moves[14];                           // 0, 1, 2, 3
 }
 
-Board::Board(std::vector<std::vector<int>> g)
-    : grid(0), positions(0), WIDTH(g[0].size()), HEIGHT(g.size()) {
+Board::Board(std::vector<std::vector<int>> g,
+             std::shared_ptr<DisjointDatabase> d)
+    : grid(0), positions(0), database(d), WIDTH(g[0].size()), HEIGHT(g.size()) {
     for (int y = HEIGHT - 1; y >= 0; y--) {
         for (int x = WIDTH - 1; x >= 0; x--) {
             positions |= (uint64_t)(y * WIDTH + x) << (4 * g[y][x]);
@@ -87,6 +88,20 @@ int Board::getBlank() const { return positions & 0xf; }
 
 uint64_t Board::getPositions() const { return positions; }
 
+int Board::getHeuristic() const {
+    const auto numPatterns = database->numPatterns();
+    const auto& where = database->where;
+    std::vector<uint64_t> partialPositions(numPatterns, 0);
+
+    for (int i = 0; i < where.size(); i++) {
+        int index = where[i];
+        int pos = (positions >> (4 * i)) & 0xf;
+        partialPositions[index] |= (uint64_t)i << (4 * pos);
+    }
+
+    return database->getHeuristic(partialPositions);
+}
+
 const std::vector<Move>& Board::getMoves(Move prevMove) {
     // Branchless lookup for moves
     const int blank = getBlank();
@@ -112,6 +127,8 @@ int Board::applyMove(Move dir) {
 
     // Set position of blank tile
     positions = (positions & ~0xf) | (slidingPos / 4);
+
+    // heuristic->applyMove(static_cast<int>(dir));
 
     return 1;
 }
