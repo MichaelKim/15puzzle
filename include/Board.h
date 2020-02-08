@@ -12,9 +12,11 @@ public:
     enum class Move : int { Null, U, R, D, L };
 
 private:
-    uint64_t grid;       // Value to position mapping
-    uint64_t positions;  // Position to value mapping
-    std::shared_ptr<DisjointDatabase> database;
+    int blank;      // Position of blank (since patterns don't store the blank)
+    uint64_t grid;  // Value to position mapping
+    std::vector<uint64_t>
+        partialPositions;  // Position mapping for each pattern
+    const DisjointDatabase& database;
 
     std::vector<int> deltas;
 
@@ -43,7 +45,7 @@ private:
 public:
     const int WIDTH, HEIGHT;
 
-    Board(std::vector<std::vector<int>> g, std::shared_ptr<DisjointDatabase> h);
+    Board(std::vector<std::vector<int>> g, const DisjointDatabase& h);
 
     int getHeuristic() const;
     const std::vector<Move>& getMoves(Move prevMove);

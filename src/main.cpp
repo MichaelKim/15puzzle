@@ -47,7 +47,7 @@ vector<vector<vector<int>>> readDatabase(istream& input) {
     return grids;
 }
 
-vector<Board> readBoards(istream& input, shared_ptr<DisjointDatabase> db) {
+vector<Board> readBoards(istream& input, const DisjointDatabase& db) {
     int width, height, boardNum;
     input >> width >> height >> boardNum;
 
@@ -96,7 +96,7 @@ int main(int argc, const char* argv[]) {
     // Setup database
     auto dbBegin = chrono::steady_clock::now();
 
-    auto db = make_shared<DisjointDatabase>(WIDTH * HEIGHT, dbName, grids);
+    DisjointDatabase db(WIDTH * HEIGHT, dbName, grids);
 
     auto dbEnd = chrono::steady_clock::now();
     cout << "Database time taken: "
