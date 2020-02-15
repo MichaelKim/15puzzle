@@ -3,6 +3,7 @@
 
 #include "Direction.h"
 
+#include <cstdint>
 #include <vector>
 
 typedef unsigned int uint;
