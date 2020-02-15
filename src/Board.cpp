@@ -90,7 +90,7 @@ Board::Board(std::vector<std::vector<int>> g, const DisjointDatabase& d)
     const auto& where = database.where;
     partialPositions.resize(numPatterns, 0);
 
-    for (int i = 0; i < where.size(); i++) {
+    for (size_t i = 0; i < where.size(); i++) {
         int index = where[i];
         int pos = (positions >> (4 * i)) & 0xf;
         partialPositions[index] |= (uint64_t)i << (4 * pos);

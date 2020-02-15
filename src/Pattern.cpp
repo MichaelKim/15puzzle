@@ -39,7 +39,7 @@ Pattern Pattern::shiftCell(int tile, Direction dir,
             int numGreater = 0;
             int numBlanks = 1;
             int skipDelta = 0;
-            for (int i = posn + 1; i < posn + WIDTH; i++) {
+            for (uint i = posn + 1; i < posn + WIDTH; i++) {
                 int skip = next.getCell(i);
                 if (skip == 0)
                     numBlanks++;
@@ -64,7 +64,7 @@ Pattern Pattern::shiftCell(int tile, Direction dir,
             int numGreater = 0;
             int numBlanks = 1;
             int skipDelta = 0;
-            for (int i = posn - WIDTH + 1; i < posn; i++) {
+            for (uint i = posn - WIDTH + 1; i < posn; i++) {
                 int skip = getCell(i);
                 if (skip == 0)
                     numBlanks++;

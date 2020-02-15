@@ -9,10 +9,10 @@
 typedef unsigned int uint;
 
 struct Pattern {
-    uint64_t id;           // distMap key
-    uint dist;             // distMap value
-    std::vector<int> pos;  // Value to position mapping
-    uint64_t g;            // Position to value mapping
+    uint64_t id;            // distMap key
+    uint dist;              // distMap value
+    std::vector<uint> pos;  // Value to position mapping
+    uint64_t g;             // Position to value mapping
 
     const uint WIDTH, HEIGHT;
 

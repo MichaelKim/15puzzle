@@ -158,7 +158,7 @@ int main(int argc, const char* argv[]) {
 
     // Check solutions
     cout << "Checking solutions:" << endl;
-    for (int i = 0; i < startBoards.size(); i++) {
+    for (size_t i = 0; i < startBoards.size(); i++) {
         Board b = startBoards[i];
         auto solution = answers[i];
 

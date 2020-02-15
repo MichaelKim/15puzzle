@@ -18,8 +18,8 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
       size(1) {
     // Get tiles
     std::cout << "Pattern #" << index << ":" << std::endl;
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
+    for (uint y = 0; y < HEIGHT; y++) {
+        for (uint x = 0; x < WIDTH; x++) {
             if (grid[y][x] > 0) {
                 tiles.push_back(grid[y][x]);
             }
@@ -30,7 +30,7 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
     }
 
     // Calculate size: (WIDTH * HEIGHT)! / (WIDTH * HEIGHT - tiles.size())!
-    for (int i = 0; i < tiles.size(); i++) {
+    for (size_t i = 0; i < tiles.size(); i++) {
         size *= WIDTH * HEIGHT - i;
     }
 
@@ -83,11 +83,11 @@ void PartialDatabase::generateDists() {
     }
 
     // Calculate starting ID and starting position
-    std::vector<int> startPos(WIDTH * HEIGHT, 0);
+    std::vector<uint> startPos(WIDTH * HEIGHT, 0);
     std::unordered_map<int, int> before;
 
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
+    for (uint y = 0; y < HEIGHT; y++) {
+        for (uint x = 0; x < WIDTH; x++) {
             if (grid[y][x] > 0) {
                 // New tile found
                 uint beforeCount = 0;
@@ -123,7 +123,7 @@ void PartialDatabase::generateDists() {
     // number of slides.
 
     int count = 0;
-    int dist = 0;
+    uint dist = 0;
 
     std::cout << "Generating database" << std::endl;
 
@@ -148,7 +148,7 @@ void PartialDatabase::generateDists() {
         }
 
         for (auto tile : tiles) {
-            for (int j = 0; j < 4; j++) {
+            for (uint j = 0; j < 4; j++) {
                 Direction dir = static_cast<Direction>(j);
                 if (curr.canShift(tile, dir)) {
                     auto next = curr.shiftCell(tile, dir, deltas);
