@@ -2,7 +2,6 @@
 #define BOARD_H
 
 #include "DisjointDatabase.h"
-#include "Point.h"
 
 #include <ostream>
 #include <vector>

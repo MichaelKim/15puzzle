@@ -2,35 +2,24 @@
 #define PATTERN_H
 
 #include "Direction.h"
-#include "Point.h"
 
-#include <ostream>
 #include <vector>
 
-class Pattern {
-private:
-    std::vector<int> deltas;  // Indexed by value
+typedef unsigned int uint;
 
-    uint64_t grid;
+struct Pattern {
+    uint64_t id;           // distMap key
+    uint dist;             // distMap value
+    std::vector<int> pos;  // Value to position mapping
+    uint64_t g;            // Position to value mapping
 
-    int perm(int n, int k) const;
+    const uint WIDTH, HEIGHT;
 
-    inline int getCell(int x, int y) const;
-    inline void setCell(int x, int y, int n);
-
-public:
-    const int WIDTH, HEIGHT;
-    std::vector<Point> tiles;
-    uint64_t id;
-
-    Pattern(std::vector<std::vector<int>> g);
-    virtual ~Pattern();
-
-    int size();
-    bool canShift(int index, Direction dir);
-    void shiftCell(int index, Direction dir);
-
-    friend std::ostream& operator<<(std::ostream& out, const Pattern& pattern);
+    int getCell(int posn) const;
+    void setCell(int posn, int tile);
+    bool canShift(int tile, Direction dir) const;
+    Pattern shiftCell(int tile, Direction dir,
+                      const std::vector<int>& deltas) const;
 };
 
 #endif  // PATTERN_H

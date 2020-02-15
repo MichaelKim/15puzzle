@@ -3,12 +3,15 @@
 
 #include "Pattern.h"
 
+#include <string>
 #include <vector>
 
 class PartialDatabase {
 private:
     std::string filename;
-    Pattern pattern;
+    std::vector<std::vector<int>> grid;
+    const uint WIDTH, HEIGHT;
+    uint size;
 
     void generateDists();
     void saveDists();
@@ -19,7 +22,7 @@ public:
 
     virtual ~PartialDatabase();
 
-    std::vector<int> tiles;
+    std::vector<int> tiles;  // Sorted list of tiles in pattern
     std::vector<int> distMap;
 };
 
