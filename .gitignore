@@ -9,3 +9,5 @@ databases/*.dat
 .DS_Store
 .vscode/
 misc/
+build/
+compile_commands.json

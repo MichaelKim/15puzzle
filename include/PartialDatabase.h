@@ -17,8 +17,8 @@ private:
     void saveDists();
 
 public:
-    PartialDatabase(std::vector<std::vector<int>> grid, std::string dbName,
-                    int index);
+    PartialDatabase(std::vector<std::vector<int>> grid,
+                    const std::string& dbName, int index);
 
     virtual ~PartialDatabase();
 

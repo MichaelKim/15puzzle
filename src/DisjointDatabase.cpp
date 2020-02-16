@@ -3,7 +3,8 @@
 #include <iostream>
 
 DisjointDatabase::DisjointDatabase(
-    int len, std::string name, std::vector<std::vector<std::vector<int>>> grids)
+    int len, const std::string& name,
+    std::vector<std::vector<std::vector<int>>> grids)
     : where(len, -1) {
     for (size_t i = 0; i < grids.size(); i++) {
         auto pd = std::make_shared<PartialDatabase>(grids[i], name, i);
@@ -47,4 +48,4 @@ int DisjointDatabase::getHeuristic(
     return totalDist;
 }
 
-DisjointDatabase::~DisjointDatabase() {}
+DisjointDatabase::~DisjointDatabase() = default;

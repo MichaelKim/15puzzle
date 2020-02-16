@@ -10,7 +10,7 @@
 #include <unordered_map>
 
 PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
-                                 std::string dbName, int index)
+                                 const std::string& dbName, int index)
     : filename("databases/" + dbName + "-" + std::to_string(index) + ".dat"),
       grid(grid),
       WIDTH(grid[0].size()),
@@ -149,7 +149,7 @@ void PartialDatabase::generateDists() {
 
         for (auto tile : tiles) {
             for (uint j = 0; j < 4; j++) {
-                Direction dir = static_cast<Direction>(j);
+                auto dir = static_cast<Direction>(j);
                 if (curr.canShift(tile, dir)) {
                     auto next = curr.shiftCell(tile, dir, deltas);
 
@@ -192,4 +192,4 @@ void PartialDatabase::saveDists() {
     }
 }
 
-PartialDatabase::~PartialDatabase() {}
+PartialDatabase::~PartialDatabase() = default;

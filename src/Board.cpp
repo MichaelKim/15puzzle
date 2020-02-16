@@ -114,21 +114,21 @@ int Board::applyMove(Move dir) {
     // Position of sliding tile
     const int slidingPos = blank + delta;
     // Value of sliding tile
-    const int slidingValue = (grid & (0xfull << slidingPos)) >> slidingPos;
+    const int slidingValue = (grid & (0xfULL << slidingPos)) >> slidingPos;
 
     // Set value of slid tile
-    grid = (grid & ~(0xfull << blank)) | ((uint64_t)slidingValue << blank);
+    grid = (grid & ~(0xfULL << blank)) | ((uint64_t)slidingValue << blank);
 
     // Update partial position
     int index =
         database.where[slidingValue];  // Which pattern the sliding tile is in
 
     // Set position of slid tile
-    partialPositions[index] = (partialPositions[index] & ~(0xfull << blank)) |
+    partialPositions[index] = (partialPositions[index] & ~(0xfULL << blank)) |
                               ((uint64_t)slidingValue << blank);
 
     // Clear blank tile
-    partialPositions[index] = partialPositions[index] & ~(0xfull << slidingPos);
+    partialPositions[index] = partialPositions[index] & ~(0xfULL << slidingPos);
 
     // Update blank tile
     this->blank += delta / 4;
@@ -144,27 +144,27 @@ void Board::undoMove(Move dir) {
     // Position of sliding tile
     const int slidingPos = blank - delta;
     // Value of sliding tile
-    const int slidingValue = (grid & (0xfull << slidingPos)) >> slidingPos;
+    const int slidingValue = (grid & (0xfULL << slidingPos)) >> slidingPos;
 
     // Set value of slid tile
-    grid = (grid & ~(0xfull << blank)) | ((uint64_t)slidingValue << blank);
+    grid = (grid & ~(0xfULL << blank)) | ((uint64_t)slidingValue << blank);
 
     // Update partial position
     int index =
         database.where[slidingValue];  // Which pattern the sliding tile is in
 
     // Set position of slid tile
-    partialPositions[index] = (partialPositions[index] & ~(0xfull << blank)) |
+    partialPositions[index] = (partialPositions[index] & ~(0xfULL << blank)) |
                               ((uint64_t)slidingValue << blank);
 
     // Clear blank tile
-    partialPositions[index] = partialPositions[index] & ~(0xfull << slidingPos);
+    partialPositions[index] = partialPositions[index] & ~(0xfULL << slidingPos);
 
     // Update blank tile
     this->blank -= delta / 4;
 }
 
-Board::~Board() {}
+Board::~Board() = default;
 
 std::ostream& operator<<(std::ostream& out, const Move& move) {
     switch (move) {
@@ -194,7 +194,7 @@ std::ostream& operator<<(std::ostream& out, const Board& board) {
                 out << std::setw(3) << 0;
             } else {
                 out << std::setw(3)
-                    << ((board.grid & (0xfull << (4 * i))) >> (4 * i));
+                    << ((board.grid & (0xfULL << (4 * i))) >> (4 * i));
             }
         }
         out << std::endl;

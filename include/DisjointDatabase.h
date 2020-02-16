@@ -11,7 +11,7 @@ private:
     std::vector<std::shared_ptr<PartialDatabase>> databases;
 
 public:
-    DisjointDatabase(int len, std::string name,
+    DisjointDatabase(int len, const std::string& name,
                      std::vector<std::vector<std::vector<int>>> grids);
     virtual ~DisjointDatabase();
 

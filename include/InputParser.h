@@ -22,10 +22,10 @@ private:
 
     InputParser() {}
 
-    static bool optionExists(std::string option);
-    static std::vector<std::string> getArgs(std::string option);
+    static bool optionExists(const std::string& option);
+    static std::vector<std::string> getArgs(const std::string& option);
     static std::vector<std::string> getMultipleArgs(
-        std::vector<std::string> options);
+        const std::vector<std::string>& options);
 };
 
 #endif

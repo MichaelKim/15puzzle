@@ -41,7 +41,7 @@ private:
 public:
     const int WIDTH, HEIGHT;
 
-    Board(std::vector<std::vector<int>> g, const DisjointDatabase& h);
+    Board(std::vector<std::vector<int>> g, const DisjointDatabase& d);
 
     int getHeuristic() const;
     const std::vector<Move>& getMoves(Move prevMove);

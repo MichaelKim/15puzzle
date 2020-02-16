@@ -59,7 +59,7 @@ vector<Board> readBoards(istream& input, const DisjointDatabase& db) {
                 input >> board[y][x];
             }
         }
-        boards.push_back(Board(board, db));
+        boards.emplace_back(board, db);
     }
     return boards;
 }
@@ -78,7 +78,7 @@ int main(int argc, const char* argv[]) {
     vector<vector<vector<int>>> grids;
     if (InputParser::databaseExists()) {
         string dbPath = InputParser::getDatabase();
-        dbName = dbPath.substr(dbPath.find_last_of("/") + 1);
+        dbName = dbPath.substr(dbPath.find_last_of('/') + 1);
 
         ifstream input = ifstream(dbPath);
         grids = readDatabase(input);
@@ -86,12 +86,13 @@ int main(int argc, const char* argv[]) {
     } else {
         grids = readDatabase(cin);
     }
-    if (grids.size() == 0) {
+    if (grids.empty()) {
         cerr << "Error: must have at least one database" << endl;
         return 1;
     }
 
-    const int WIDTH = grids[0][0].size(), HEIGHT = grids[0].size();
+    const int WIDTH = grids[0][0].size();
+    const int HEIGHT = grids[0].size();
 
     // Setup database
     auto dbBegin = chrono::steady_clock::now();
@@ -115,6 +116,7 @@ int main(int argc, const char* argv[]) {
     } else {
         startBoards = readBoards(cin, db);
     }
+    return 0;
 
     // Setup search
     Idastar<Board> search;
@@ -128,7 +130,7 @@ int main(int argc, const char* argv[]) {
         vector<Board::Move> solution = search.solve(startBoard);
         auto singleSolveEnd = chrono::steady_clock::now();
 
-        if (solution.size() == 0) {
+        if (solution.empty()) {
             cout << "No solution found!" << endl;
         } else {
             cout << "Solution: " << solution.size() << " steps" << endl;

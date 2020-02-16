@@ -2,12 +2,12 @@
 
 int Pattern::getCell(int posn) const {
     int i = posn << 2;
-    return ((g & (0xfull << i)) >> i);
+    return ((g & (0xfULL << i)) >> i);
 }
 
-void Pattern::setCell(int posn, int n) {
+void Pattern::setCell(int posn, int tile) {
     int i = posn << 2;
-    g = (g & ~(0xfull << i)) | ((uint64_t)n << i);
+    g = (g & ~(0xfULL << i)) | ((uint64_t)tile << i);
 }
 
 bool Pattern::canShift(int tile, Direction dir) const {
@@ -41,9 +41,9 @@ Pattern Pattern::shiftCell(int tile, Direction dir,
             int skipDelta = 0;
             for (uint i = posn + 1; i < posn + WIDTH; i++) {
                 int skip = next.getCell(i);
-                if (skip == 0)
+                if (skip == 0) {
                     numBlanks++;
-                else if (skip > tile) {
+                } else if (skip > tile) {
                     numGreater++;
                     skipDelta += deltas[skip];
                 }
@@ -66,9 +66,9 @@ Pattern Pattern::shiftCell(int tile, Direction dir,
             int skipDelta = 0;
             for (uint i = posn - WIDTH + 1; i < posn; i++) {
                 int skip = getCell(i);
-                if (skip == 0)
+                if (skip == 0) {
                     numBlanks++;
-                else if (skip > tile) {
+                } else if (skip > tile) {
                     numGreater++;
                     skipDelta += deltas[skip];
                 }
