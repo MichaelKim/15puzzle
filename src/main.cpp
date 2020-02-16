@@ -116,18 +116,17 @@ int main(int argc, const char* argv[]) {
     } else {
         startBoards = readBoards(cin, db);
     }
-    return 0;
 
     // Setup search
-    Idastar<Board> search;
+    Idastar search;
 
     // Start search
-    vector<vector<Board::Move>> answers;
+    vector<vector<Direction>> answers;
     auto solveBegin = chrono::steady_clock::now();
 
     for (const Board& startBoard : startBoards) {
         auto singleSolveBegin = chrono::steady_clock::now();
-        vector<Board::Move> solution = search.solve(startBoard);
+        auto solution = search.solve(startBoard);
         auto singleSolveEnd = chrono::steady_clock::now();
 
         if (solution.empty()) {

@@ -2,7 +2,7 @@
 
 int Pattern::getCell(int posn) const {
     int i = posn << 2;
-    return ((g & (0xfULL << i)) >> i);
+    return (g & (0xfULL << i)) >> i;
 }
 
 void Pattern::setCell(int posn, int tile) {

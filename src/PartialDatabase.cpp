@@ -111,6 +111,8 @@ void PartialDatabase::generateDists() {
         startId += startPos[tile] - before[tile];
     }
 
+    std::cout << "Starting ID: " << startId << std::endl;
+
     // The pattern database consists of all possible permutations
     // of the pattern's tiles placed in the board. Any tile that
     // isn't part of the pattern are treated as blanks, so that

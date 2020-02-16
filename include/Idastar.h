@@ -1,14 +1,14 @@
 #ifndef IDASTAR_H
 #define IDASTAR_H
 
+#include "Board.h"
+#include "Direction.h"
+
 #include <vector>
 
-template <class TState>
 class Idastar {
 private:
-    using Move = typename TState::Move;
-
-    std::vector<Move> path;
+    std::vector<Direction> path;
     int minCost;
     int limit;
     uint64_t nodes;
@@ -17,10 +17,8 @@ public:
     Idastar();
     virtual ~Idastar();
 
-    std::vector<Move> solve(TState start);
-    bool dfs(TState& root, int g, Move prevMove);
+    std::vector<Direction> solve(Board start);
+    bool dfs(Board& root, int g, Direction prevMove);
 };
-
-#include "Idastar-inl.h"
 
 #endif

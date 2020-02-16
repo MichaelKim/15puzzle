@@ -1,56 +1,58 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include "Direction.h"
 #include "DisjointDatabase.h"
 
 #include <ostream>
 #include <vector>
 
 class Board {
-public:
-    enum class Move : int { Null, U, R, D, L };
-
 private:
     int blank;      // Position of blank (since patterns don't store the blank)
     uint64_t grid;  // Value to position mapping
-    std::vector<uint64_t>
-        partialPositions;  // Position mapping for each pattern
+    std::vector<uint64_t> patterns;  // Pattern IDs
     const DisjointDatabase& database;
 
     std::vector<int> deltas;
+    std::vector<int> tileDeltas;
 
-    const std::vector<std::vector<Move>> moves = {
-        /*  0 */ {Move::U},
-        /*  1 */ {Move::R},
-        /*  2 */ {Move::D},
-        /*  3 */ {Move::L},
-        /*  4 */ {Move::U, Move::R},
-        /*  5 */ {Move::U, Move::D},
-        /*  6 */ {Move::U, Move::L},
-        /*  7 */ {Move::R, Move::D},
-        /*  8 */ {Move::R, Move::L},
-        /*  9 */ {Move::D, Move::L},
-        /* 10 */ {Move::U, Move::R, Move::D},
-        /* 11 */ {Move::U, Move::R, Move::L},
-        /* 12 */ {Move::U, Move::D, Move::L},
-        /* 13 */ {Move::R, Move::D, Move::L},
-        /* 14 */ {Move::U, Move::R, Move::D, Move::L}};
-    const std::vector<Move>& generateMoveList(int x, int y, Move prevMove);
-    std::vector<std::vector<std::vector<Move>>> moveList;
+    const std::vector<std::vector<Direction>> moves = {
+        /*  0 */ {Direction::U},
+        /*  1 */ {Direction::R},
+        /*  2 */ {Direction::D},
+        /*  3 */ {Direction::L},
+        /*  4 */ {Direction::U, Direction::R},
+        /*  5 */ {Direction::U, Direction::D},
+        /*  6 */ {Direction::U, Direction::L},
+        /*  7 */ {Direction::R, Direction::D},
+        /*  8 */ {Direction::R, Direction::L},
+        /*  9 */ {Direction::D, Direction::L},
+        /* 10 */ {Direction::U, Direction::R, Direction::D},
+        /* 11 */ {Direction::U, Direction::R, Direction::L},
+        /* 12 */ {Direction::U, Direction::D, Direction::L},
+        /* 13 */ {Direction::R, Direction::D, Direction::L},
+        /* 14 */ {Direction::U, Direction::R, Direction::D, Direction::L}};
+    const std::vector<Direction>& generateMoveList(int x, int y,
+                                                   Direction prevMove);
+    std::vector<std::vector<std::vector<Direction>>> moveList;
+
+    inline int getTile(int posn);
+    inline void setTile(int posn, int tile);
 
 public:
     const int WIDTH, HEIGHT;
 
-    Board(std::vector<std::vector<int>> g, const DisjointDatabase& d);
+    Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d);
 
     int getHeuristic() const;
-    const std::vector<Move>& getMoves(Move prevMove);
-    int applyMove(Move dir);
-    void undoMove(Move dir);
+    const std::vector<Direction>& getMoves() const;
+    const std::vector<Direction>& getMoves(Direction prevMove) const;
+    int applyMove(Direction dir);
+    void undoMove(Direction dir);
 
     virtual ~Board();
 
-    friend std::ostream& operator<<(std::ostream& out, const Move& move);
     friend std::ostream& operator<<(std::ostream& out, const Board& board);
 };
 

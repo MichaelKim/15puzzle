@@ -32,7 +32,6 @@ DisjointDatabase::DisjointDatabase(
 
             // Assume blank tile
             foundBlank = true;
-            i = 0;
         }
     }
 }
@@ -40,10 +39,10 @@ DisjointDatabase::DisjointDatabase(
 int DisjointDatabase::numPatterns() const { return databases.size(); }
 
 int DisjointDatabase::getHeuristic(
-    const std::vector<uint64_t>& positions) const {
+    const std::vector<uint64_t>& patterns) const {
     int totalDist = 0;
-    for (size_t i = 0; i < positions.size(); i++) {
-        totalDist += databases[i]->distMap[positions[i]];
+    for (size_t i = 0; i < patterns.size(); i++) {
+        totalDist += databases[i]->distMap[patterns[i]];
     }
     return totalDist;
 }

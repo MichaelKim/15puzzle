@@ -1,30 +1,31 @@
-#include "Idastar.h"
+#include "../include/Idastar.h"
 
 #include <iostream>
 
 #define INF 1000000
 
-template <class TState>
-Idastar<TState>::Idastar() : path({}), minCost(INF), limit(0), nodes(0) {}
+Idastar::Idastar() : path({}), minCost(INF), limit(0), nodes(0) {}
 
-template <class TState>
-std::vector<typename TState::Move> Idastar<TState>::solve(TState start) {
+std::vector<Direction> Idastar::solve(Board start) {
     // Uses IDA* with additive pattern disjoint database heuristics
-    path.clear();
-    nodes = 0;
-
     std::cout << "Running single threaded" << std::endl;
 
+    path.clear();
+    nodes = 0;
     limit = start.getHeuristic();
+
+    // Starting moves (for prevMove)
+    const std::vector<Direction> startMoves = start.getMoves();
 
     if (limit > 0) {
         std::cout << "Limit, Nodes:";
 
-        Move prevMove = Move::Null;
-        while (path.size() == 0) {
+        while (path.empty()) {
             minCost = INF;
             std::cout << " " << limit << ", " << nodes << std::endl;
-            dfs(start, 0, prevMove);
+            for (auto startDir : startMoves) {
+                if (dfs(start, 0, startDir)) break;
+            }
             limit = minCost;
         }
 
@@ -36,16 +37,17 @@ std::vector<typename TState::Move> Idastar<TState>::solve(TState start) {
     return path;
 }
 
-template <class TState>
-bool Idastar<TState>::dfs(TState& node, int g, Move prevMove) {
+bool Idastar::dfs(Board& node, int g, Direction prevMove) {
     int h = node.getHeuristic();
     int f = g + h;
 
     if (f <= limit) {
         if (h == 0) {
+            // Found goal state (heuristic = 0)
             return true;
         }
     } else {
+        // Exceeded search depth, store next smallest depth
         if (f < minCost) {
             minCost = f;
         }
@@ -68,5 +70,4 @@ bool Idastar<TState>::dfs(TState& node, int g, Move prevMove) {
     return false;
 }
 
-template <class TState>
-Idastar<TState>::~Idastar() {}
+Idastar::~Idastar() = default;

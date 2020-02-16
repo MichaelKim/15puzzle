@@ -2,62 +2,62 @@
 
 #include <iomanip>
 #include <iostream>
+#include <unordered_map>
 
-using Move = Board::Move;
-
-const std::vector<Move>& Board::generateMoveList(int x, int y, Move prevMove) {
+const std::vector<Direction>& Board::generateMoveList(int x, int y,
+                                                      Direction prevMove) {
     if (y == 0) {
         if (x == 0) {
-            if (prevMove == Move::L) return moves[2];  // 2
-            if (prevMove == Move::U) return moves[1];  // 1
-            return moves[7];                           // 1, 2
+            if (prevMove == Direction::L) return moves[2];  // 2
+            if (prevMove == Direction::U) return moves[1];  // 1
+            return moves[7];                                // 1, 2
         }
         if (x == WIDTH - 1) {
-            if (prevMove == Move::U) return moves[3];  // 3
-            if (prevMove == Move::R) return moves[2];  // 2
-            return moves[9];                           // 2, 3
+            if (prevMove == Direction::U) return moves[3];  // 3
+            if (prevMove == Direction::R) return moves[2];  // 2
+            return moves[9];                                // 2, 3
         }
-        if (prevMove == Move::L) return moves[9];  // 2, 3
-        if (prevMove == Move::U) return moves[8];  // 1, 3
-        if (prevMove == Move::R) return moves[7];  // 1, 2
-        return moves[13];                          // 1, 2, 3
+        if (prevMove == Direction::L) return moves[9];  // 2, 3
+        if (prevMove == Direction::U) return moves[8];  // 1, 3
+        if (prevMove == Direction::R) return moves[7];  // 1, 2
+        return moves[13];                               // 1, 2, 3
     }
     if (y == HEIGHT - 1) {
         if (x == 0) {
-            if (prevMove == Move::D) return moves[1];  // 1
-            if (prevMove == Move::L) return moves[0];  // 0
-            return moves[4];                           // 0, 1
+            if (prevMove == Direction::D) return moves[1];  // 1
+            if (prevMove == Direction::L) return moves[0];  // 0
+            return moves[4];                                // 0, 1
         }
         if (x == WIDTH - 1) {
-            if (prevMove == Move::D) return moves[3];  // 3;
-            if (prevMove == Move::R) return moves[0];  // 0
-            return moves[6];                           // 0, 3
+            if (prevMove == Direction::D) return moves[3];  // 3;
+            if (prevMove == Direction::R) return moves[0];  // 0
+            return moves[6];                                // 0, 3
         }
-        if (prevMove == Move::D) return moves[8];  // 1, 3
-        if (prevMove == Move::L) return moves[6];  // 0, 3
-        if (prevMove == Move::R) return moves[4];  // 0, 1
-        return moves[11];                          // 0, 1, 3
+        if (prevMove == Direction::D) return moves[8];  // 1, 3
+        if (prevMove == Direction::L) return moves[6];  // 0, 3
+        if (prevMove == Direction::R) return moves[4];  // 0, 1
+        return moves[11];                               // 0, 1, 3
     }
     if (x == 0) {
-        if (prevMove == Move::D) return moves[7];  // 1, 2
-        if (prevMove == Move::L) return moves[5];  // 0, 2
-        if (prevMove == Move::U) return moves[4];  // 0, 1
-        return moves[10];                          // 0, 1, 2
+        if (prevMove == Direction::D) return moves[7];  // 1, 2
+        if (prevMove == Direction::L) return moves[5];  // 0, 2
+        if (prevMove == Direction::U) return moves[4];  // 0, 1
+        return moves[10];                               // 0, 1, 2
     }
     if (x == WIDTH - 1) {
-        if (prevMove == Move::D) return moves[9];  // 2, 3
-        if (prevMove == Move::U) return moves[6];  // 0, 3
-        if (prevMove == Move::R) return moves[5];  // 0, 2
-        return moves[12];                          // 0, 2, 3
+        if (prevMove == Direction::D) return moves[9];  // 2, 3
+        if (prevMove == Direction::U) return moves[6];  // 0, 3
+        if (prevMove == Direction::R) return moves[5];  // 0, 2
+        return moves[12];                               // 0, 2, 3
     }
-    if (prevMove == Move::U) return moves[11];  // 0, 1, 3
-    if (prevMove == Move::R) return moves[10];  // 0, 1, 2
-    if (prevMove == Move::D) return moves[13];  // 1, 2, 3
-    if (prevMove == Move::L) return moves[12];  // 0, 2, 3
-    return moves[14];                           // 0, 1, 2, 3
+    if (prevMove == Direction::U) return moves[11];  // 0, 1, 3
+    if (prevMove == Direction::R) return moves[10];  // 0, 1, 2
+    if (prevMove == Direction::D) return moves[13];  // 1, 2, 3
+    if (prevMove == Direction::L) return moves[12];  // 0, 2, 3
+    return moves[14];                                // 0, 1, 2, 3
 }
 
-Board::Board(std::vector<std::vector<int>> g, const DisjointDatabase& d)
+Board::Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d)
     : blank(0), grid(0), database(d), WIDTH(g[0].size()), HEIGHT(g.size()) {
     uint64_t positions = 0;
     for (int y = HEIGHT - 1; y >= 0; y--) {
@@ -70,65 +70,173 @@ Board::Board(std::vector<std::vector<int>> g, const DisjointDatabase& d)
     }
 
     // x, y, prevMove, moves[]
-    moveList = std::vector<std::vector<std::vector<Move>>>(
-        WIDTH * HEIGHT, std::vector<std::vector<Move>>(5));
+    moveList = std::vector<std::vector<std::vector<Direction>>>(
+        WIDTH * HEIGHT, std::vector<std::vector<Direction>>(5));
 
     for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {
-            for (int m = 0; m < 5; m++) {
+            for (int m = 0; m < 4; m++) {
                 moveList[y * WIDTH + x][m] =
-                    generateMoveList(x, y, static_cast<Move>(m));
+                    generateMoveList(x, y, static_cast<Direction>(m));
             }
         }
     }
 
     // {0, 0}, {0, -1}, {1, 0}, {0, 1}, {-1, 0}};
-    deltas = std::vector<int>{0, -4 * WIDTH, 4, 4 * WIDTH, -4};
+    deltas = std::vector<int>{-4 * WIDTH, 4, 4 * WIDTH, -4};
 
-    // Calculate partial positions
-    int numPatterns = database.numPatterns();
+    // Calculate deltas
+    auto numPatterns = database.numPatterns();
     const auto& where = database.where;
-    partialPositions.resize(numPatterns, 0);
 
-    for (size_t i = 0; i < where.size(); i++) {
-        int index = where[i];
-        int pos = (positions >> (4 * i)) & 0xf;
-        partialPositions[index] |= (uint64_t)i << (4 * pos);
+    // The tiles in each pattern
+    std::vector<std::vector<int>> patternTiles(numPatterns);
+    for (int i = 1; i < WIDTH * HEIGHT; i++) {  // Ignore blank tile (0)
+        patternTiles[where[i]].push_back(i);
+    }
+
+    tileDeltas.resize(WIDTH * HEIGHT, 1);
+    patterns.resize(numPatterns, 0);
+
+    for (int i = 0; i < numPatterns; i++) {
+        // Calculate tileDeltas
+        auto& tiles = patternTiles[i];
+        for (int j = tiles.size() - 2; j >= 0; j--) {
+            tileDeltas[tiles[j]] =
+                tileDeltas[tiles[j + 1]] * (WIDTH * HEIGHT - 1 - j);
+        }
+
+        // Calculate pattern
+        std::vector<uint> startPos(WIDTH * HEIGHT, 0);
+        std::unordered_map<int, int> before;
+        for (int y = 0; y < HEIGHT; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                if (where[g[y][x]] == i) {
+                    // New tile found
+                    uint beforeCount = 0;
+
+                    // Count number of preceding pattern tiles that's smaller
+                    for (auto& it : before) {
+                        if (it.first < g[y][x]) {
+                            beforeCount++;
+                        }
+                    }
+
+                    before[g[y][x]] = beforeCount;
+                    startPos[g[y][x]] = y * WIDTH + x;
+                }
+            }
+        }
+        uint j = WIDTH * HEIGHT;
+        for (auto tile : tiles) {
+            patterns[i] *= j--;
+            patterns[i] += startPos[tile] - before[tile];
+        }
     }
 }
 
-int Board::getHeuristic() const {
-    return database.getHeuristic(partialPositions);
+int Board::getHeuristic() const { return database.getHeuristic(patterns); }
+
+const std::vector<Direction>& Board::getMoves() const {
+    // Should be run only once at start of search
+    if (blank < WIDTH) {           // top
+        if (blank % WIDTH == 0) {  // left
+            return moves[7];
+        }
+        if (blank % WIDTH == WIDTH - 1) {  // right
+            return moves[9];
+        }
+        return moves[13];
+    }
+    if (blank >= (WIDTH - 1) * HEIGHT) {  // bottom
+        if (blank % WIDTH == 0) {         // left
+            return moves[4];
+        }
+        if (blank % WIDTH == WIDTH - 1) {  // right
+            return moves[6];
+        }
+        return moves[11];
+    }
+    if (blank % WIDTH == 0) {  // left
+        return moves[10];
+    }
+    if (blank % WIDTH == WIDTH - 1) {  // right
+        return moves[12];
+    }
+
+    return moves[14];
 }
 
-const std::vector<Move>& Board::getMoves(Move prevMove) {
+const std::vector<Direction>& Board::getMoves(Direction prevMove) const {
     // Branchless lookup for moves
     return moveList[blank][static_cast<int>(prevMove)];
 }
 
-int Board::applyMove(Move dir) {
-    // Will never be NULL
+inline int Board::getTile(int posn) {
+    return (grid & (0xfULL << posn)) >> posn;
+}
+
+inline void Board::setTile(int posn, int tile) {
+    grid = (grid & ~(0xfULL << posn)) | ((uint64_t)tile << posn);
+}
+
+int Board::applyMove(Direction dir) {
     // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
     const int blank = 4 * this->blank;
     // Position of sliding tile
     const int slidingPos = blank + delta;
     // Value of sliding tile
-    const int slidingValue = (grid & (0xfULL << slidingPos)) >> slidingPos;
+    const int tile = getTile(slidingPos);
 
     // Set value of slid tile
-    grid = (grid & ~(0xfULL << blank)) | ((uint64_t)slidingValue << blank);
+    setTile(blank, tile);
 
-    // Update partial position
-    int index =
-        database.where[slidingValue];  // Which pattern the sliding tile is in
+    // Update pattern
+    int index = database.where[tile];  // Which pattern the sliding tile is in
 
-    // Set position of slid tile
-    partialPositions[index] = (partialPositions[index] & ~(0xfULL << blank)) |
-                              ((uint64_t)slidingValue << blank);
-
-    // Clear blank tile
-    partialPositions[index] = partialPositions[index] & ~(0xfULL << slidingPos);
+    switch (dir) {
+        case Direction::U: {
+            int numGreater = 0;
+            int numBlanks = 1;
+            int skipDelta = 0;
+            for (int i = this->blank - WIDTH + 1; i < this->blank; i++) {
+                int skip = getTile(i * 4);
+                if (database.where[skip] != index) {
+                    numBlanks++;
+                } else if (skip > tile) {
+                    numGreater++;
+                    skipDelta += tileDeltas[skip];
+                }
+            }
+            patterns[index] +=
+                skipDelta + (numGreater + numBlanks) * tileDeltas[tile];
+            break;
+        }
+        case Direction::R:
+            patterns[index] -= tileDeltas[tile];
+            break;
+        case Direction::D: {
+            int numGreater = 0;
+            int numBlanks = 1;
+            int skipDelta = 0;
+            for (int i = this->blank + 1; i < this->blank + WIDTH; i++) {
+                int skip = getTile(i * 4);
+                if (database.where[skip] != index) {
+                    numBlanks++;
+                } else if (skip > tile) {
+                    numGreater++;
+                    skipDelta += tileDeltas[skip];
+                }
+            }
+            patterns[index] -=
+                skipDelta + (numGreater + numBlanks) * tileDeltas[tile];
+            break;
+        }
+        default:
+            patterns[index] += tileDeltas[tile];
+            break;
+    }
 
     // Update blank tile
     this->blank += delta / 4;
@@ -136,55 +244,70 @@ int Board::applyMove(Move dir) {
     return 1;
 }
 
-void Board::undoMove(Move dir) {
-    // Will never be NULL
+void Board::undoMove(Direction dir) {
     // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
     const int blank = 4 * this->blank;
     // Position of sliding tile
     const int slidingPos = blank - delta;
     // Value of sliding tile
-    const int slidingValue = (grid & (0xfULL << slidingPos)) >> slidingPos;
+    const int tile = getTile(slidingPos);
 
     // Set value of slid tile
-    grid = (grid & ~(0xfULL << blank)) | ((uint64_t)slidingValue << blank);
+    setTile(blank, tile);
 
     // Update partial position
-    int index =
-        database.where[slidingValue];  // Which pattern the sliding tile is in
+    int index = database.where[tile];  // Which pattern the sliding tile is in
 
-    // Set position of slid tile
-    partialPositions[index] = (partialPositions[index] & ~(0xfULL << blank)) |
-                              ((uint64_t)slidingValue << blank);
+    switch (dir) {
+        case Direction::U: {
+            int numGreater = 0;
+            int numBlanks = 1;
+            int skipDelta = 0;
+            for (int i = this->blank + 1; i < this->blank + WIDTH; i++) {
+                int skip = getTile(i * 4);
+                if (database.where[skip] != index) {
+                    numBlanks++;
+                } else if (skip > tile) {
+                    numGreater++;
+                    skipDelta += tileDeltas[skip];
+                }
+            }
+            patterns[index] -=
+                skipDelta + (numGreater + numBlanks) * tileDeltas[tile];
 
-    // Clear blank tile
-    partialPositions[index] = partialPositions[index] & ~(0xfULL << slidingPos);
+            break;
+        }
+        case Direction::R:
+            patterns[index] += tileDeltas[tile];
+            break;
+        case Direction::D: {
+            int numGreater = 0;
+            int numBlanks = 1;
+            int skipDelta = 0;
+            for (int i = this->blank - WIDTH + 1; i < this->blank; i++) {
+                int skip = getTile(i * 4);
+                if (database.where[skip] != index) {
+                    numBlanks++;
+                } else if (skip > tile) {
+                    numGreater++;
+                    skipDelta += tileDeltas[skip];
+                }
+            }
+            patterns[index] +=
+                skipDelta + (numGreater + numBlanks) * tileDeltas[tile];
+            break;
+        }
+        default:
+            patterns[index] -= tileDeltas[tile];
+            break;
+    }
 
     // Update blank tile
     this->blank -= delta / 4;
 }
 
 Board::~Board() = default;
-
-std::ostream& operator<<(std::ostream& out, const Move& move) {
-    switch (move) {
-        case Move::U:
-            out << "D";
-            break;
-        case Move::R:
-            out << "L";
-            break;
-        case Move::D:
-            out << "U";
-            break;
-        case Move::L:
-            out << "R";
-            break;
-        default:
-            break;
-    }
-    return out;
-}
 
 std::ostream& operator<<(std::ostream& out, const Board& board) {
     for (int y = 0; y < board.HEIGHT; y++) {
