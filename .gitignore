@@ -7,6 +7,7 @@ wobj/
 
 databases/*.dat
 .DS_Store
+.vs/
 .vscode/
 misc/
 build/

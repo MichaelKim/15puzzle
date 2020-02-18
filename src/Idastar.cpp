@@ -11,20 +11,31 @@ std::vector<Direction> Idastar::solve(Board start) {
     std::cout << "Running single threaded" << std::endl;
 
     path.clear();
-    nodes = 0;
+    nodes = 1;
     limit = start.getHeuristic();
-
-    // Starting moves (for prevMove)
-    const std::vector<Direction> startMoves = start.getMoves();
 
     if (limit > 0) {
         std::cout << "Limit, Nodes:";
 
+        // Starting moves (for prevMove)
+        const std::vector<Direction> startMoves = start.getMoves();
+
+        // Boards after first move
+        std::vector<Board> firstSlide;
+        for (auto startDir : startMoves) {
+            auto copy = start;
+            copy.applyMove(startDir);
+            firstSlide.push_back(copy);
+        }
+
         while (path.empty()) {
             minCost = INF;
             std::cout << " " << limit << ", " << nodes << std::endl;
-            for (auto startDir : startMoves) {
-                if (dfs(start, 0, startDir)) break;
+            for (size_t i = 0; i < startMoves.size(); i++) {
+                if (dfs(firstSlide[i], 1, startMoves[i])) {
+                    path.push_back(startMoves[i]);
+                    break;
+                }
             }
             limit = minCost;
         }
