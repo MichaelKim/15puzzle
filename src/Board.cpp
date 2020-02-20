@@ -59,8 +59,10 @@ const std::vector<Direction>& Board::generateMoveList(int x, int y,
 
 Board::Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d)
     : blank(0), database(d), WIDTH(g[0].size()), HEIGHT(g.size()) {
+    uint64_t positions = 0;
     for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {
+            positions |= (uint64_t)(y * WIDTH + x) << (4 * g[y][x]);
             grid.push_back(g[y][x]);
 
             if (g[y][x] == 0) blank = y * WIDTH + x;
@@ -80,60 +82,23 @@ Board::Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d)
         }
     }
 
-    // {0, 0}, {0, -1}, {1, 0}, {0, 1}, {-1, 0}};
     deltas = std::vector<int>{-WIDTH, 1, WIDTH, -1};
 
-    // Calculate deltas
+    // Calculate partial positions
     auto numPatterns = database.numPatterns();
     const auto& where = database.where;
+    partialPositions.resize(numPatterns, 0);
 
-    // The tiles in each pattern
-    std::vector<std::vector<int>> patternTiles(numPatterns);
-    for (int i = 1; i < WIDTH * HEIGHT; i++) {  // Ignore blank tile (0)
-        patternTiles[where[i]].push_back(i);
-    }
-
-    tileDeltas.resize(WIDTH * HEIGHT, 1);
-    patterns.resize(numPatterns, 0);
-
-    for (int i = 0; i < numPatterns; i++) {
-        // Calculate tileDeltas
-        auto& tiles = patternTiles[i];
-        for (int j = tiles.size() - 2; j >= 0; j--) {
-            tileDeltas[tiles[j]] =
-                tileDeltas[tiles[j + 1]] * (WIDTH * HEIGHT - 1 - j);
-        }
-
-        // Calculate pattern
-        std::vector<uint> startPos(WIDTH * HEIGHT, 0);
-        std::unordered_map<int, int> before;
-        for (int y = 0; y < HEIGHT; y++) {
-            for (int x = 0; x < WIDTH; x++) {
-                if (where[g[y][x]] == i) {
-                    // New tile found
-                    uint beforeCount = 0;
-
-                    // Count number of preceding pattern tiles that's smaller
-                    for (auto& it : before) {
-                        if (it.first < g[y][x]) {
-                            beforeCount++;
-                        }
-                    }
-
-                    before[g[y][x]] = beforeCount;
-                    startPos[g[y][x]] = y * WIDTH + x;
-                }
-            }
-        }
-        uint j = WIDTH * HEIGHT;
-        for (auto tile : tiles) {
-            patterns[i] *= j--;
-            patterns[i] += startPos[tile] - before[tile];
-        }
+    for (int i = 0; i < where.size(); i++) {
+        int index = where[i];
+        int pos = (positions >> (4 * i)) & 0xf;
+        partialPositions[index] |= (uint64_t)i << (4 * pos);
     }
 }
 
-int Board::getHeuristic() const { return database.getHeuristic(patterns); }
+int Board::getHeuristic() const {
+    return database.getHeuristic(partialPositions);
+}
 
 const std::vector<Direction>& Board::getMoves() const {
     // Should be run only once at start of search
@@ -175,7 +140,7 @@ inline int Board::getTile(int posn) { return grid[posn]; }
 inline void Board::setTile(int posn, int tile) { grid[posn] = tile; }
 
 // Pattern ID, pattern index
-std::pair<uint64_t, int> Board::applyMove(Direction dir) {
+void Board::applyMove(Direction dir) {
     // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
     // Position of sliding tile
@@ -187,59 +152,22 @@ std::pair<uint64_t, int> Board::applyMove(Direction dir) {
     setTile(blank, tile);
 
     // Update pattern
-    int index = database.where[tile];   // Which pattern the sliding tile is in
-    auto oldPattern = patterns[index];  // Storing for undo
+    int index = database.where[tile];  // Which pattern the sliding tile is in
 
-    switch (dir) {
-        case Direction::U: {
-            int numGreater = 0;
-            int numBlanks = 1;
-            int skipDelta = 0;
-            for (int i = blank - WIDTH + 1; i < blank; i++) {
-                int skip = getTile(i);
-                if (database.where[skip] != index) {
-                    numBlanks++;
-                } else if (skip > tile) {
-                    numGreater++;
-                    skipDelta += tileDeltas[skip];
-                }
-            }
-            patterns[index] +=
-                skipDelta + (numGreater + numBlanks) * tileDeltas[tile];
-            break;
-        }
-        case Direction::R:
-            patterns[index] -= tileDeltas[tile];
-            break;
-        case Direction::D: {
-            int numGreater = 0;
-            int numBlanks = 1;
-            int skipDelta = 0;
-            for (int i = blank + 1; i < blank + WIDTH; i++) {
-                int skip = getTile(i);
-                if (database.where[skip] != index) {
-                    numBlanks++;
-                } else if (skip > tile) {
-                    numGreater++;
-                    skipDelta += tileDeltas[skip];
-                }
-            }
-            patterns[index] -=
-                skipDelta + (numGreater + numBlanks) * tileDeltas[tile];
-            break;
-        }
-        default:
-            patterns[index] += tileDeltas[tile];
-            break;
-    }
+    // Set position of slid tile
+    partialPositions[index] =
+        (partialPositions[index] & ~(0xfull << (4 * blank))) |
+        ((uint64_t)tile << (4 * blank));
+
+    // Clear blank tile
+    partialPositions[index] =
+        partialPositions[index] & ~(0xfull << (4 * slidingPos));
 
     // Update blank tile
     blank += delta;
-
-    return {oldPattern, index};
 }
 
-void Board::undoMove(const std::pair<uint64_t, int>& prev, Direction dir) {
+void Board::undoMove(Direction dir) {
     // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
     // Position of sliding tile
@@ -250,8 +178,17 @@ void Board::undoMove(const std::pair<uint64_t, int>& prev, Direction dir) {
     // Set value of slid tile
     setTile(blank, tile);
 
-    // Restore saved pattern ID
-    patterns[prev.second] = prev.first;
+    // Update pattern
+    int index = database.where[tile];  // Which pattern the sliding tile is in
+
+    // Set position of slid tile
+    partialPositions[index] =
+        (partialPositions[index] & ~(0xfull << (4 * blank))) |
+        ((uint64_t)tile << (4 * blank));
+
+    // Clear blank tile
+    partialPositions[index] =
+        partialPositions[index] & ~(0xfull << (4 * slidingPos));
 
     // Update blank tile
     blank -= delta;

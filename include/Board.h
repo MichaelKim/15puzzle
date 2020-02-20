@@ -10,12 +10,12 @@
 class Board {
 private:
     int blank;  // Position of blank (since patterns don't store the blank)
-    std::vector<int> grid;           // Value to position mapping
-    std::vector<uint64_t> patterns;  // Pattern IDs
+    std::vector<int> grid;  // Value to position mapping
+    std::vector<uint64_t>
+        partialPositions;  // Position mapping for each pattern
     const DisjointDatabase& database;
 
     std::vector<int> deltas;
-    std::vector<int> tileDeltas;
 
     const std::vector<std::vector<Direction>> moves = {
         /*  0 */ {Direction::U},
@@ -48,8 +48,8 @@ public:
     int getHeuristic() const;
     const std::vector<Direction>& getMoves() const;
     const std::vector<Direction>& getMoves(Direction prevMove) const;
-    std::pair<uint64_t, int> applyMove(Direction dir);
-    void undoMove(const std::pair<uint64_t, int>& prev, Direction dir);
+    void applyMove(Direction dir);
+    void undoMove(Direction dir);
 
     virtual ~Board();
 

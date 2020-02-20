@@ -34,9 +34,6 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
         size *= WIDTH * HEIGHT - i;
     }
 
-    // Resize distMap
-    distMap.resize(size, 1000000);
-
     std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (!file.good()) {
         // Database file missing, generate database
@@ -47,14 +44,15 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
         // Read database from file
         std::cout << "Parsing database" << std::endl;
 
-        uint64_t id = 0;
+        uint64_t id;
         uint dist;
-        while (file.read((char*)&dist, sizeof(dist))) {
+
+        while (file.read((char*)&id, sizeof(id)) &&
+               file.read((char*)&dist, sizeof(dist))) {
             distMap[id] = dist;
-            id++;
         }
 
-        if (id != size) {
+        if (distMap.size() != size) {
             std::cout << "Error: incorrectly sized database!" << std::endl;
             throw;
         }
@@ -66,52 +64,20 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
 void PartialDatabase::generateDists() {
     std::cout << "Precomputing..." << std::endl;
 
-    // Calculate deltas
-    // delta[tiles[i]] = (WIDTH * HEIGHT - i)! /
-    //                   (WIDTH * HEIGHT - tiles.size())!
-    std::vector<int> deltas(WIDTH * HEIGHT, 1);
-    for (int i = tiles.size() - 2; i >= 0; i--) {
-        deltas[tiles[i]] = deltas[tiles[i + 1]] * (WIDTH * HEIGHT - 1 - i);
-    }
-
-    // Calculate compressed grid
+    // Calculate compressed grid and starting position
     uint64_t startG = 0;
+    std::vector<uint> startPos(WIDTH * HEIGHT, 0);
     for (int y = HEIGHT - 1; y >= 0; y--) {
         for (int x = WIDTH - 1; x >= 0; x--) {
             startG = (startG << 4) + grid[y][x];
-        }
-    }
-
-    // Calculate starting ID and starting position
-    std::vector<uint> startPos(WIDTH * HEIGHT, 0);
-    std::unordered_map<int, int> before;
-
-    for (uint y = 0; y < HEIGHT; y++) {
-        for (uint x = 0; x < WIDTH; x++) {
             if (grid[y][x] > 0) {
-                // New tile found
-                uint beforeCount = 0;
-
-                // Count number of preceding pattern tiles that's smaller
-                for (auto& it : before) {
-                    if (it.first < grid[y][x]) {
-                        beforeCount++;
-                    }
-                }
-                before[grid[y][x]] = beforeCount;
                 startPos[grid[y][x]] = y * WIDTH + x;
             }
         }
     }
 
-    uint64_t startId = 0;
-    uint j = WIDTH * HEIGHT;
-    for (auto tile : tiles) {
-        startId *= j--;
-        startId += startPos[tile] - before[tile];
-    }
-
-    std::cout << "Starting ID: " << startId << std::endl;
+    std::cout << "Starting grid: " << std::hex << startG << std::dec
+              << std::endl;
 
     // The pattern database consists of all possible permutations
     // of the pattern's tiles placed in the board. Any tile that
@@ -134,8 +100,8 @@ void PartialDatabase::generateDists() {
     // Start of BFS
     std::queue<Pattern> bfs;
 
-    bfs.push({startId, 0, startPos, startG, WIDTH, HEIGHT});
-    distMap[startId] = 0;
+    bfs.push({0, startPos, startG, WIDTH, HEIGHT});
+    distMap[startG] = 0;
 
     while (!bfs.empty()) {
         auto& curr = bfs.front();
@@ -153,11 +119,11 @@ void PartialDatabase::generateDists() {
             for (uint j = 0; j < 4; j++) {
                 auto dir = static_cast<Direction>(j);
                 if (curr.canShift(tile, dir)) {
-                    auto next = curr.shiftCell(tile, dir, deltas);
+                    auto next = curr.shiftCell(tile, dir);
 
                     // Haven't found this board yet
-                    if (distMap[next.id] == 1000000) {
-                        distMap[next.id] = next.dist;
+                    if (distMap.find(next.g) == distMap.end()) {
+                        distMap[next.g] = next.dist;
                         bfs.push(next);
                     }
                 }
@@ -181,13 +147,13 @@ void PartialDatabase::saveDists() {
     if (!file.good()) {
         std::cerr << "Could not generate database file: " + filename
                   << std::endl;
+    } else if (distMap.size() != size) {
+        std::cout << "Error: missing entries!" << std::endl;
+        throw;
     } else {
-        for (auto dist : distMap) {
-            if (dist == 1000000) {
-                std::cout << "Error: missing entries!" << std::endl;
-                throw;
-            }
-            file.write((char*)&dist, sizeof(dist));
+        for (const auto& it : distMap) {
+            file.write((char*)&(it.first), sizeof(it.first));
+            file.write((char*)&(it.second), sizeof(it.second));
         }
 
         file.close();

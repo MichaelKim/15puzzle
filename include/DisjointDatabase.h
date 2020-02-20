@@ -18,7 +18,7 @@ public:
     std::vector<int> where;
 
     int numPatterns() const;
-    int getHeuristic(const std::vector<uint64_t>& patterns) const;
+    int getHeuristic(const std::vector<uint64_t>& partialPositions) const;
 };
 
 #endif  // DISJOINTDATABASE_H

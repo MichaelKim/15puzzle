@@ -2,6 +2,7 @@
 #define PARTIALDATABASE_H
 
 #include "Pattern.h"
+#include "flat_hash_map.h"
 
 #include <string>
 #include <vector>
@@ -23,7 +24,7 @@ public:
     virtual ~PartialDatabase();
 
     std::vector<int> tiles;  // Sorted list of tiles in pattern
-    std::vector<int> distMap;
+    ska::flat_hash_map<uint64_t, int> distMap;
 };
 
 #endif  // PARTIALDATABASE_H

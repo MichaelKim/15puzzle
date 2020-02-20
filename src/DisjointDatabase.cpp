@@ -39,10 +39,11 @@ DisjointDatabase::DisjointDatabase(
 int DisjointDatabase::numPatterns() const { return databases.size(); }
 
 int DisjointDatabase::getHeuristic(
-    const std::vector<uint64_t>& patterns) const {
+    const std::vector<uint64_t>& partialPositions) const {
     int totalDist = 0;
-    for (size_t i = 0; i < patterns.size(); i++) {
-        totalDist += databases[i]->distMap[patterns[i]];
+    for (size_t i = 0; i < partialPositions.size(); i++) {
+        auto it = databases[i]->distMap.find(partialPositions[i]);
+        totalDist += it->second;
     }
     return totalDist;
 }
