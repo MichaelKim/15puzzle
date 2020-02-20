@@ -67,16 +67,18 @@ bool Idastar::dfs(Board& node, int g, Direction prevMove) {
     }
     nodes += 1;
 
-    const auto& moves = node.getMoves(prevMove);
-    for (auto move : moves) {
-        auto prev = node.applyMove(move);
+    for (int i = 0; i < 4; i++) {
+        auto move = static_cast<Direction>(i);
+        if (node.canMove(move, prevMove)) {
+            auto prev = node.applyMove(move);
 
-        if (dfs(node, g + COST, move)) {
-            path.push_back(move);
-            return true;
+            if (dfs(node, g + COST, move)) {
+                path.push_back(move);
+                return true;
+            }
+
+            node.undoMove(prev, move);
         }
-
-        node.undoMove(prev, move);
     }
 
     return false;

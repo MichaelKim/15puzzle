@@ -69,13 +69,36 @@ Board::Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d)
 
     // x, y, prevMove, moves[]
     moveList = std::vector<std::vector<std::vector<Direction>>>(
-        WIDTH * HEIGHT, std::vector<std::vector<Direction>>(5));
+        WIDTH * HEIGHT, std::vector<std::vector<Direction>>(4));
 
     for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {
             for (int m = 0; m < 4; m++) {
                 moveList[y * WIDTH + x][m] =
                     generateMoveList(x, y, static_cast<Direction>(m));
+            }
+        }
+    }
+
+    moveList2 =
+        std::vector<std::vector<bool>>(WIDTH * HEIGHT, std::vector<bool>(4));
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            for (int m = 0; m < 4; m++) {
+                switch (static_cast<Direction>(m)) {
+                    case Direction::U:
+                        moveList2[y * WIDTH + x][m] = (y > 0);
+                        break;
+                    case Direction::L:
+                        moveList2[y * WIDTH + x][m] = (x > 0);
+                        break;
+                    case Direction::D:
+                        moveList2[y * WIDTH + x][m] = (y < HEIGHT - 1);
+                        break;
+                    default:
+                        moveList2[y * WIDTH + x][m] = (x < WIDTH - 1);
+                        break;
+                }
             }
         }
     }
@@ -168,6 +191,11 @@ const std::vector<Direction>& Board::getMoves() const {
 const std::vector<Direction>& Board::getMoves(Direction prevMove) const {
     // Branchless lookup for moves
     return moveList[blank][static_cast<int>(prevMove)];
+}
+
+bool Board::canMove(Direction dir, Direction prev) const {
+    return moveList2[blank][static_cast<int>(dir)] &&
+           reverse[static_cast<int>(dir)] != prev;
 }
 
 inline int Board::getTile(int posn) { return grid[posn]; }

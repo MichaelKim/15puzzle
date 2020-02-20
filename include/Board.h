@@ -17,6 +17,10 @@ private:
     std::vector<int> deltas;
     std::vector<int> tileDeltas;
 
+    Direction reverse[4] = {Direction::D, Direction::L, Direction::U,
+                            Direction::R};
+    std::vector<std::vector<bool>> moveList2;
+
     const std::vector<std::vector<Direction>> moves = {
         /*  0 */ {Direction::U},
         /*  1 */ {Direction::R},
@@ -48,6 +52,7 @@ public:
     int getHeuristic() const;
     const std::vector<Direction>& getMoves() const;
     const std::vector<Direction>& getMoves(Direction prevMove) const;
+    bool canMove(Direction dir, Direction prev) const;
     std::pair<uint64_t, int> applyMove(Direction dir);
     void undoMove(const std::pair<uint64_t, int>& prev, Direction dir);
 
