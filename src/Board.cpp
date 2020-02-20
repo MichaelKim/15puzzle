@@ -58,12 +58,10 @@ const std::vector<Direction>& Board::generateMoveList(int x, int y,
 }
 
 Board::Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d)
-    : blank(0), grid(0), database(d), WIDTH(g[0].size()), HEIGHT(g.size()) {
-    uint64_t positions = 0;
-    for (int y = HEIGHT - 1; y >= 0; y--) {
-        for (int x = WIDTH - 1; x >= 0; x--) {
-            positions |= (uint64_t)(y * WIDTH + x) << (4 * g[y][x]);
-            grid = grid * 16 + g[y][x];
+    : blank(0), database(d), WIDTH(g[0].size()), HEIGHT(g.size()) {
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            grid.push_back(g[y][x]);
 
             if (g[y][x] == 0) blank = y * WIDTH + x;
         }
@@ -83,7 +81,7 @@ Board::Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d)
     }
 
     // {0, 0}, {0, -1}, {1, 0}, {0, 1}, {-1, 0}};
-    deltas = std::vector<int>{-4 * WIDTH, 4, 4 * WIDTH, -4};
+    deltas = std::vector<int>{-WIDTH, 1, WIDTH, -1};
 
     // Calculate deltas
     auto numPatterns = database.numPatterns();
@@ -172,18 +170,14 @@ const std::vector<Direction>& Board::getMoves(Direction prevMove) const {
     return moveList[blank][static_cast<int>(prevMove)];
 }
 
-inline int Board::getTile(int posn) {
-    return (grid & (0xfULL << posn)) >> posn;
-}
+inline int Board::getTile(int posn) { return grid[posn]; }
 
-inline void Board::setTile(int posn, int tile) {
-    grid = (grid & ~(0xfULL << posn)) | ((uint64_t)tile << posn);
-}
+inline void Board::setTile(int posn, int tile) { grid[posn] = tile; }
 
-int Board::applyMove(Direction dir) {
+// Pattern ID, pattern index
+std::pair<uint64_t, int> Board::applyMove(Direction dir) {
     // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
-    const int blank = 4 * this->blank;
     // Position of sliding tile
     const int slidingPos = blank + delta;
     // Value of sliding tile
@@ -193,15 +187,16 @@ int Board::applyMove(Direction dir) {
     setTile(blank, tile);
 
     // Update pattern
-    int index = database.where[tile];  // Which pattern the sliding tile is in
+    int index = database.where[tile];   // Which pattern the sliding tile is in
+    auto oldPattern = patterns[index];  // Storing for undo
 
     switch (dir) {
         case Direction::U: {
             int numGreater = 0;
             int numBlanks = 1;
             int skipDelta = 0;
-            for (int i = this->blank - WIDTH + 1; i < this->blank; i++) {
-                int skip = getTile(i * 4);
+            for (int i = blank - WIDTH + 1; i < blank; i++) {
+                int skip = getTile(i);
                 if (database.where[skip] != index) {
                     numBlanks++;
                 } else if (skip > tile) {
@@ -220,8 +215,8 @@ int Board::applyMove(Direction dir) {
             int numGreater = 0;
             int numBlanks = 1;
             int skipDelta = 0;
-            for (int i = this->blank + 1; i < this->blank + WIDTH; i++) {
-                int skip = getTile(i * 4);
+            for (int i = blank + 1; i < blank + WIDTH; i++) {
+                int skip = getTile(i);
                 if (database.where[skip] != index) {
                     numBlanks++;
                 } else if (skip > tile) {
@@ -239,15 +234,14 @@ int Board::applyMove(Direction dir) {
     }
 
     // Update blank tile
-    this->blank += delta / 4;
+    blank += delta;
 
-    return 1;
+    return {oldPattern, index};
 }
 
-void Board::undoMove(Direction dir) {
+void Board::undoMove(const std::pair<uint64_t, int>& prev, Direction dir) {
     // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
-    const int blank = 4 * this->blank;
     // Position of sliding tile
     const int slidingPos = blank - delta;
     // Value of sliding tile
@@ -256,55 +250,11 @@ void Board::undoMove(Direction dir) {
     // Set value of slid tile
     setTile(blank, tile);
 
-    // Update partial position
-    int index = database.where[tile];  // Which pattern the sliding tile is in
-
-    switch (dir) {
-        case Direction::U: {
-            int numGreater = 0;
-            int numBlanks = 1;
-            int skipDelta = 0;
-            for (int i = this->blank + 1; i < this->blank + WIDTH; i++) {
-                int skip = getTile(i * 4);
-                if (database.where[skip] != index) {
-                    numBlanks++;
-                } else if (skip > tile) {
-                    numGreater++;
-                    skipDelta += tileDeltas[skip];
-                }
-            }
-            patterns[index] -=
-                skipDelta + (numGreater + numBlanks) * tileDeltas[tile];
-
-            break;
-        }
-        case Direction::R:
-            patterns[index] += tileDeltas[tile];
-            break;
-        case Direction::D: {
-            int numGreater = 0;
-            int numBlanks = 1;
-            int skipDelta = 0;
-            for (int i = this->blank - WIDTH + 1; i < this->blank; i++) {
-                int skip = getTile(i * 4);
-                if (database.where[skip] != index) {
-                    numBlanks++;
-                } else if (skip > tile) {
-                    numGreater++;
-                    skipDelta += tileDeltas[skip];
-                }
-            }
-            patterns[index] +=
-                skipDelta + (numGreater + numBlanks) * tileDeltas[tile];
-            break;
-        }
-        default:
-            patterns[index] -= tileDeltas[tile];
-            break;
-    }
+    // Restore saved pattern ID
+    patterns[prev.second] = prev.first;
 
     // Update blank tile
-    this->blank -= delta / 4;
+    blank -= delta;
 }
 
 Board::~Board() = default;
@@ -316,8 +266,7 @@ std::ostream& operator<<(std::ostream& out, const Board& board) {
             if (i == board.blank) {
                 out << std::setw(3) << 0;
             } else {
-                out << std::setw(3)
-                    << ((board.grid & (0xfULL << (4 * i))) >> (4 * i));
+                out << std::setw(3) << board.grid[i];
             }
         }
         out << std::endl;

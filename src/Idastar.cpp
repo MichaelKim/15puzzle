@@ -3,6 +3,7 @@
 #include <iostream>
 
 #define INF 1000000
+#define COST 1  // Cost of move
 
 Idastar::Idastar() : path({}), minCost(INF), limit(0), nodes(0) {}
 
@@ -32,7 +33,7 @@ std::vector<Direction> Idastar::solve(Board start) {
             minCost = INF;
             std::cout << " " << limit << ", " << nodes << std::endl;
             for (size_t i = 0; i < startMoves.size(); i++) {
-                if (dfs(firstSlide[i], 1, startMoves[i])) {
+                if (dfs(firstSlide[i], COST, startMoves[i])) {
                     path.push_back(startMoves[i]);
                     break;
                 }
@@ -68,14 +69,14 @@ bool Idastar::dfs(Board& node, int g, Direction prevMove) {
 
     const auto& moves = node.getMoves(prevMove);
     for (auto move : moves) {
-        int cost = node.applyMove(move);
+        auto prev = node.applyMove(move);
 
-        if (dfs(node, g + cost, move)) {
+        if (dfs(node, g + COST, move)) {
             path.push_back(move);
             return true;
         }
 
-        node.undoMove(move);
+        node.undoMove(prev, move);
     }
 
     return false;
