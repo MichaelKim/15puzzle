@@ -10,12 +10,16 @@
 class Board {
 private:
     int blank;  // Position of blank (since patterns don't store the blank)
-    std::vector<int> grid;           // Value to position mapping
-    std::vector<uint64_t> patterns;  // Pattern IDs
-    const DisjointDatabase& database;
+    std::vector<int> grid;               // Value to position mapping
+    std::vector<int> mirrGrid;           // Mirrored grid
+    std::vector<uint64_t> patterns;      // Pattern IDs
+    std::vector<uint64_t> mirrPatterns;  // Mirrored pattern IDs
 
-    std::vector<int> deltas;
-    std::vector<int> tileDeltas;
+    // Lookup tables
+    const DisjointDatabase& database;  // Pattern heuristic
+    std::vector<int> deltas;           // Blank deltas
+    std::vector<int> tileDeltas;       // Tile deltas
+    std::vector<int> mirror;           // Mirror position
 
     const std::vector<std::vector<Direction>> moves = {
         /*  0 */ {Direction::U},
@@ -37,6 +41,10 @@ private:
                                                    Direction prevMove);
     std::vector<std::vector<std::vector<Direction>>> moveList;
 
+    std::vector<uint64_t> generatePatterns(
+        const std::vector<int>& grid,
+        const std::vector<std::vector<int>>& patternTiles);
+
     inline int getTile(int posn);
     inline void setTile(int posn, int tile);
 
@@ -48,8 +56,8 @@ public:
     int getHeuristic() const;
     const std::vector<Direction>& getMoves() const;
     const std::vector<Direction>& getMoves(Direction prevMove) const;
-    std::pair<uint64_t, int> applyMove(Direction dir);
-    void undoMove(const std::pair<uint64_t, int>& prev, Direction dir);
+    std::pair<uint64_t, uint64_t> applyMove(Direction dir);
+    void undoMove(const std::pair<uint64_t, uint64_t>& prev, Direction dir);
 
     virtual ~Board();
 

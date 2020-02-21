@@ -80,60 +80,83 @@ Board::Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d)
         }
     }
 
-    // {0, 0}, {0, -1}, {1, 0}, {0, 1}, {-1, 0}};
+    // {0, -1}, {1, 0}, {0, 1}, {-1, 0}};
     deltas = std::vector<int>{-WIDTH, 1, WIDTH, -1};
 
     // Calculate deltas
     auto numPatterns = database.numPatterns();
-    const auto& where = database.where;
 
     // The tiles in each pattern
     std::vector<std::vector<int>> patternTiles(numPatterns);
     for (int i = 1; i < WIDTH * HEIGHT; i++) {  // Ignore blank tile (0)
-        patternTiles[where[i]].push_back(i);
+        patternTiles[database.where[i]].push_back(i);
     }
 
-    tileDeltas.resize(WIDTH * HEIGHT, 1);
-    patterns.resize(numPatterns, 0);
+    patterns = generatePatterns(grid, patternTiles);
 
+    // Calculate tileDeltas
+    tileDeltas.resize(WIDTH * HEIGHT, 1);
     for (int i = 0; i < numPatterns; i++) {
-        // Calculate tileDeltas
         auto& tiles = patternTiles[i];
         for (int j = tiles.size() - 2; j >= 0; j--) {
             tileDeltas[tiles[j]] =
                 tileDeltas[tiles[j + 1]] * (WIDTH * HEIGHT - 1 - j);
         }
+    }
+
+    // Calculate mirror positions
+    // TODO: test with blank not in top-left or bottom-right
+    mirror = {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15};
+    int mirr2[16] = {0, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12};
+    mirrGrid.resize(WIDTH * HEIGHT, 0);
+    for (int i = 0; i < WIDTH * HEIGHT; i++) {
+        mirrGrid[i] = mirr2[grid[mirror[i]]];
+    }
+    mirrPatterns = generatePatterns(mirrGrid, patternTiles);
+}
+
+std::vector<uint64_t> Board::generatePatterns(
+    const std::vector<int>& grid,
+    const std::vector<std::vector<int>>& patternTiles) {
+    auto numPatterns = database.numPatterns();
+    std::vector<uint64_t> pat(numPatterns, 0);
+
+    for (int i = 0; i < numPatterns; i++) {
+        auto& tiles = patternTiles[i];
 
         // Calculate pattern
         std::vector<uint> startPos(WIDTH * HEIGHT, 0);
         std::unordered_map<int, int> before;
-        for (int y = 0; y < HEIGHT; y++) {
-            for (int x = 0; x < WIDTH; x++) {
-                if (where[g[y][x]] == i) {
-                    // New tile found
-                    uint beforeCount = 0;
+        for (int j = 0; j < WIDTH * HEIGHT; j++) {
+            if (database.where[grid[j]] == i) {
+                // New tile found
+                uint beforeCount = 0;
 
-                    // Count number of preceding pattern tiles that's smaller
-                    for (auto& it : before) {
-                        if (it.first < g[y][x]) {
-                            beforeCount++;
-                        }
+                // Count number of preceding pattern tiles that's smaller
+                for (auto& it : before) {
+                    if (it.first < grid[j]) {
+                        beforeCount++;
                     }
-
-                    before[g[y][x]] = beforeCount;
-                    startPos[g[y][x]] = y * WIDTH + x;
                 }
+
+                before[grid[j]] = beforeCount;
+                startPos[grid[j]] = j;
             }
         }
         uint j = WIDTH * HEIGHT;
         for (auto tile : tiles) {
-            patterns[i] *= j--;
-            patterns[i] += startPos[tile] - before[tile];
+            pat[i] *= j--;
+            pat[i] += startPos[tile] - before[tile];
         }
     }
+
+    return pat;
 }
 
-int Board::getHeuristic() const { return database.getHeuristic(patterns); }
+int Board::getHeuristic() const {
+    return std::max(database.getHeuristic(patterns),
+                    database.getHeuristic(mirrPatterns));
+}
 
 const std::vector<Direction>& Board::getMoves() const {
     // Should be run only once at start of search
@@ -175,13 +198,13 @@ inline int Board::getTile(int posn) { return grid[posn]; }
 inline void Board::setTile(int posn, int tile) { grid[posn] = tile; }
 
 // Pattern ID, pattern index
-std::pair<uint64_t, int> Board::applyMove(Direction dir) {
+std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
     // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
-    // Position of sliding tile
-    const int slidingPos = blank + delta;
+    // Position of sliding tile (and new blank)
+    const auto newBlank = blank + delta;
     // Value of sliding tile
-    const int tile = getTile(slidingPos);
+    const auto tile = getTile(newBlank);
 
     // Set value of slid tile
     setTile(blank, tile);
@@ -195,7 +218,7 @@ std::pair<uint64_t, int> Board::applyMove(Direction dir) {
             int numGreater = 0;
             int numBlanks = 1;
             int skipDelta = 0;
-            for (int i = blank - WIDTH + 1; i < blank; i++) {
+            for (int i = newBlank + 1; i < blank; i++) {
                 int skip = getTile(i);
                 if (database.where[skip] != index) {
                     numBlanks++;
@@ -215,7 +238,7 @@ std::pair<uint64_t, int> Board::applyMove(Direction dir) {
             int numGreater = 0;
             int numBlanks = 1;
             int skipDelta = 0;
-            for (int i = blank + 1; i < blank + WIDTH; i++) {
+            for (int i = blank + 1; i < newBlank; i++) {
                 int skip = getTile(i);
                 if (database.where[skip] != index) {
                     numBlanks++;
@@ -233,28 +256,90 @@ std::pair<uint64_t, int> Board::applyMove(Direction dir) {
             break;
     }
 
-    // Update blank tile
-    blank += delta;
+    // Update mirror grid, pattern
+    auto mirrBlank = mirror[blank];
+    auto mirrNewBlank = mirror[newBlank];
+    auto mirrTile = mirrGrid[mirrNewBlank];
+    mirrGrid[mirrBlank] = mirrTile;
+    int mirrIndex = database.where[mirrTile];
+    auto oldMirrPattern = mirrPatterns[mirrIndex];
 
-    return {oldPattern, index};
+    switch (dir) {
+        case Direction::L: {
+            int numGreater = 0;
+            int numBlanks = 1;
+            int skipDelta = 0;
+            for (int i = mirrNewBlank + 1; i < mirrBlank; i++) {
+                int skip = mirrGrid[i];
+                if (database.where[skip] != mirrIndex) {
+                    numBlanks++;
+                } else if (skip > mirrTile) {
+                    numGreater++;
+                    skipDelta += tileDeltas[skip];
+                }
+            }
+            mirrPatterns[mirrIndex] +=
+                skipDelta + (numGreater + numBlanks) * tileDeltas[mirrTile];
+            break;
+        }
+        case Direction::D:
+            mirrPatterns[mirrIndex] -= tileDeltas[mirrTile];
+            break;
+        case Direction::R: {
+            int numGreater = 0;
+            int numBlanks = 1;
+            int skipDelta = 0;
+            for (int i = mirrBlank + 1; i < mirrNewBlank; i++) {
+                int skip = mirrGrid[i];
+                if (database.where[skip] != mirrIndex) {
+                    numBlanks++;
+                } else if (skip > mirrTile) {
+                    numGreater++;
+                    skipDelta += tileDeltas[skip];
+                }
+            }
+            mirrPatterns[mirrIndex] -=
+                skipDelta + (numGreater + numBlanks) * tileDeltas[mirrTile];
+            break;
+        }
+        default:
+            mirrPatterns[mirrIndex] += tileDeltas[mirrTile];
+            break;
+    }
+
+    // Update blank tile
+    blank = newBlank;
+
+    return {oldPattern, oldMirrPattern};
 }
 
-void Board::undoMove(const std::pair<uint64_t, int>& prev, Direction dir) {
+void Board::undoMove(const std::pair<uint64_t, uint64_t>& prev, Direction dir) {
+    const auto& [pattern, mirrPattern] = prev;
+
     // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
     // Position of sliding tile
-    const int slidingPos = blank - delta;
+    const auto newBlank = blank - delta;
     // Value of sliding tile
-    const int tile = getTile(slidingPos);
+    const auto tile = getTile(newBlank);
 
     // Set value of slid tile
     setTile(blank, tile);
 
     // Restore saved pattern ID
-    patterns[prev.second] = prev.first;
+    int index = database.where[tile];
+    patterns[index] = pattern;
+
+    // Update mirrored grid
+    auto mirrBlank = mirror[blank];
+    auto mirrNewBlank = mirror[newBlank];
+    auto mirrTile = mirrGrid[mirrNewBlank];
+    mirrGrid[mirrBlank] = mirrTile;
+    int mirrIndex = database.where[mirrTile];
+    mirrPatterns[mirrIndex] = mirrPattern;
 
     // Update blank tile
-    blank -= delta;
+    blank = newBlank;
 }
 
 Board::~Board() = default;
@@ -271,5 +356,28 @@ std::ostream& operator<<(std::ostream& out, const Board& board) {
         }
         out << std::endl;
     }
+    // out << std::endl;
+
+    // for (int y = 0; y < board.HEIGHT; y++) {
+    //     for (int x = 0; x < board.WIDTH; x++) {
+    //         const int i = y * board.WIDTH + x;
+    //         if (i == board.mirror[board.blank]) {
+    //             out << std::setw(3) << 0;
+    //         } else {
+    //             out << std::setw(3) << board.mirrGrid[i];
+    //         }
+    //     }
+    //     out << std::endl;
+    // }
+
+    // std::cout << board.database.getHeuristic(board.patterns) << std::endl;
+    // std::cout << board.database.getHeuristic(board.mirrPatterns) <<
+    // std::endl;
+
+    // for (int i = 0; i < board.database.numPatterns(); i++) {
+    //     std::cout << board.patterns[i] << " " << board.mirrPatterns[i]
+    //               << std::endl;
+    // }
+
     return out;
 }
