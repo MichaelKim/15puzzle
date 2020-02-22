@@ -26,8 +26,6 @@ void usage() {
             "        Print this help\n"
             "    -i, --interactive\n"
             "        Show a playback of each solution\n"
-            "    -p, --parallel\n"
-            "        Run multithreaded IDA* (experimental)"
          << endl;
 }
 

@@ -10,12 +10,18 @@ This solver has also been ported to WebAssembly using Emscripten [here](https://
 
 ### Build
 
-``` sh
+```sh
 make
 
 # or
 
-g++ -std=c++14 src/*.cpp -o bin/puzzle
+mkdir build
+cd build
+cmake ..
+
+# or
+
+g++ -std=c++17 src/*.cpp -o bin/puzzle
 ```
 
 ### Usage
@@ -33,19 +39,15 @@ Options:
     Print this help message
   -i, --interactive
     Show a playback of each solution
-  -p, --parallel
-    Run multithreaded IDA* (experimental)
 ```
 
 Alternatively, the database and board files can be read in through standard input. The following three commands will do the same solves:
 
-``` sh
+```sh
 cat databases/8-reg | ./puzzle -b boards/8-reg
 cat boards/8-reg | ./puzzle -d databases/8-reg
 cat databases/8-reg boards/8-reg | ./puzzle
 ```
-
-The parallel option is experimental, and will probably not speed up the solver. If anything, it might be slower than running normally.
 
 ## File Formats
 
