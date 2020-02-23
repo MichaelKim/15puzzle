@@ -106,11 +106,16 @@ Board::Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d)
 
     // Calculate mirror positions
     // TODO: test with blank not in top-left or bottom-right
-    mirror = {0, 4, 8, 12, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15};
-    int mirr2[16] = {0, 1, 5, 9, 13, 2, 6, 10, 14, 3, 7, 11, 15, 4, 8, 12};
+    mirror = std::vector<int>(WIDTH * HEIGHT, 0);
+    for (int i = 0; i < WIDTH * HEIGHT; i++) {
+        int y = i / WIDTH;
+        int x = i % WIDTH;
+        mirror[i] = (x * WIDTH) + y;
+    }
+
     mirrGrid.resize(WIDTH * HEIGHT, 0);
     for (int i = 0; i < WIDTH * HEIGHT; i++) {
-        mirrGrid[i] = mirr2[grid[mirror[i]]];
+        mirrGrid[i] = database.mirrPos[grid[mirror[i]]];
     }
     mirrPatterns = generatePatterns(mirrGrid, patternTiles);
 }

@@ -8,7 +8,7 @@
 
 class DisjointDatabase {
 private:
-    std::vector<std::shared_ptr<PartialDatabase>> databases;
+    std::vector<std::unique_ptr<PartialDatabase>> databases;
 
 public:
     DisjointDatabase(int len, const std::string& name,
@@ -16,6 +16,7 @@ public:
     virtual ~DisjointDatabase();
 
     std::vector<int> where;
+    std::vector<uint> mirrPos;
 
     int numPatterns() const;
     int getHeuristic(const std::vector<uint64_t>& patterns) const;

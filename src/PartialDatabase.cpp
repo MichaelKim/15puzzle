@@ -9,6 +9,8 @@
 #include <queue>
 #include <unordered_map>
 
+#define INF 1000000
+
 PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
                                  const std::string& dbName, int index)
     : filename("databases/" + dbName + "-" + std::to_string(index) + ".dat"),
@@ -35,7 +37,7 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
     }
 
     // Resize distMap
-    distMap.resize(size, 1000000);
+    distMap.resize(size, INF);
 
     std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (!file.good()) {
@@ -156,7 +158,7 @@ void PartialDatabase::generateDists() {
                     auto next = curr.shiftCell(tile, dir, deltas);
 
                     // Haven't found this board yet
-                    if (distMap[next.id] == 1000000) {
+                    if (distMap[next.id] == INF) {
                         distMap[next.id] = next.dist;
                         bfs.push(next);
                     }
@@ -183,10 +185,6 @@ void PartialDatabase::saveDists() {
                   << std::endl;
     } else {
         for (auto dist : distMap) {
-            if (dist == 1000000) {
-                std::cout << "Error: missing entries!" << std::endl;
-                throw;
-            }
             file.write((char*)&dist, sizeof(dist));
         }
 
