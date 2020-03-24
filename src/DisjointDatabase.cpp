@@ -47,4 +47,10 @@ int DisjointDatabase::getHeuristic(
     return totalDist;
 }
 
+int DisjointDatabase::getHeuristicDelta(int index, uint64_t prevPattern,
+                                        uint64_t nextPattern) const {
+    const auto& distMap = databases[index]->distMap;
+    return distMap[nextPattern] - distMap[prevPattern];
+}
+
 DisjointDatabase::~DisjointDatabase() = default;

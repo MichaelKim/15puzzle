@@ -19,6 +19,8 @@ public:
 
     int numPatterns() const;
     int getHeuristic(const std::vector<uint64_t>& patterns) const;
+    int getHeuristicDelta(int index, uint64_t prevPattern,
+                          uint64_t nextPattern) const;
 };
 
 #endif  // DISJOINTDATABASE_H

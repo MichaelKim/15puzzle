@@ -17,6 +17,8 @@ private:
     std::vector<int> deltas;
     std::vector<int> tileDeltas;
 
+    int h;
+
     const std::vector<std::vector<Direction>> moves = {
         /*  0 */ {Direction::U},
         /*  1 */ {Direction::R},

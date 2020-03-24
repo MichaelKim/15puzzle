@@ -131,9 +131,11 @@ Board::Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d)
             patterns[i] += startPos[tile] - before[tile];
         }
     }
+
+    h = database.getHeuristic(patterns);
 }
 
-int Board::getHeuristic() const { return database.getHeuristic(patterns); }
+int Board::getHeuristic() const { return h; }
 
 const std::vector<Direction>& Board::getMoves() const {
     // Should be run only once at start of search
@@ -236,6 +238,8 @@ std::pair<uint64_t, int> Board::applyMove(Direction dir) {
     // Update blank tile
     blank += delta;
 
+    h += database.getHeuristicDelta(index, oldPattern, patterns[index]);
+
     return {oldPattern, index};
 }
 
@@ -251,6 +255,8 @@ void Board::undoMove(const std::pair<uint64_t, int>& prev, Direction dir) {
     setTile(blank, tile);
 
     // Restore saved pattern ID
+    h += database.getHeuristicDelta(prev.second, patterns[prev.second],
+                                    prev.first);
     patterns[prev.second] = prev.first;
 
     // Update blank tile
