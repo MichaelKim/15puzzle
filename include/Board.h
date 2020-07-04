@@ -1,11 +1,11 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#include "Direction.h"
-#include "DisjointDatabase.h"
-
 #include <ostream>
 #include <vector>
+
+#include "Direction.h"
+#include "DisjointDatabase.h"
 
 class Board {
 private:
@@ -51,7 +51,7 @@ private:
 public:
     const int WIDTH, HEIGHT;
 
-    Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d);
+    Board(const std::vector<std::vector<uint>>& g, const DisjointDatabase& d);
 
     int getHeuristic() const;
     const std::vector<Direction>& getMoves() const;

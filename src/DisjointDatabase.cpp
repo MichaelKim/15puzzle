@@ -3,11 +3,12 @@
 #include <iostream>
 
 DisjointDatabase::DisjointDatabase(
-    int len, const std::string& name,
-    std::vector<std::vector<std::vector<int>>> grids)
-    : where(len, -1) {
-    int WIDTH = grids[0][0].size();
-    int HEIGHT = grids[0].size();
+    const std::string& name,
+    std::vector<std::vector<std::vector<uint>>> grids) {
+    const auto WIDTH = grids[0][0].size();
+    const auto HEIGHT = grids[0].size();
+
+    where = std::vector<int>(WIDTH * HEIGHT, -1);
 
     // All partial grids, layered to one
     // This represents the solved grid
@@ -67,7 +68,7 @@ DisjointDatabase::DisjointDatabase(
     }
 }
 
-int DisjointDatabase::numPatterns() const { return databases.size(); }
+std::size_t DisjointDatabase::numPatterns() const { return databases.size(); }
 
 int DisjointDatabase::getHeuristic(
     const std::vector<uint64_t>& patterns) const {

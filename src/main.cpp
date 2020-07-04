@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "../include/Board.h"
+#include "../include/DisjointDatabase.h"
 #include "../include/Idastar.h"
 #include "../include/InputParser.h"
 
@@ -29,15 +30,15 @@ void usage() {
          << endl;
 }
 
-vector<vector<vector<int>>> readDatabase(istream& input) {
-    int width, height, databaseNum;
+vector<vector<vector<uint>>> readDatabase(istream& input) {
+    uint width, height, databaseNum;
     input >> width >> height >> databaseNum;
 
-    vector<vector<vector<int>>> grids(
-        databaseNum, vector<vector<int>>(height, vector<int>(width, 0)));
-    for (int i = 0; i < databaseNum; i++) {
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
+    vector<vector<vector<uint>>> grids(
+        databaseNum, vector<vector<uint>>(height, vector<uint>(width, 0)));
+    for (uint i = 0; i < databaseNum; i++) {
+        for (uint y = 0; y < height; y++) {
+            for (uint x = 0; x < width; x++) {
                 input >> grids[i][y][x];
             }
         }
@@ -46,14 +47,14 @@ vector<vector<vector<int>>> readDatabase(istream& input) {
 }
 
 vector<Board> readBoards(istream& input, const DisjointDatabase& db) {
-    int width, height, boardNum;
+    uint width, height, boardNum;
     input >> width >> height >> boardNum;
 
     vector<Board> boards;
-    for (int i = 0; i < boardNum; i++) {
-        vector<vector<int>> board(height, vector<int>(width, 0));
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
+    for (uint i = 0; i < boardNum; i++) {
+        vector<vector<uint>> board(height, vector<uint>(width, 0));
+        for (uint y = 0; y < height; y++) {
+            for (uint x = 0; x < width; x++) {
                 input >> board[y][x];
             }
         }
@@ -61,6 +62,40 @@ vector<Board> readBoards(istream& input, const DisjointDatabase& db) {
     }
     return boards;
 }
+
+std::pair<std::string, vector<vector<vector<uint>>>> getDatabase() {
+    if (InputParser::databaseExists()) {
+        auto dbPath = InputParser::getDatabase();
+        auto dbName = dbPath.substr(dbPath.find_last_of('/') + 1);
+
+        ifstream input(dbPath);
+        return {dbName, readDatabase(input)};
+    }
+
+    return {"def", readDatabase(cin)};
+}
+
+vector<Board> getBoards(const DisjointDatabase& db) {
+    if (InputParser::boardExists()) {
+        ifstream input(InputParser::getBoard());
+
+        return readBoards(input, db);
+    }
+
+    return readBoards(cin, db);
+}
+
+void timeElapsed(decltype(chrono::steady_clock::now()) start) {
+    auto end = chrono::steady_clock::now();
+    cout << "Time elapsed: "
+         << (chrono::duration_cast<chrono::microseconds>(end - start).count()) /
+                1000000.0
+         << endl
+         << endl;
+}
+
+#define START_TIMER(name) auto timer_##name = chrono::steady_clock::now()
+#define END_TIMER(name) timeElapsed(timer_##name)
 
 int main(int argc, const char* argv[]) {
     InputParser::parse(argc, argv);
@@ -72,60 +107,30 @@ int main(int argc, const char* argv[]) {
     }
 
     // Reading database file
-    string dbName = "def";
-    vector<vector<vector<int>>> grids;
-    if (InputParser::databaseExists()) {
-        string dbPath = InputParser::getDatabase();
-        dbName = dbPath.substr(dbPath.find_last_of('/') + 1);
-
-        ifstream input = ifstream(dbPath);
-        grids = readDatabase(input);
-        input.close();
-    } else {
-        grids = readDatabase(cin);
-    }
+    const auto [dbName, grids] = getDatabase();
     if (grids.empty()) {
         cerr << "Error: must have at least one database" << endl;
         return 1;
     }
 
-    const int WIDTH = grids[0][0].size();
-    const int HEIGHT = grids[0].size();
-
     // Setup database
-    auto dbBegin = chrono::steady_clock::now();
-
-    DisjointDatabase db(WIDTH * HEIGHT, dbName, grids);
-
-    auto dbEnd = chrono::steady_clock::now();
-    cout << "Database time taken: "
-         << (chrono::duration_cast<chrono::microseconds>(dbEnd - dbBegin)
-                 .count()) /
-                1000000.0
-         << endl
-         << endl;
+    START_TIMER(db);
+    DisjointDatabase db(dbName, grids);
+    END_TIMER(db);
 
     // Reading board file
-    vector<Board> startBoards;
-    if (InputParser::boardExists()) {
-        ifstream input = ifstream(InputParser::getBoard());
-        startBoards = readBoards(input, db);
-        input.close();
-    } else {
-        startBoards = readBoards(cin, db);
-    }
+    auto startBoards(getBoards(db));
 
     // Setup search
     Idastar search;
 
     // Start search
     vector<vector<Direction>> answers;
-    auto solveBegin = chrono::steady_clock::now();
-
-    for (const Board& startBoard : startBoards) {
-        auto singleSolveBegin = chrono::steady_clock::now();
+    START_TIMER(solve);
+    for (const auto& startBoard : startBoards) {
+        START_TIMER(singleSolve);
         auto solution = search.solve(startBoard);
-        auto singleSolveEnd = chrono::steady_clock::now();
+        END_TIMER(singleSolve);
 
         if (solution.empty()) {
             cout << "No solution found!" << endl;
@@ -137,31 +142,17 @@ int main(int argc, const char* argv[]) {
             cout << endl;
         }
 
-        cout << "Solve time taken: "
-             << (chrono::duration_cast<chrono::microseconds>(singleSolveEnd -
-                                                             singleSolveBegin)
-                     .count()) /
-                    1000000.0
-             << endl
-             << endl;
-
         answers.push_back(solution);
     }
-
-    auto solveEnd = chrono::steady_clock::now();
-    cout << "Total solve time taken: "
-         << (chrono::duration_cast<chrono::microseconds>(solveEnd - solveBegin)
-                 .count()) /
-                1000000.0
-         << endl;
+    END_TIMER(solve);
 
     // Check solutions
     cout << "Checking solutions:" << endl;
-    for (size_t i = 0; i < startBoards.size(); i++) {
-        Board b = startBoards[i];
+    for (auto i = 0; i < startBoards.size(); i++) {
+        auto b = startBoards[i];
         auto solution = answers[i];
 
-        for (int j = solution.size() - 1; j >= 0; j--) {
+        for (auto j = solution.size(); j--;) {
             b.applyMove(solution[j]);
             if (InputParser::showInteractive()) {
                 cout << (solution.size() - j) << endl;

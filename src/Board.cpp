@@ -57,7 +57,7 @@ const std::vector<Direction>& Board::generateMoveList(int x, int y,
     return moves[14];                                // 0, 1, 2, 3
 }
 
-Board::Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d)
+Board::Board(const std::vector<std::vector<uint>>& g, const DisjointDatabase& d)
     : blank(0), database(d), WIDTH(g[0].size()), HEIGHT(g.size()) {
     for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {

@@ -1,7 +1,5 @@
 #include "../include/PartialDatabase.h"
 
-#include "../include/Pattern.h"
-
 #include <chrono>
 #include <fstream>
 #include <iomanip>
@@ -9,11 +7,13 @@
 #include <queue>
 #include <unordered_map>
 
+#include "../include/Pattern.h"
+
 #define INF 1000000
 
-PartialDatabase::PartialDatabase(std::vector<std::vector<int>> grid,
+PartialDatabase::PartialDatabase(std::vector<std::vector<uint>> grid,
                                  const std::string& dbName, int index)
-    : filename("databases/" + dbName + "-" + std::to_string(index) + ".dat"),
+    : filename("databases/def-" + std::to_string(index) + ".dat"),
       grid(grid),
       WIDTH(grid[0].size()),
       HEIGHT(grid.size()),

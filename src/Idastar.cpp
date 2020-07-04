@@ -50,8 +50,8 @@ std::vector<Direction> Idastar::solve(Board start) {
 }
 
 bool Idastar::dfs(Board& node, int g, Direction prevMove) {
-    int h = node.getHeuristic();
-    int f = g + h;
+    auto h = node.getHeuristic();
+    auto f = g + h;
 
     if (f <= limit) {
         if (h == 0) {

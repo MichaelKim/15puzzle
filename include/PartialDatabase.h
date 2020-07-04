@@ -1,15 +1,15 @@
 #ifndef PARTIALDATABASE_H
 #define PARTIALDATABASE_H
 
-#include "Pattern.h"
-
 #include <string>
 #include <vector>
+
+#include "Pattern.h"
 
 class PartialDatabase {
 private:
     std::string filename;
-    std::vector<std::vector<int>> grid;
+    std::vector<std::vector<uint>> grid;
     const uint WIDTH, HEIGHT;
     uint size;
 
@@ -17,7 +17,7 @@ private:
     void saveDists();
 
 public:
-    PartialDatabase(std::vector<std::vector<int>> grid,
+    PartialDatabase(std::vector<std::vector<uint>> grid,
                     const std::string& dbName, int index);
 
     virtual ~PartialDatabase();
