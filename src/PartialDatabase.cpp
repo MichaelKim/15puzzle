@@ -191,5 +191,3 @@ void PartialDatabase::saveDists() {
         file.close();
     }
 }
-
-PartialDatabase::~PartialDatabase() = default;

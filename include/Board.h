@@ -51,15 +51,14 @@ private:
 public:
     const int WIDTH, HEIGHT;
 
-    Board(const std::vector<std::vector<uint>>& g, const DisjointDatabase& d);
+    Board(const std::vector<std::vector<unsigned>>& g,
+          const DisjointDatabase& d);
 
     int getHeuristic() const;
     const std::vector<Direction>& getMoves() const;
     const std::vector<Direction>& getMoves(Direction prevMove) const;
     std::pair<uint64_t, uint64_t> applyMove(Direction dir);
     void undoMove(const std::pair<uint64_t, uint64_t>& prev, Direction dir);
-
-    virtual ~Board();
 
     friend std::ostream& operator<<(std::ostream& out, const Board& board);
 };

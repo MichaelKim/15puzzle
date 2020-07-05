@@ -4,7 +4,7 @@
 
 DisjointDatabase::DisjointDatabase(
     const std::string& name,
-    std::vector<std::vector<std::vector<uint>>> grids) {
+    std::vector<std::vector<std::vector<unsigned>>> grids) {
     const auto WIDTH = grids[0][0].size();
     const auto HEIGHT = grids[0].size();
 
@@ -15,12 +15,12 @@ DisjointDatabase::DisjointDatabase(
     std::vector<std::vector<int>> combined(HEIGHT, std::vector<int>(WIDTH, 0));
 
     // The reflected positions of the tiles
-    mirrPos = std::vector<uint>(WIDTH * HEIGHT, 0);
+    mirrPos = std::vector<unsigned>(WIDTH * HEIGHT, 0);
 
     for (size_t i = 0; i < grids.size(); i++) {
-        auto pd = std::make_unique<PartialDatabase>(grids[i], name, i);
+        PartialDatabase pd(grids[i], name, i);
 
-        for (auto tile : pd->tiles) {
+        for (auto tile : pd.tiles) {
             if (where[tile] != -1) {
                 std::cout << "Error: patterns overlapping" << std::endl;
                 throw;
@@ -29,11 +29,11 @@ DisjointDatabase::DisjointDatabase(
             where[tile] = i;
         }
 
-        databases.push_back(std::move(pd));
+        databases.push_back(pd);
 
         // Calculate value to position mapping
-        for (uint y = 0; y < HEIGHT; y++) {
-            for (uint x = 0; x < WIDTH; x++) {
+        for (unsigned y = 0; y < HEIGHT; y++) {
+            for (unsigned x = 0; x < WIDTH; x++) {
                 if (grids[i][y][x] > 0) {
                     combined[y][x] = grids[i][y][x];
                 }
@@ -41,8 +41,8 @@ DisjointDatabase::DisjointDatabase(
         }
     }
 
-    for (uint y = 0; y < HEIGHT; y++) {
-        for (uint x = 0; x < WIDTH; x++) {
+    for (unsigned y = 0; y < HEIGHT; y++) {
+        for (unsigned x = 0; x < WIDTH; x++) {
             if (combined[y][x] > 0) {
                 mirrPos[combined[y][x]] = combined[x][y];
             }
@@ -74,9 +74,7 @@ int DisjointDatabase::getHeuristic(
     const std::vector<uint64_t>& patterns) const {
     int totalDist = 0;
     for (size_t i = 0; i < patterns.size(); i++) {
-        totalDist += databases[i]->distMap[patterns[i]];
+        totalDist += databases[i].distMap[patterns[i]];
     }
     return totalDist;
 }
-
-DisjointDatabase::~DisjointDatabase() = default;

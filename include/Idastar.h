@@ -1,10 +1,10 @@
 #ifndef IDASTAR_H
 #define IDASTAR_H
 
+#include <vector>
+
 #include "Board.h"
 #include "Direction.h"
-
-#include <vector>
 
 class Idastar {
 private:
@@ -15,7 +15,6 @@ private:
 
 public:
     Idastar();
-    virtual ~Idastar();
 
     std::vector<Direction> solve(Board start);
     bool dfs(Board& root, int g, Direction prevMove);

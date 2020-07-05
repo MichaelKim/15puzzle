@@ -81,5 +81,3 @@ bool Idastar::dfs(Board& node, int g, Direction prevMove) {
 
     return false;
 }
-
-Idastar::~Idastar() = default;

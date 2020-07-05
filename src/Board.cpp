@@ -1,5 +1,6 @@
 #include "../include/Board.h"
 
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <unordered_map>
@@ -57,7 +58,8 @@ const std::vector<Direction>& Board::generateMoveList(int x, int y,
     return moves[14];                                // 0, 1, 2, 3
 }
 
-Board::Board(const std::vector<std::vector<uint>>& g, const DisjointDatabase& d)
+Board::Board(const std::vector<std::vector<unsigned>>& g,
+             const DisjointDatabase& d)
     : blank(0), database(d), WIDTH(g[0].size()), HEIGHT(g.size()) {
     for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {
@@ -130,12 +132,12 @@ std::vector<uint64_t> Board::generatePatterns(
         auto& tiles = patternTiles[i];
 
         // Calculate pattern
-        std::vector<uint> startPos(WIDTH * HEIGHT, 0);
+        std::vector<unsigned> startPos(WIDTH * HEIGHT, 0);
         std::unordered_map<int, int> before;
         for (int j = 0; j < WIDTH * HEIGHT; j++) {
             if (database.where[grid[j]] == i) {
                 // New tile found
-                uint beforeCount = 0;
+                unsigned beforeCount = 0;
 
                 // Count number of preceding pattern tiles that's smaller
                 for (auto& it : before) {
@@ -148,7 +150,7 @@ std::vector<uint64_t> Board::generatePatterns(
                 startPos[grid[j]] = j;
             }
         }
-        uint j = WIDTH * HEIGHT;
+        unsigned j = WIDTH * HEIGHT;
         for (auto tile : tiles) {
             pat[i] *= j--;
             pat[i] += startPos[tile] - before[tile];
@@ -347,8 +349,6 @@ void Board::undoMove(const std::pair<uint64_t, uint64_t>& prev, Direction dir) {
     blank = newBlank;
 }
 
-Board::~Board() = default;
-
 std::ostream& operator<<(std::ostream& out, const Board& board) {
     for (int y = 0; y < board.HEIGHT; y++) {
         for (int x = 0; x < board.WIDTH; x++) {
@@ -361,28 +361,5 @@ std::ostream& operator<<(std::ostream& out, const Board& board) {
         }
         out << std::endl;
     }
-    // out << std::endl;
-
-    // for (int y = 0; y < board.HEIGHT; y++) {
-    //     for (int x = 0; x < board.WIDTH; x++) {
-    //         const int i = y * board.WIDTH + x;
-    //         if (i == board.mirror[board.blank]) {
-    //             out << std::setw(3) << 0;
-    //         } else {
-    //             out << std::setw(3) << board.mirrGrid[i];
-    //         }
-    //     }
-    //     out << std::endl;
-    // }
-
-    // std::cout << board.database.getHeuristic(board.patterns) << std::endl;
-    // std::cout << board.database.getHeuristic(board.mirrPatterns) <<
-    // std::endl;
-
-    // for (int i = 0; i < board.database.numPatterns(); i++) {
-    //     std::cout << board.patterns[i] << " " << board.mirrPatterns[i]
-    //               << std::endl;
-    // }
-
     return out;
 }
