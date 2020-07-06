@@ -108,6 +108,28 @@ Board::Board(const std::array<int, 16>& g, const DisjointDatabase& d)
         mirrGrid[i] = database.mirrPos[grid[mirror[i]]];
     }
     mirrPatterns = generatePatterns(mirrGrid, patternTiles);
+
+    // Blank position
+    for (int i = 0; i < 16; i++) {
+        // Direction
+        for (int j = 0; j < 4; j++) {
+            auto dir = static_cast<Direction>(j);
+            switch (dir) {
+                case Direction::U:
+                    canMoveList[i][j] = (i / 4) > 0;
+                    break;
+                case Direction::R:
+                    canMoveList[i][j] = (i % 4) < WIDTH - 1;
+                    break;
+                case Direction::D:
+                    canMoveList[i][j] = (i / 4) < HEIGHT - 1;
+                    break;
+                default:
+                    canMoveList[i][j] = (i % 4) > 0;
+                    break;
+            }
+        }
+    }
 }
 
 std::vector<uint64_t> Board::generatePatterns(
@@ -189,9 +211,17 @@ const std::vector<Direction>& Board::getMoves(Direction prevMove) const {
     return moveList[blank][static_cast<int>(prevMove)];
 }
 
-inline int Board::getTile(int posn) { return grid[posn]; }
+inline int Board::getTile(int posn) const { return grid[posn]; }
 
 inline void Board::setTile(int posn, int tile) { grid[posn] = tile; }
+
+inline int Board::getMirrTile(int posn) const { return mirrGrid[posn]; }
+
+inline void Board::setMirrTile(int posn, int tile) { mirrGrid[posn] = tile; }
+
+bool Board::canMove(Direction dir) {
+    return canMoveList[blank][static_cast<int>(dir)];
+}
 
 // Pattern ID, pattern index
 std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
@@ -251,8 +281,8 @@ std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
     // Update mirror grid, pattern
     auto mirrBlank = mirror[blank];
     auto mirrNewBlank = mirror[newBlank];
-    auto mirrTile = mirrGrid[mirrNewBlank];
-    mirrGrid[mirrBlank] = mirrTile;
+    auto mirrTile = getMirrTile(mirrNewBlank);
+    setMirrTile(mirrBlank, mirrTile);
     int mirrIndex = database.where[mirrTile];
     auto oldMirrPattern = mirrPatterns[mirrIndex];
 
@@ -261,7 +291,7 @@ std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
             int numSkips = 1;
             int skipDelta = 0;
             for (int i = 1; i <= WIDTH; i++) {
-                int skip = mirrGrid[i + mirrNewBlank];
+                int skip = getMirrTile(i + mirrNewBlank);
                 if (database.where[skip] != mirrIndex) {
                     numSkips++;
                 } else if (skip > mirrTile) {
@@ -280,7 +310,7 @@ std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
             int numSkips = 1;
             int skipDelta = 0;
             for (int i = 1; i <= WIDTH; i++) {
-                int skip = mirrGrid[i + mirrBlank];
+                int skip = getMirrTile(i + mirrBlank);
                 if (database.where[skip] != mirrIndex) {
                     numSkips++;
                 } else if (skip > mirrTile) {
@@ -323,8 +353,8 @@ void Board::undoMove(const std::pair<uint64_t, uint64_t>& prev, Direction dir) {
     // Update mirrored grid
     auto mirrBlank = mirror[blank];
     auto mirrNewBlank = mirror[newBlank];
-    auto mirrTile = mirrGrid[mirrNewBlank];
-    mirrGrid[mirrBlank] = mirrTile;
+    auto mirrTile = getMirrTile(mirrNewBlank);
+    setMirrTile(mirrBlank, mirrTile);
     int mirrIndex = database.where[mirrTile];
     mirrPatterns[mirrIndex] = mirrPattern;
 
@@ -339,7 +369,7 @@ std::ostream& operator<<(std::ostream& out, const Board& board) {
             if (i == board.blank) {
                 out << std::setw(3) << 0;
             } else {
-                out << std::setw(3) << board.grid[i];
+                out << std::setw(3) << board.getTile(i);
             }
         }
         out << std::endl;

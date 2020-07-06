@@ -46,17 +46,22 @@ private:
                                                    Direction prevMove);
     std::array<std::vector<std::vector<Direction>>, 16> moveList;
 
+    std::array<std::array<bool, 4>, 16> canMoveList;
+
     std::vector<uint64_t> generatePatterns(
         const std::array<int, 16>& grid,
         const std::vector<std::vector<int>>& patternTiles);
 
-    inline int getTile(int posn);
-    inline void setTile(int posn, int tile);
+    int getTile(int posn) const;
+    void setTile(int posn, int tile);
+    int getMirrTile(int posn) const;
+    void setMirrTile(int posn, int tile);
 
 public:
     Board(const std::array<int, 16>& g, const DisjointDatabase& d);
 
     int getHeuristic() const;
+    bool canMove(Direction dir);
     const std::vector<Direction>& getMoves() const;
     const std::vector<Direction>& getMoves(Direction prevMove) const;
     std::pair<uint64_t, uint64_t> applyMove(Direction dir);
