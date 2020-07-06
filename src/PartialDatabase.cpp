@@ -5,6 +5,8 @@
 #include <iostream>
 #include <queue>
 
+#include "../include/Util.h"
+
 #define INF 1000000
 
 PartialDatabase::PartialDatabase(std::vector<std::vector<unsigned>> grid,
@@ -58,24 +60,27 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<unsigned>> grid,
 }
 
 void PartialDatabase::generateDists() {
-    PatternGroup group(grid, WIDTH, HEIGHT);
+    std::cout << "Generating database" << std::endl;
 
-    Pattern start = group.getPattern();
+    PatternGroup group(grid, WIDTH, HEIGHT);
 
     int count = 0;
     unsigned dist = 0;
 
-    std::queue<Pattern> bfs;
-    bfs.push(start);
+    START_TIMER(pdb);
+
+    std::queue<std::pair<Pattern, unsigned>> bfs;
+    const auto& start = group.initPattern;
+    bfs.push({start, 0});
     distMap[start.id] = 0;
 
     while (!bfs.empty()) {
-        const auto& curr = bfs.front();
+        const auto& [curr, currDist] = bfs.front();
 
         // Logging
-        if (curr.dist > dist) {
+        if (currDist > dist) {
             std::cout << dist << ": " << count << std::endl;
-            dist = curr.dist;
+            dist = currDist;
             count = 1;
         } else {
             count++;
@@ -89,8 +94,8 @@ void PartialDatabase::generateDists() {
 
                     // Haven't found this board yet
                     if (distMap[next.id] == INF) {
-                        distMap[next.id] = next.dist;
-                        bfs.push(next);
+                        distMap[next.id] = currDist + 1;
+                        bfs.push({std::move(next), currDist + 1});
                     }
                 }
             }
@@ -98,6 +103,8 @@ void PartialDatabase::generateDists() {
 
         bfs.pop();
     }
+
+    END_TIMER(pdb);
 }
 
 void PartialDatabase::saveDists() {

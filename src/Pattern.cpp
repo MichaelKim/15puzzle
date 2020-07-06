@@ -4,13 +4,9 @@
 
 PatternGroup::PatternGroup(std::vector<std::vector<unsigned>> grid,
                            const unsigned WIDTH, const unsigned HEIGHT)
-    : deltas(WIDTH * HEIGHT, 1),
-      WIDTH(WIDTH),
-      HEIGHT(HEIGHT),
-      id(0),
-      pos(WIDTH * HEIGHT, 0),
-      g(0) {
+    : deltas(WIDTH * HEIGHT, 1), WIDTH(WIDTH), HEIGHT(HEIGHT) {
     // Calculate compressed grid
+    uint64_t g = 0;
     for (int y = HEIGHT; y--;) {
         for (int x = WIDTH; x--;) {
             g = (g << 4) + grid[y][x];
@@ -20,6 +16,7 @@ PatternGroup::PatternGroup(std::vector<std::vector<unsigned>> grid,
     // Calculate starting ID and starting position
     std::unordered_map<int, int> before;
     std::vector<unsigned> tiles;
+    std::vector<unsigned> pos(WIDTH * HEIGHT, 0);
 
     for (unsigned y = 0; y < HEIGHT; y++) {
         for (unsigned x = 0; x < WIDTH; x++) {
@@ -43,19 +40,21 @@ PatternGroup::PatternGroup(std::vector<std::vector<unsigned>> grid,
         }
     }
 
-    // Calculate deltas
-    for (int i = tiles.size() - 1; i--;) {
-        deltas[tiles[i]] = deltas[tiles[i + 1]] * (WIDTH * HEIGHT - 1 - i);
-    }
-
+    // Calculate id
     unsigned j = WIDTH * HEIGHT;
+    uint64_t id = 0;
     for (auto tile : tiles) {
         id *= j--;
         id += pos[tile] - before[tile];
     }
-}
 
-Pattern PatternGroup::getPattern() { return {id, 0, pos, g}; }
+    initPattern = Pattern{pos, id, g};
+
+    // Calculate deltas
+    for (int i = tiles.size() - 1; i--;) {
+        deltas[tiles[i]] = deltas[tiles[i + 1]] * (WIDTH * HEIGHT - 1 - i);
+    }
+}
 
 unsigned PatternGroup::getCell(const Pattern& pattern, int position) const {
     auto i = position << 2;
@@ -88,38 +87,12 @@ bool PatternGroup::canShift(const Pattern& pattern, unsigned tile,
 Pattern PatternGroup::shiftCell(Pattern next, unsigned tile, Direction dir) {
     // Position of tile
     auto& posn = next.pos[tile];
-    next.dist += 1;
     // Clear tile
     setCell(next, posn, 0);
 
     switch (dir) {
         case Direction::U: {
             setCell(next, posn - WIDTH, tile);
-            posn -= WIDTH;
-
-            int numDelta = 1;
-            int skipDelta = 0;
-            for (unsigned i = posn + 1; i < posn + WIDTH; i++) {
-                auto skip = getCell(next, i);
-                if (skip == 0) {
-                    numDelta++;
-                } else if (skip > tile) {
-                    numDelta++;
-                    skipDelta += deltas[skip];
-                }
-            }
-            next.id -= skipDelta + numDelta * deltas[tile];
-            break;
-        }
-        case Direction::R:
-            setCell(next, posn + 1, tile);
-            posn++;
-
-            next.id += deltas[tile];
-            break;
-        case Direction::D: {
-            setCell(next, posn + WIDTH, tile);
-            posn += WIDTH;
 
             int numDelta = 1;
             int skipDelta = 0;
@@ -132,13 +105,40 @@ Pattern PatternGroup::shiftCell(Pattern next, unsigned tile, Direction dir) {
                     skipDelta += deltas[skip];
                 }
             }
+
+            posn -= WIDTH;
+            next.id -= skipDelta + numDelta * deltas[tile];
+            break;
+        }
+        case Direction::R:
+            setCell(next, posn + 1, tile);
+
+            posn++;
+            next.id += deltas[tile];
+            break;
+        case Direction::D: {
+            setCell(next, posn + WIDTH, tile);
+
+            int numDelta = 1;
+            int skipDelta = 0;
+            for (unsigned i = posn + 1; i < posn + WIDTH; i++) {
+                auto skip = getCell(next, i);
+                if (skip == 0) {
+                    numDelta++;
+                } else if (skip > tile) {
+                    numDelta++;
+                    skipDelta += deltas[skip];
+                }
+            }
+
+            posn += WIDTH;
             next.id += skipDelta + numDelta * deltas[tile];
             break;
         }
         default:
             setCell(next, posn - 1, tile);
-            posn--;
 
+            posn--;
             next.id -= deltas[tile];
             break;
     }

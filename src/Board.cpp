@@ -222,40 +222,36 @@ std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
 
     switch (dir) {
         case Direction::U: {
-            int numGreater = 0;
-            int numBlanks = 1;
+            int numSkips = 1;
             int skipDelta = 0;
             for (int i = newBlank + 1; i < blank; i++) {
                 int skip = getTile(i);
                 if (database.where[skip] != index) {
-                    numBlanks++;
+                    numSkips++;  // Blank
                 } else if (skip > tile) {
-                    numGreater++;
+                    numSkips++;  // Greater
                     skipDelta += tileDeltas[skip];
                 }
             }
-            patterns[index] +=
-                skipDelta + (numGreater + numBlanks) * tileDeltas[tile];
+            patterns[index] += skipDelta + numSkips * tileDeltas[tile];
             break;
         }
         case Direction::R:
             patterns[index] -= tileDeltas[tile];
             break;
         case Direction::D: {
-            int numGreater = 0;
-            int numBlanks = 1;
+            int numSkips = 1;
             int skipDelta = 0;
             for (int i = blank + 1; i < newBlank; i++) {
                 int skip = getTile(i);
                 if (database.where[skip] != index) {
-                    numBlanks++;
+                    numSkips++;
                 } else if (skip > tile) {
-                    numGreater++;
+                    numSkips++;
                     skipDelta += tileDeltas[skip];
                 }
             }
-            patterns[index] -=
-                skipDelta + (numGreater + numBlanks) * tileDeltas[tile];
+            patterns[index] -= skipDelta + numSkips * tileDeltas[tile];
             break;
         }
         default:
@@ -273,40 +269,38 @@ std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
 
     switch (dir) {
         case Direction::L: {
-            int numGreater = 0;
-            int numBlanks = 1;
+            int numSkips = 1;
             int skipDelta = 0;
             for (int i = mirrNewBlank + 1; i < mirrBlank; i++) {
                 int skip = mirrGrid[i];
                 if (database.where[skip] != mirrIndex) {
-                    numBlanks++;
+                    numSkips++;
                 } else if (skip > mirrTile) {
-                    numGreater++;
+                    numSkips++;
                     skipDelta += tileDeltas[skip];
                 }
             }
             mirrPatterns[mirrIndex] +=
-                skipDelta + (numGreater + numBlanks) * tileDeltas[mirrTile];
+                skipDelta + numSkips * tileDeltas[mirrTile];
             break;
         }
         case Direction::D:
             mirrPatterns[mirrIndex] -= tileDeltas[mirrTile];
             break;
         case Direction::R: {
-            int numGreater = 0;
-            int numBlanks = 1;
+            int numSkips = 1;
             int skipDelta = 0;
             for (int i = mirrBlank + 1; i < mirrNewBlank; i++) {
                 int skip = mirrGrid[i];
                 if (database.where[skip] != mirrIndex) {
-                    numBlanks++;
+                    numSkips++;
                 } else if (skip > mirrTile) {
-                    numGreater++;
+                    numSkips++;
                     skipDelta += tileDeltas[skip];
                 }
             }
             mirrPatterns[mirrIndex] -=
-                skipDelta + (numGreater + numBlanks) * tileDeltas[mirrTile];
+                skipDelta + numSkips * tileDeltas[mirrTile];
             break;
         }
         default:

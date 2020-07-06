@@ -8,9 +8,8 @@
 
 // Minimal state info
 struct Pattern {
-    uint64_t id;                // distMap key
-    unsigned dist;              // distMap value
     std::vector<unsigned> pos;  // Value to position mapping
+    uint64_t id;                // distMap key
     uint64_t g;                 // Position to value mapping
 };
 
@@ -20,15 +19,11 @@ class PatternGroup {
     const unsigned WIDTH;
     const unsigned HEIGHT;
 
-    uint64_t id;                // distMap key
-    std::vector<unsigned> pos;  // Value to position mapping
-    uint64_t g;                 // Position to value mapping
-
 public:
     PatternGroup(std::vector<std::vector<unsigned>> grid, const unsigned WIDTH,
                  const unsigned HEIGHT);
 
-    Pattern getPattern();
+    Pattern initPattern;  // Initial pattern
 
     unsigned getCell(const Pattern& pattern, int position) const;
     void setCell(Pattern& pattern, int position, unsigned tile);

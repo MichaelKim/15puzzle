@@ -9,6 +9,7 @@
 #include "../include/DisjointDatabase.h"
 #include "../include/Idastar.h"
 #include "../include/InputParser.h"
+#include "../include/Util.h"
 
 using namespace std;
 
@@ -85,18 +86,6 @@ vector<Board> getBoards(const DisjointDatabase& db) {
 
     return readBoards(cin, db);
 }
-
-void timeElapsed(decltype(chrono::steady_clock::now()) start) {
-    auto end = chrono::steady_clock::now();
-    cout << "Time elapsed: "
-         << (chrono::duration_cast<chrono::microseconds>(end - start).count()) /
-                1000000.0
-         << endl
-         << endl;
-}
-
-#define START_TIMER(name) auto timer_##name = chrono::steady_clock::now()
-#define END_TIMER(name) timeElapsed(timer_##name)
 
 int main(int argc, const char* argv[]) {
     InputParser::parse(argc, argv);
