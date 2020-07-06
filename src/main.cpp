@@ -1,3 +1,4 @@
+#include <array>
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -10,6 +11,9 @@
 #include "../include/Idastar.h"
 #include "../include/InputParser.h"
 #include "../include/Util.h"
+
+// Fixed board size: 4x4
+// Dynamic database pattern
 
 using namespace std;
 
@@ -31,41 +35,36 @@ void usage() {
          << endl;
 }
 
-vector<vector<vector<unsigned>>> readDatabase(istream& input) {
-    unsigned width, height, databaseNum;
-    input >> width >> height >> databaseNum;
+vector<array<int, 16>> readDatabase(istream& input) {
+    int databaseNum;
+    input >> databaseNum;
 
-    vector<vector<vector<unsigned>>> grids(
-        databaseNum,
-        vector<vector<unsigned>>(height, vector<unsigned>(width, 0)));
-    for (unsigned i = 0; i < databaseNum; i++) {
-        for (unsigned y = 0; y < height; y++) {
-            for (unsigned x = 0; x < width; x++) {
-                input >> grids[i][y][x];
-            }
+    vector<array<int, 16>> grids(databaseNum, array<int, 16>());
+    for (auto& grid : grids) {
+        for (auto& tile : grid) {
+            input >> tile;
         }
     }
+
     return grids;
 }
 
 vector<Board> readBoards(istream& input, const DisjointDatabase& db) {
-    unsigned width, height, boardNum;
-    input >> width >> height >> boardNum;
+    int boardNum;
+    input >> boardNum;
 
     vector<Board> boards;
-    for (unsigned i = 0; i < boardNum; i++) {
-        vector<vector<unsigned>> board(height, vector<unsigned>(width, 0));
-        for (unsigned y = 0; y < height; y++) {
-            for (unsigned x = 0; x < width; x++) {
-                input >> board[y][x];
-            }
+    for (int i = 0; i < boardNum; i++) {
+        array<int, 16> board;
+        for (auto& tile : board) {
+            input >> tile;
         }
         boards.emplace_back(board, db);
     }
     return boards;
 }
 
-std::pair<std::string, vector<vector<vector<unsigned>>>> getDatabase() {
+std::pair<std::string, vector<array<int, 16>>> getDatabase() {
     if (InputParser::databaseExists()) {
         auto dbPath = InputParser::getDatabase();
         auto dbName = dbPath.substr(dbPath.find_last_of('/') + 1);

@@ -1,6 +1,7 @@
 #ifndef PARTIALDATABASE_H
 #define PARTIALDATABASE_H
 
+#include <array>
 #include <string>
 #include <vector>
 
@@ -9,17 +10,17 @@
 class PartialDatabase {
 private:
     std::string filename;
-    std::vector<std::vector<unsigned>> grid;
-    const unsigned WIDTH, HEIGHT;
-    unsigned size;
+    std::array<int, 16> grid;
+    const int WIDTH = 4, HEIGHT = 4;
+    int size;
 
     void generateDists();
 
     void saveDists();
 
 public:
-    PartialDatabase(std::vector<std::vector<unsigned>> grid,
-                    const std::string& dbName, int index);
+    PartialDatabase(const std::array<int, 16>& grid, const std::string& dbName,
+                    int index);
 
     std::vector<int> tiles;  // Sorted list of tiles in pattern
     std::vector<int> distMap;

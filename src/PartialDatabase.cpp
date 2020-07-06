@@ -9,25 +9,23 @@
 
 #define INF 1000000
 
-PartialDatabase::PartialDatabase(std::vector<std::vector<unsigned>> grid,
+PartialDatabase::PartialDatabase(const std::array<int, 16>& grid,
                                  const std::string& dbName, int index)
     : filename("databases/def-" + std::to_string(index) + ".dat"),
       grid(grid),
-      WIDTH(grid[0].size()),
-      HEIGHT(grid.size()),
       size(1) {
-    // Calculate size: (WIDTH * HEIGHT)! / (WIDTH * HEIGHT -
-    // tiles.size())!
+    // Calculate size: 16! / (16 - tiles.size())!
     std::cout << "Pattern #" << index << ":" << std::endl;
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            if (grid[y][x] > 0) {
-                size *= WIDTH * HEIGHT - tiles.size();
-                tiles.push_back(grid[y][x]);
-            }
-            std::cout << std::setw(3) << grid[y][x];
+    for (int i = 0; i < 16; i++) {
+        if (grid[i] > 0) {
+            size *= 16 - tiles.size();
+            tiles.push_back(grid[i]);
         }
-        std::cout << std::endl;
+
+        std::cout << std::setw(3) << grid[i];
+        if (i % 4 == 3) {
+            std::cout << std::endl;
+        }
     }
 
     // Resize distMap
@@ -60,16 +58,14 @@ PartialDatabase::PartialDatabase(std::vector<std::vector<unsigned>> grid,
 }
 
 void PartialDatabase::generateDists() {
-    std::cout << "Generating database" << std::endl;
-
-    PatternGroup group(grid, WIDTH, HEIGHT);
+    PatternGroup group(grid);
 
     int count = 0;
     unsigned dist = 0;
 
     START_TIMER(pdb);
 
-    std::queue<std::pair<Pattern, unsigned>> bfs;
+    std::queue<std::pair<Pattern, int>> bfs;
     const auto& start = group.initPattern;
     bfs.push({start, 0});
     distMap[start.id] = 0;
@@ -87,7 +83,7 @@ void PartialDatabase::generateDists() {
         }
 
         for (auto tile : tiles) {
-            for (unsigned j = 0; j < 4; j++) {
+            for (int j = 0; j < 4; j++) {
                 auto dir = static_cast<Direction>(j);
                 if (group.canShift(curr, tile, dir)) {
                     auto next = group.shiftCell(curr, tile, dir);

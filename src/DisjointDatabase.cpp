@@ -3,21 +3,21 @@
 #include <iostream>
 
 DisjointDatabase::DisjointDatabase(
-    const std::string& name,
-    std::vector<std::vector<std::vector<unsigned>>> grids) {
-    const auto WIDTH = grids[0][0].size();
-    const auto HEIGHT = grids[0].size();
+    const std::string& name, const std::vector<std::array<int, 16>>& grids) {
+    const auto WIDTH = 4;
+    const auto HEIGHT = 4;
 
-    where = std::vector<int>(WIDTH * HEIGHT, -1);
+    where.fill(-1);
 
     // All partial grids, layered to one
     // This represents the solved grid
-    std::vector<std::vector<int>> combined(HEIGHT, std::vector<int>(WIDTH, 0));
+    std::array<int, 16> combined;
+    combined.fill(0);
 
     // The reflected positions of the tiles
-    mirrPos = std::vector<unsigned>(WIDTH * HEIGHT, 0);
+    mirrPos.fill(0);
 
-    for (size_t i = 0; i < grids.size(); i++) {
+    for (auto i = 0; i < grids.size(); i++) {
         PartialDatabase pd(grids[i], name, i);
 
         for (auto tile : pd.tiles) {
@@ -32,20 +32,19 @@ DisjointDatabase::DisjointDatabase(
         databases.push_back(pd);
 
         // Calculate value to position mapping
-        for (unsigned y = 0; y < HEIGHT; y++) {
-            for (unsigned x = 0; x < WIDTH; x++) {
-                if (grids[i][y][x] > 0) {
-                    combined[y][x] = grids[i][y][x];
-                }
+        for (int j = 0; j < 16; j++) {
+            if (grids[i][j] > 0) {
+                combined[j] = grids[i][j];
             }
         }
     }
 
-    for (unsigned y = 0; y < HEIGHT; y++) {
-        for (unsigned x = 0; x < WIDTH; x++) {
-            if (combined[y][x] > 0) {
-                mirrPos[combined[y][x]] = combined[x][y];
-            }
+    for (int j = 0; j < 16; j++) {
+        if (combined[j] > 0) {
+            int y = j / 4;
+            int x = j % 4;
+            int mirr = x * 4 + y;
+            mirrPos[combined[mirr]] = combined[j];
         }
     }
 
@@ -55,7 +54,7 @@ DisjointDatabase::DisjointDatabase(
     // Check that the patterns perfectly cover the board
     // (except for the blank tile)
     bool foundBlank = false;
-    for (auto& i : where) {
+    for (auto i : where) {
         if (i == -1) {
             if (foundBlank) {
                 std::cout << "Error: found multiple blank tiles" << std::endl;

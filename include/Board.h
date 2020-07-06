@@ -1,6 +1,7 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include <array>
 #include <ostream>
 #include <vector>
 
@@ -8,18 +9,22 @@
 #include "DisjointDatabase.h"
 
 class Board {
+public:
+    const int WIDTH = 4, HEIGHT = 4;
+
 private:
     int blank;  // Position of blank (since patterns don't store the blank)
-    std::vector<int> grid;               // Value to position mapping
-    std::vector<int> mirrGrid;           // Mirrored grid
+    std::array<int, 16> grid;            // Value to position mapping
+    std::array<int, 16> mirrGrid;        // Mirrored grid
     std::vector<uint64_t> patterns;      // Pattern IDs
     std::vector<uint64_t> mirrPatterns;  // Mirrored pattern IDs
 
     // Lookup tables
     const DisjointDatabase& database;  // Pattern heuristic
-    std::vector<int> deltas;           // Blank deltas
-    std::vector<int> tileDeltas;       // Tile deltas
-    std::vector<int> mirror;           // Mirror position
+    // {0, -1}, {1, 0}, {0, 1}, {-1, 0}}
+    const std::array<int, 4> deltas = {-WIDTH, 1, WIDTH, -1};  // Blank deltas
+    std::array<int, 16> tileDeltas;                            // Tile deltas
+    std::array<int, 16> mirror;  // Mirror position
 
     const std::vector<std::vector<Direction>> moves = {
         /*  0 */ {Direction::U},
@@ -39,20 +44,17 @@ private:
         /* 14 */ {Direction::U, Direction::R, Direction::D, Direction::L}};
     const std::vector<Direction>& generateMoveList(int x, int y,
                                                    Direction prevMove);
-    std::vector<std::vector<std::vector<Direction>>> moveList;
+    std::array<std::vector<std::vector<Direction>>, 16> moveList;
 
     std::vector<uint64_t> generatePatterns(
-        const std::vector<int>& grid,
+        const std::array<int, 16>& grid,
         const std::vector<std::vector<int>>& patternTiles);
 
     inline int getTile(int posn);
     inline void setTile(int posn, int tile);
 
 public:
-    const int WIDTH, HEIGHT;
-
-    Board(const std::vector<std::vector<unsigned>>& g,
-          const DisjointDatabase& d);
+    Board(const std::array<int, 16>& g, const DisjointDatabase& d);
 
     int getHeuristic() const;
     const std::vector<Direction>& getMoves() const;

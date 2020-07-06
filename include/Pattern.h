@@ -1,6 +1,7 @@
 #ifndef PATTERN_H
 #define PATTERN_H
 
+#include <array>
 #include <unordered_map>
 #include <vector>
 
@@ -8,20 +9,19 @@
 
 // Minimal state info
 struct Pattern {
-    std::vector<unsigned> pos;  // Value to position mapping
-    uint64_t id;                // distMap key
-    uint64_t g;                 // Position to value mapping
+    std::array<int, 16> pos;  // Value to position mapping
+    uint64_t id;              // distMap key
+    uint64_t g;               // Position to value mapping
 };
 
 // Stores pre-computed values for family of Patterns
 class PatternGroup {
-    std::vector<int> deltas;
-    const unsigned WIDTH;
-    const unsigned HEIGHT;
+    std::array<int, 16> deltas;
+    const int WIDTH = 4;
+    const int HEIGHT = 4;
 
 public:
-    PatternGroup(std::vector<std::vector<unsigned>> grid, const unsigned WIDTH,
-                 const unsigned HEIGHT);
+    PatternGroup(const std::array<int, 16>& grid);
 
     Pattern initPattern;  // Initial pattern
 

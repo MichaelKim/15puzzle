@@ -58,32 +58,21 @@ const std::vector<Direction>& Board::generateMoveList(int x, int y,
     return moves[14];                                // 0, 1, 2, 3
 }
 
-Board::Board(const std::vector<std::vector<unsigned>>& g,
-             const DisjointDatabase& d)
-    : blank(0), database(d), WIDTH(g[0].size()), HEIGHT(g.size()) {
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            grid.push_back(g[y][x]);
-
-            if (g[y][x] == 0) blank = y * WIDTH + x;
-        }
+Board::Board(const std::array<int, 16>& g, const DisjointDatabase& d)
+    : blank(0), grid(g), database(d) {
+    for (int i = 0; i < 16; i++) {
+        if (g[i] == 0) blank = i;
     }
 
     // x, y, prevMove, moves[]
-    moveList = std::vector<std::vector<std::vector<Direction>>>(
-        WIDTH * HEIGHT, std::vector<std::vector<Direction>>(5));
+    moveList.fill(std::vector<std::vector<Direction>>(5));
 
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            for (int m = 0; m < 4; m++) {
-                moveList[y * WIDTH + x][m] =
-                    generateMoveList(x, y, static_cast<Direction>(m));
-            }
+    for (int i = 0; i < 16; i++) {
+        for (int m = 0; m < 4; m++) {
+            moveList[i][m] =
+                generateMoveList(i % 4, i / 4, static_cast<Direction>(m));
         }
     }
-
-    // {0, -1}, {1, 0}, {0, 1}, {-1, 0}};
-    deltas = std::vector<int>{-WIDTH, 1, WIDTH, -1};
 
     // Calculate deltas
     auto numPatterns = database.numPatterns();
@@ -97,7 +86,7 @@ Board::Board(const std::vector<std::vector<unsigned>>& g,
     patterns = generatePatterns(grid, patternTiles);
 
     // Calculate tileDeltas
-    tileDeltas.resize(WIDTH * HEIGHT, 1);
+    tileDeltas.fill(1);
     for (int i = 0; i < numPatterns; i++) {
         auto& tiles = patternTiles[i];
         for (int j = tiles.size() - 2; j >= 0; j--) {
@@ -108,14 +97,13 @@ Board::Board(const std::vector<std::vector<unsigned>>& g,
 
     // Calculate mirror positions
     // TODO: test with blank not in top-left or bottom-right
-    mirror = std::vector<int>(WIDTH * HEIGHT, 0);
     for (int i = 0; i < WIDTH * HEIGHT; i++) {
         int y = i / WIDTH;
         int x = i % WIDTH;
         mirror[i] = (x * WIDTH) + y;
     }
 
-    mirrGrid.resize(WIDTH * HEIGHT, 0);
+    mirrGrid.fill(0);
     for (int i = 0; i < WIDTH * HEIGHT; i++) {
         mirrGrid[i] = database.mirrPos[grid[mirror[i]]];
     }
@@ -123,7 +111,7 @@ Board::Board(const std::vector<std::vector<unsigned>>& g,
 }
 
 std::vector<uint64_t> Board::generatePatterns(
-    const std::vector<int>& grid,
+    const std::array<int, 16>& grid,
     const std::vector<std::vector<int>>& patternTiles) {
     auto numPatterns = database.numPatterns();
     std::vector<uint64_t> pat(numPatterns, 0);
@@ -150,7 +138,8 @@ std::vector<uint64_t> Board::generatePatterns(
                 startPos[grid[j]] = j;
             }
         }
-        unsigned j = WIDTH * HEIGHT;
+
+        int j = WIDTH * HEIGHT;
         for (auto tile : tiles) {
             pat[i] *= j--;
             pat[i] += startPos[tile] - before[tile];
@@ -224,8 +213,8 @@ std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
         case Direction::U: {
             int numSkips = 1;
             int skipDelta = 0;
-            for (int i = newBlank + 1; i < blank; i++) {
-                int skip = getTile(i);
+            for (int i = 1; i <= WIDTH; i++) {
+                int skip = getTile(i + newBlank);
                 if (database.where[skip] != index) {
                     numSkips++;  // Blank
                 } else if (skip > tile) {
@@ -242,8 +231,8 @@ std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
         case Direction::D: {
             int numSkips = 1;
             int skipDelta = 0;
-            for (int i = blank + 1; i < newBlank; i++) {
-                int skip = getTile(i);
+            for (int i = 1; i <= WIDTH; i++) {
+                int skip = getTile(i + blank);
                 if (database.where[skip] != index) {
                     numSkips++;
                 } else if (skip > tile) {
@@ -271,8 +260,8 @@ std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
         case Direction::L: {
             int numSkips = 1;
             int skipDelta = 0;
-            for (int i = mirrNewBlank + 1; i < mirrBlank; i++) {
-                int skip = mirrGrid[i];
+            for (int i = 1; i <= WIDTH; i++) {
+                int skip = mirrGrid[i + mirrNewBlank];
                 if (database.where[skip] != mirrIndex) {
                     numSkips++;
                 } else if (skip > mirrTile) {
@@ -290,8 +279,8 @@ std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
         case Direction::R: {
             int numSkips = 1;
             int skipDelta = 0;
-            for (int i = mirrBlank + 1; i < mirrNewBlank; i++) {
-                int skip = mirrGrid[i];
+            for (int i = 1; i <= WIDTH; i++) {
+                int skip = mirrGrid[i + mirrBlank];
                 if (database.where[skip] != mirrIndex) {
                     numSkips++;
                 } else if (skip > mirrTile) {

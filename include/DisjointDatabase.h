@@ -1,6 +1,7 @@
 #ifndef DISJOINTDATABASE_H
 #define DISJOINTDATABASE_H
 
+#include <array>
 #include <vector>
 
 #include "PartialDatabase.h"
@@ -11,10 +12,10 @@ private:
 
 public:
     DisjointDatabase(const std::string& name,
-                     std::vector<std::vector<std::vector<unsigned>>> grids);
+                     const std::vector<std::array<int, 16>>& grids);
 
-    std::vector<int> where;
-    std::vector<unsigned> mirrPos;
+    std::array<int, 16> where;
+    std::array<int, 16> mirrPos;
 
     std::size_t numPatterns() const;
     int getHeuristic(const std::vector<uint64_t>& patterns) const;
