@@ -5,80 +5,46 @@
 #include <iostream>
 #include <unordered_map>
 
-const std::vector<Direction>& Board::generateMoveList(int x, int y,
-                                                      Direction prevMove) {
-    if (y == 0) {
-        if (x == 0) {
-            if (prevMove == Direction::L) return moves[2];  // 2
-            if (prevMove == Direction::U) return moves[1];  // 1
-            return moves[7];                                // 1, 2
+std::vector<std::array<bool, 4>> Board::initMoveList(int WIDTH, int HEIGHT) {
+    std::vector<std::array<bool, 4>> canMoveList(WIDTH * HEIGHT);
+
+    // Blank position
+    for (int i = 0; i < WIDTH * HEIGHT; i++) {
+        // Direction
+        for (int j = 0; j < 4; j++) {
+            auto dir = static_cast<Direction>(j);
+            switch (dir) {
+                case Direction::U:
+                    canMoveList[i][j] = (i / 4) > 0;
+                    break;
+                case Direction::R:
+                    canMoveList[i][j] = (i % 4) < WIDTH - 1;
+                    break;
+                case Direction::D:
+                    canMoveList[i][j] = (i / 4) < HEIGHT - 1;
+                    break;
+                default:
+                    canMoveList[i][j] = (i % 4) > 0;
+                    break;
+            }
         }
-        if (x == WIDTH - 1) {
-            if (prevMove == Direction::U) return moves[3];  // 3
-            if (prevMove == Direction::R) return moves[2];  // 2
-            return moves[9];                                // 2, 3
-        }
-        if (prevMove == Direction::L) return moves[9];  // 2, 3
-        if (prevMove == Direction::U) return moves[8];  // 1, 3
-        if (prevMove == Direction::R) return moves[7];  // 1, 2
-        return moves[13];                               // 1, 2, 3
     }
-    if (y == HEIGHT - 1) {
-        if (x == 0) {
-            if (prevMove == Direction::D) return moves[1];  // 1
-            if (prevMove == Direction::L) return moves[0];  // 0
-            return moves[4];                                // 0, 1
-        }
-        if (x == WIDTH - 1) {
-            if (prevMove == Direction::D) return moves[3];  // 3;
-            if (prevMove == Direction::R) return moves[0];  // 0
-            return moves[6];                                // 0, 3
-        }
-        if (prevMove == Direction::D) return moves[8];  // 1, 3
-        if (prevMove == Direction::L) return moves[6];  // 0, 3
-        if (prevMove == Direction::R) return moves[4];  // 0, 1
-        return moves[11];                               // 0, 1, 3
-    }
-    if (x == 0) {
-        if (prevMove == Direction::D) return moves[7];  // 1, 2
-        if (prevMove == Direction::L) return moves[5];  // 0, 2
-        if (prevMove == Direction::U) return moves[4];  // 0, 1
-        return moves[10];                               // 0, 1, 2
-    }
-    if (x == WIDTH - 1) {
-        if (prevMove == Direction::D) return moves[9];  // 2, 3
-        if (prevMove == Direction::U) return moves[6];  // 0, 3
-        if (prevMove == Direction::R) return moves[5];  // 0, 2
-        return moves[12];                               // 0, 2, 3
-    }
-    if (prevMove == Direction::U) return moves[11];  // 0, 1, 3
-    if (prevMove == Direction::R) return moves[10];  // 0, 1, 2
-    if (prevMove == Direction::D) return moves[13];  // 1, 2, 3
-    if (prevMove == Direction::L) return moves[12];  // 0, 2, 3
-    return moves[14];                                // 0, 1, 2, 3
+
+    return canMoveList;
 }
 
 Board::Board(const std::vector<std::vector<unsigned>>& g,
              const DisjointDatabase& d)
-    : blank(0), database(d), WIDTH(g[0].size()), HEIGHT(g.size()) {
+    : blank(0),
+      database(d),
+      WIDTH(g[0].size()),
+      HEIGHT(g.size()),
+      canMoveList(initMoveList(g[0].size(), g.size())) {
     for (int y = 0; y < HEIGHT; y++) {
         for (int x = 0; x < WIDTH; x++) {
             grid.push_back(g[y][x]);
 
             if (g[y][x] == 0) blank = y * WIDTH + x;
-        }
-    }
-
-    // x, y, prevMove, moves[]
-    moveList = std::vector<std::vector<std::vector<Direction>>>(
-        WIDTH * HEIGHT, std::vector<std::vector<Direction>>(5));
-
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            for (int m = 0; m < 4; m++) {
-                moveList[y * WIDTH + x][m] =
-                    generateMoveList(x, y, static_cast<Direction>(m));
-            }
         }
     }
 
@@ -165,39 +131,39 @@ int Board::getHeuristic() const {
                     database.getHeuristic(mirrPatterns));
 }
 
-const std::vector<Direction>& Board::getMoves() const {
+std::vector<Direction> Board::getMoves() const {
     // Should be run only once at start of search
     if (blank < WIDTH) {           // top
         if (blank % WIDTH == 0) {  // left
-            return moves[7];
+            return {Direction::R, Direction::D};
         }
         if (blank % WIDTH == WIDTH - 1) {  // right
-            return moves[9];
+            return {Direction::D, Direction::L};
         }
-        return moves[13];
+        return {Direction::R, Direction::D, Direction::L};
     }
     if (blank >= (WIDTH - 1) * HEIGHT) {  // bottom
         if (blank % WIDTH == 0) {         // left
-            return moves[4];
+            return {Direction::U, Direction::R};
         }
         if (blank % WIDTH == WIDTH - 1) {  // right
-            return moves[6];
+            return {Direction::U, Direction::L};
         }
-        return moves[11];
+        return {Direction::U, Direction::R, Direction::L};
     }
     if (blank % WIDTH == 0) {  // left
-        return moves[10];
+        return {Direction::U, Direction::R, Direction::D};
     }
     if (blank % WIDTH == WIDTH - 1) {  // right
-        return moves[12];
+        return {Direction::U, Direction::D, Direction::L};
     }
 
-    return moves[14];
+    return {Direction::U, Direction::R, Direction::D, Direction::L};
 }
 
-const std::vector<Direction>& Board::getMoves(Direction prevMove) const {
+bool Board::canMove(Direction dir) const {
     // Branchless lookup for moves
-    return moveList[blank][static_cast<int>(prevMove)];
+    return canMoveList[blank][static_cast<int>(dir)];
 }
 
 inline int Board::getTile(int posn) { return grid[posn]; }

@@ -18,7 +18,7 @@ private:
     void saveDists();
 
 public:
-    PartialDatabase(std::vector<std::vector<unsigned>> grid,
+    PartialDatabase(const std::vector<std::vector<unsigned>>& grid,
                     const std::string& dbName, int index);
 
     std::vector<int> tiles;  // Sorted list of tiles in pattern

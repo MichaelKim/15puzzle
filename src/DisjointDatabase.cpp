@@ -4,7 +4,7 @@
 
 DisjointDatabase::DisjointDatabase(
     const std::string& name,
-    std::vector<std::vector<std::vector<unsigned>>> grids) {
+    const std::vector<std::vector<std::vector<unsigned>>>& grids) {
     const auto WIDTH = grids[0][0].size();
     const auto HEIGHT = grids[0].size();
 
@@ -55,7 +55,7 @@ DisjointDatabase::DisjointDatabase(
     // Check that the patterns perfectly cover the board
     // (except for the blank tile)
     bool foundBlank = false;
-    for (auto& i : where) {
+    for (auto i : where) {
         if (i == -1) {
             if (foundBlank) {
                 std::cout << "Error: found multiple blank tiles" << std::endl;

@@ -10,8 +10,9 @@ private:
     std::vector<PartialDatabase> databases;
 
 public:
-    DisjointDatabase(const std::string& name,
-                     std::vector<std::vector<std::vector<unsigned>>> grids);
+    DisjointDatabase(
+        const std::string& name,
+        const std::vector<std::vector<std::vector<unsigned>>>& grids);
 
     std::vector<int> where;
     std::vector<unsigned> mirrPos;

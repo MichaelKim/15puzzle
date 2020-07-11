@@ -9,7 +9,7 @@
 
 #define INF 1000000
 
-PartialDatabase::PartialDatabase(std::vector<std::vector<unsigned>> grid,
+PartialDatabase::PartialDatabase(const std::vector<std::vector<unsigned>>& grid,
                                  const std::string& dbName, int index)
     : filename("databases/def-" + std::to_string(index) + ".dat"),
       grid(grid),
@@ -65,11 +65,11 @@ void PartialDatabase::generateDists() {
     PatternGroup group(grid, WIDTH, HEIGHT);
 
     int count = 0;
-    unsigned dist = 0;
+    int dist = 0;
 
     START_TIMER(pdb);
 
-    std::queue<std::pair<Pattern, unsigned>> bfs;
+    std::queue<std::pair<Pattern, int>> bfs;
     const auto& start = group.initPattern;
     bfs.push({start, 0});
     distMap[start.id] = 0;
@@ -87,7 +87,7 @@ void PartialDatabase::generateDists() {
         }
 
         for (auto tile : tiles) {
-            for (unsigned j = 0; j < 4; j++) {
+            for (int j = 0; j < 4; j++) {
                 auto dir = static_cast<Direction>(j);
                 if (group.canShift(curr, tile, dir)) {
                     auto next = group.shiftCell(curr, tile, dir);

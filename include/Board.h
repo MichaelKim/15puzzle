@@ -1,6 +1,7 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include <array>
 #include <ostream>
 #include <vector>
 
@@ -21,25 +22,8 @@ private:
     std::vector<int> tileDeltas;       // Tile deltas
     std::vector<int> mirror;           // Mirror position
 
-    const std::vector<std::vector<Direction>> moves = {
-        /*  0 */ {Direction::U},
-        /*  1 */ {Direction::R},
-        /*  2 */ {Direction::D},
-        /*  3 */ {Direction::L},
-        /*  4 */ {Direction::U, Direction::R},
-        /*  5 */ {Direction::U, Direction::D},
-        /*  6 */ {Direction::U, Direction::L},
-        /*  7 */ {Direction::R, Direction::D},
-        /*  8 */ {Direction::R, Direction::L},
-        /*  9 */ {Direction::D, Direction::L},
-        /* 10 */ {Direction::U, Direction::R, Direction::D},
-        /* 11 */ {Direction::U, Direction::R, Direction::L},
-        /* 12 */ {Direction::U, Direction::D, Direction::L},
-        /* 13 */ {Direction::R, Direction::D, Direction::L},
-        /* 14 */ {Direction::U, Direction::R, Direction::D, Direction::L}};
-    const std::vector<Direction>& generateMoveList(int x, int y,
-                                                   Direction prevMove);
-    std::vector<std::vector<std::vector<Direction>>> moveList;
+    std::vector<std::array<bool, 4>> initMoveList(int WIDTH, int HEIGHT);
+    std::vector<std::array<bool, 4>> canMoveList;
 
     std::vector<uint64_t> generatePatterns(
         const std::vector<int>& grid,
@@ -55,8 +39,8 @@ public:
           const DisjointDatabase& d);
 
     int getHeuristic() const;
-    const std::vector<Direction>& getMoves() const;
-    const std::vector<Direction>& getMoves(Direction prevMove) const;
+    bool canMove(Direction dir) const;
+    std::vector<Direction> getMoves() const;
     std::pair<uint64_t, uint64_t> applyMove(Direction dir);
     void undoMove(const std::pair<uint64_t, uint64_t>& prev, Direction dir);
 

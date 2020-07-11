@@ -67,16 +67,48 @@ bool Idastar::dfs(Board& node, int g, Direction prevMove) {
     }
     nodes += 1;
 
-    const auto& moves = node.getMoves(prevMove);
-    for (auto move : moves) {
-        auto prev = node.applyMove(move);
+    if (prevMove != Direction::D && node.canMove(Direction::U)) {
+        auto prev = node.applyMove(Direction::U);
 
-        if (dfs(node, g + COST, move)) {
-            path.push_back(move);
+        if (dfs(node, g + COST, Direction::U)) {
+            path.push_back(Direction::U);
             return true;
         }
 
-        node.undoMove(prev, move);
+        node.undoMove(prev, Direction::U);
+    }
+
+    if (prevMove != Direction::L && node.canMove(Direction::R)) {
+        auto prev = node.applyMove(Direction::R);
+
+        if (dfs(node, g + COST, Direction::R)) {
+            path.push_back(Direction::R);
+            return true;
+        }
+
+        node.undoMove(prev, Direction::R);
+    }
+
+    if (prevMove != Direction::U && node.canMove(Direction::D)) {
+        auto prev = node.applyMove(Direction::D);
+
+        if (dfs(node, g + COST, Direction::D)) {
+            path.push_back(Direction::D);
+            return true;
+        }
+
+        node.undoMove(prev, Direction::D);
+    }
+
+    if (prevMove != Direction::R && node.canMove(Direction::L)) {
+        auto prev = node.applyMove(Direction::L);
+
+        if (dfs(node, g + COST, Direction::L)) {
+            path.push_back(Direction::L);
+            return true;
+        }
+
+        node.undoMove(prev, Direction::L);
     }
 
     return false;
