@@ -2,8 +2,8 @@
 
 #include <unordered_map>
 
-PatternGroup::PatternGroup(std::vector<std::vector<unsigned>> grid,
-                           const unsigned WIDTH, const unsigned HEIGHT)
+PatternGroup::PatternGroup(const std::vector<std::vector<int>>& grid,
+                           const int WIDTH, const int HEIGHT)
     : deltas(WIDTH * HEIGHT, 1), WIDTH(WIDTH), HEIGHT(HEIGHT) {
     // Calculate compressed grid
     uint64_t g = 0;
@@ -15,14 +15,14 @@ PatternGroup::PatternGroup(std::vector<std::vector<unsigned>> grid,
 
     // Calculate starting ID and starting position
     std::unordered_map<int, int> before;
-    std::vector<unsigned> tiles;
-    std::vector<unsigned> pos(WIDTH * HEIGHT, 0);
+    std::vector<int> tiles;
+    std::vector<int> pos(WIDTH * HEIGHT, 0);
 
-    for (unsigned y = 0; y < HEIGHT; y++) {
-        for (unsigned x = 0; x < WIDTH; x++) {
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
             if (grid[y][x] > 0) {
                 // New tile found
-                unsigned beforeCount = 0;
+                int beforeCount = 0;
 
                 // Count number of preceding pattern tiles that's smaller
                 for (auto& it : before) {
@@ -41,7 +41,7 @@ PatternGroup::PatternGroup(std::vector<std::vector<unsigned>> grid,
     }
 
     // Calculate id
-    unsigned j = WIDTH * HEIGHT;
+    int j = WIDTH * HEIGHT;
     uint64_t id = 0;
     for (auto tile : tiles) {
         id *= j--;
@@ -56,17 +56,17 @@ PatternGroup::PatternGroup(std::vector<std::vector<unsigned>> grid,
     }
 }
 
-unsigned PatternGroup::getCell(const Pattern& pattern, int position) const {
+int PatternGroup::getCell(const Pattern& pattern, int position) const {
     auto i = position << 2;
     return (pattern.g & (0xfULL << i)) >> i;
 }
 
-void PatternGroup::setCell(Pattern& pattern, int position, unsigned tile) {
+void PatternGroup::setCell(Pattern& pattern, int position, int tile) {
     auto i = position << 2;
     pattern.g = (pattern.g & ~(0xfULL << i)) | ((uint64_t)tile << i);
 }
 
-bool PatternGroup::canShift(const Pattern& pattern, unsigned tile,
+bool PatternGroup::canShift(const Pattern& pattern, int tile,
                             Direction dir) const {
     auto posn = pattern.pos[tile];
 
@@ -84,7 +84,7 @@ bool PatternGroup::canShift(const Pattern& pattern, unsigned tile,
     }
 }
 
-Pattern PatternGroup::shiftCell(Pattern next, unsigned tile, Direction dir) {
+Pattern PatternGroup::shiftCell(Pattern next, int tile, Direction dir) {
     // Position of tile
     auto& posn = next.pos[tile];
     // Clear tile
@@ -96,7 +96,7 @@ Pattern PatternGroup::shiftCell(Pattern next, unsigned tile, Direction dir) {
 
             int numDelta = 1;
             int skipDelta = 0;
-            for (unsigned i = posn - WIDTH + 1; i < posn; i++) {
+            for (int i = posn - WIDTH + 1; i < posn; i++) {
                 auto skip = getCell(next, i);
                 if (skip == 0) {
                     numDelta++;
@@ -121,7 +121,7 @@ Pattern PatternGroup::shiftCell(Pattern next, unsigned tile, Direction dir) {
 
             int numDelta = 1;
             int skipDelta = 0;
-            for (unsigned i = posn + 1; i < posn + WIDTH; i++) {
+            for (int i = posn + 1; i < posn + WIDTH; i++) {
                 auto skip = getCell(next, i);
                 if (skip == 0) {
                     numDelta++;

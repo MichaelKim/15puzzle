@@ -35,8 +35,7 @@ private:
 public:
     const int WIDTH, HEIGHT;
 
-    Board(const std::vector<std::vector<unsigned>>& g,
-          const DisjointDatabase& d);
+    Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d);
 
     int getHeuristic() const;
     bool canMove(Direction dir) const;

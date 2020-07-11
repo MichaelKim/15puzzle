@@ -33,8 +33,7 @@ std::vector<std::array<bool, 4>> Board::initMoveList(int WIDTH, int HEIGHT) {
     return canMoveList;
 }
 
-Board::Board(const std::vector<std::vector<unsigned>>& g,
-             const DisjointDatabase& d)
+Board::Board(const std::vector<std::vector<int>>& g, const DisjointDatabase& d)
     : blank(0),
       database(d),
       WIDTH(g[0].size()),
@@ -98,12 +97,12 @@ std::vector<uint64_t> Board::generatePatterns(
         auto& tiles = patternTiles[i];
 
         // Calculate pattern
-        std::vector<unsigned> startPos(WIDTH * HEIGHT, 0);
+        std::vector<int> startPos(WIDTH * HEIGHT, 0);
         std::unordered_map<int, int> before;
         for (int j = 0; j < WIDTH * HEIGHT; j++) {
             if (database.where[grid[j]] == i) {
                 // New tile found
-                unsigned beforeCount = 0;
+                int beforeCount = 0;
 
                 // Count number of preceding pattern tiles that's smaller
                 for (auto& it : before) {
@@ -116,7 +115,7 @@ std::vector<uint64_t> Board::generatePatterns(
                 startPos[grid[j]] = j;
             }
         }
-        unsigned j = WIDTH * HEIGHT;
+        int j = WIDTH * HEIGHT;
         for (auto tile : tiles) {
             pat[i] *= j--;
             pat[i] += startPos[tile] - before[tile];

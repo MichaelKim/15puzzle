@@ -10,12 +10,11 @@ private:
     std::vector<PartialDatabase> databases;
 
 public:
-    DisjointDatabase(
-        const std::string& name,
-        const std::vector<std::vector<std::vector<unsigned>>>& grids);
+    DisjointDatabase(const std::string& name,
+                     const std::vector<std::vector<std::vector<int>>>& grids);
 
     std::vector<int> where;
-    std::vector<unsigned> mirrPos;
+    std::vector<int> mirrPos;
 
     std::size_t numPatterns() const;
     int getHeuristic(const std::vector<uint64_t>& patterns) const;

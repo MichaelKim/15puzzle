@@ -9,16 +9,16 @@
 class PartialDatabase {
 private:
     std::string filename;
-    std::vector<std::vector<unsigned>> grid;
-    const unsigned WIDTH, HEIGHT;
-    unsigned size;
+    std::vector<std::vector<int>> grid;
+    const int WIDTH, HEIGHT;
+    int size;
 
     void generateDists();
 
     void saveDists();
 
 public:
-    PartialDatabase(const std::vector<std::vector<unsigned>>& grid,
+    PartialDatabase(const std::vector<std::vector<int>>& grid,
                     const std::string& dbName, int index);
 
     std::vector<int> tiles;  // Sorted list of tiles in pattern

@@ -9,7 +9,7 @@
 
 #define INF 1000000
 
-PartialDatabase::PartialDatabase(const std::vector<std::vector<unsigned>>& grid,
+PartialDatabase::PartialDatabase(const std::vector<std::vector<int>>& grid,
                                  const std::string& dbName, int index)
     : filename("databases/def-" + std::to_string(index) + ".dat"),
       grid(grid),
@@ -44,7 +44,7 @@ PartialDatabase::PartialDatabase(const std::vector<std::vector<unsigned>>& grid,
         std::cout << "Parsing database" << std::endl;
 
         uint64_t id = 0;
-        unsigned dist;
+        int dist;
         while (file.read((char*)&dist, sizeof(dist))) {
             distMap[id] = dist;
             id++;

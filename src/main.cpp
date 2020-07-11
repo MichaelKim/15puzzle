@@ -31,16 +31,15 @@ void usage() {
          << endl;
 }
 
-vector<vector<vector<unsigned>>> readDatabase(istream& input) {
-    unsigned width, height, databaseNum;
+vector<vector<vector<int>>> readDatabase(istream& input) {
+    int width, height, databaseNum;
     input >> width >> height >> databaseNum;
 
-    vector<vector<vector<unsigned>>> grids(
-        databaseNum,
-        vector<vector<unsigned>>(height, vector<unsigned>(width, 0)));
-    for (unsigned i = 0; i < databaseNum; i++) {
-        for (unsigned y = 0; y < height; y++) {
-            for (unsigned x = 0; x < width; x++) {
+    vector<vector<vector<int>>> grids(
+        databaseNum, vector<vector<int>>(height, vector<int>(width, 0)));
+    for (int i = 0; i < databaseNum; i++) {
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
                 input >> grids[i][y][x];
             }
         }
@@ -49,14 +48,14 @@ vector<vector<vector<unsigned>>> readDatabase(istream& input) {
 }
 
 vector<Board> readBoards(istream& input, const DisjointDatabase& db) {
-    unsigned width, height, boardNum;
+    int width, height, boardNum;
     input >> width >> height >> boardNum;
 
     vector<Board> boards;
-    for (unsigned i = 0; i < boardNum; i++) {
-        vector<vector<unsigned>> board(height, vector<unsigned>(width, 0));
-        for (unsigned y = 0; y < height; y++) {
-            for (unsigned x = 0; x < width; x++) {
+    for (int i = 0; i < boardNum; i++) {
+        vector<vector<int>> board(height, vector<int>(width, 0));
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
                 input >> board[y][x];
             }
         }
@@ -65,7 +64,7 @@ vector<Board> readBoards(istream& input, const DisjointDatabase& db) {
     return boards;
 }
 
-std::pair<std::string, vector<vector<vector<unsigned>>>> getDatabase() {
+std::pair<std::string, vector<vector<vector<int>>>> getDatabase() {
     if (InputParser::databaseExists()) {
         auto dbPath = InputParser::getDatabase();
         auto dbName = dbPath.substr(dbPath.find_last_of('/') + 1);

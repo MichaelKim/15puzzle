@@ -4,7 +4,7 @@
 
 DisjointDatabase::DisjointDatabase(
     const std::string& name,
-    const std::vector<std::vector<std::vector<unsigned>>>& grids) {
+    const std::vector<std::vector<std::vector<int>>>& grids) {
     const auto WIDTH = grids[0][0].size();
     const auto HEIGHT = grids[0].size();
 
@@ -15,7 +15,7 @@ DisjointDatabase::DisjointDatabase(
     std::vector<std::vector<int>> combined(HEIGHT, std::vector<int>(WIDTH, 0));
 
     // The reflected positions of the tiles
-    mirrPos = std::vector<unsigned>(WIDTH * HEIGHT, 0);
+    mirrPos = std::vector<int>(WIDTH * HEIGHT, 0);
 
     for (size_t i = 0; i < grids.size(); i++) {
         PartialDatabase pd(grids[i], name, i);
@@ -32,8 +32,8 @@ DisjointDatabase::DisjointDatabase(
         databases.push_back(pd);
 
         // Calculate value to position mapping
-        for (unsigned y = 0; y < HEIGHT; y++) {
-            for (unsigned x = 0; x < WIDTH; x++) {
+        for (int y = 0; y < HEIGHT; y++) {
+            for (int x = 0; x < WIDTH; x++) {
                 if (grids[i][y][x] > 0) {
                     combined[y][x] = grids[i][y][x];
                 }
@@ -41,8 +41,8 @@ DisjointDatabase::DisjointDatabase(
         }
     }
 
-    for (unsigned y = 0; y < HEIGHT; y++) {
-        for (unsigned x = 0; x < WIDTH; x++) {
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
             if (combined[y][x] > 0) {
                 mirrPos[combined[y][x]] = combined[x][y];
             }
