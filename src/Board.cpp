@@ -33,8 +33,15 @@ constexpr std::array<std::array<bool, 4>, 16> Board::initMoveList() {
     return canMoveList;
 }
 
-Board::Board(const std::array<int, 16>& g, const DisjointDatabase& d)
-    : blank(0), grid(g), database(d), canMoveList(initMoveList()) {
+Board::Board(const std::array<int, 16>& g, const DisjointDatabase& d,
+             const WalkingDistance& w)
+    : blank(0),
+      grid(g),
+      database(d),
+      wdDb(w),
+      canMoveList(initMoveList()),
+      wdRowIndex(-1),
+      wdColIndex(-1) {
     for (int i = 0; i < 16; i++) {
         if (g[i] == 0) blank = i;
     }
@@ -73,6 +80,43 @@ Board::Board(const std::array<int, 16>& g, const DisjointDatabase& d)
         mirrGrid[i] = database.mirrPos[grid[mirror[i]]];
     }
     mirrPatterns = generatePatterns(mirrGrid, patternTiles);
+
+    // Walking distance
+    // Convert to WD tables
+    std::array<std::array<int, 4>, 4> rowTable{};
+    std::array<std::array<int, 4>, 4> colTable{};
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            int tile = grid[y * WIDTH + x];
+            if (tile > 0) {
+                rowTable[y][(tile - 1) / 4]++;
+                colTable[x][(tile - 1) % 4]++;
+            }
+        }
+    }
+    // Compress WD tables
+    uint64_t rowComp = 0;
+    uint64_t colComp = 0;
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            rowComp = (rowComp << 3) | rowTable[y][x];
+            colComp = (colComp << 3) | colTable[y][x];
+        }
+    }
+
+    // Convert to index
+    for (int i = 0; i < wdDb.tables.size(); i++) {
+        if (wdDb.tables[i] == rowComp) {
+            wdRowIndex = i;
+            break;
+        }
+    }
+    for (int i = 0; i < wdDb.tables.size(); i++) {
+        if (wdDb.tables[i] == colComp) {
+            wdColIndex = i;
+            break;
+        }
+    }
 }
 
 std::vector<uint64_t> Board::generatePatterns(
@@ -115,8 +159,9 @@ std::vector<uint64_t> Board::generatePatterns(
 }
 
 int Board::getHeuristic() const {
-    return std::max(database.getHeuristic(patterns),
-                    database.getHeuristic(mirrPatterns));
+    return std::max(std::max(database.getHeuristic(patterns),
+                             database.getHeuristic(mirrPatterns)),
+                    wdDb.costs[wdRowIndex] + wdDb.costs[wdColIndex]);
 }
 
 std::vector<Direction> Board::getMoves() const {
@@ -162,7 +207,7 @@ bool Board::canMove(Direction dir) {
 }
 
 // Pattern ID, pattern index
-std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
+std::tuple<uint64_t, uint64_t, int, int> Board::applyMove(Direction dir) {
     // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
     // Position of sliding tile (and new blank)
@@ -177,6 +222,8 @@ std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
     int index = database.where[tile];   // Which pattern the sliding tile is in
     auto oldPattern = patterns[index];  // Storing for undo
 
+    auto prevRowIndex = wdRowIndex;
+    auto prevColIndex = wdColIndex;
     switch (dir) {
         case Direction::U: {
             int numSkips = 1;
@@ -191,10 +238,14 @@ std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
                 }
             }
             patterns[index] += skipDelta + numSkips * tileDeltas[tile];
+
+            // Update WD
+            wdRowIndex = wdDb.edges[wdRowIndex][1][(tile - 1) / 4];
             break;
         }
         case Direction::R:
             patterns[index] -= tileDeltas[tile];
+            wdColIndex = wdDb.edges[wdColIndex][0][(tile - 1) % 4];
             break;
         case Direction::D: {
             int numSkips = 1;
@@ -209,10 +260,14 @@ std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
                 }
             }
             patterns[index] -= skipDelta + numSkips * tileDeltas[tile];
+
+            // Update WD
+            wdRowIndex = wdDb.edges[wdRowIndex][0][(tile - 1) / 4];
             break;
         }
         default:
             patterns[index] += tileDeltas[tile];
+            wdColIndex = wdDb.edges[wdColIndex][1][(tile - 1) % 4];
             break;
     }
 
@@ -268,11 +323,12 @@ std::pair<uint64_t, uint64_t> Board::applyMove(Direction dir) {
     // Update blank tile
     blank = newBlank;
 
-    return {oldPattern, oldMirrPattern};
+    return {oldPattern, oldMirrPattern, prevRowIndex, prevColIndex};
 }
 
-void Board::undoMove(const std::pair<uint64_t, uint64_t>& prev, Direction dir) {
-    const auto& [pattern, mirrPattern] = prev;
+void Board::undoMove(const std::tuple<uint64_t, uint64_t, int, int>& prev,
+                     Direction dir) {
+    const auto& [pattern, mirrPattern, prevRowIndex, prevColIndex] = prev;
 
     // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
@@ -298,6 +354,10 @@ void Board::undoMove(const std::pair<uint64_t, uint64_t>& prev, Direction dir) {
 
     // Update blank tile
     blank = newBlank;
+
+    // Update WD
+    wdRowIndex = prevRowIndex;
+    wdColIndex = prevColIndex;
 }
 
 std::ostream& operator<<(std::ostream& out, const Board& board) {

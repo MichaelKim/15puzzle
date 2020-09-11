@@ -11,6 +11,7 @@
 #include "../include/Idastar.h"
 #include "../include/InputParser.h"
 #include "../include/Util.h"
+#include "../include/WalkingDistance.h"
 
 // Fixed board size: 4x4
 // Dynamic database pattern
@@ -49,7 +50,8 @@ vector<array<int, 16>> readDatabase(istream& input) {
     return grids;
 }
 
-vector<Board> readBoards(istream& input, const DisjointDatabase& db) {
+vector<Board> readBoards(istream& input, const DisjointDatabase& db,
+                         const WalkingDistance& wd) {
     int boardNum;
     input >> boardNum;
 
@@ -59,7 +61,7 @@ vector<Board> readBoards(istream& input, const DisjointDatabase& db) {
         for (auto& tile : board) {
             input >> tile;
         }
-        boards.emplace_back(board, db);
+        boards.emplace_back(board, db, wd);
     }
     return boards;
 }
@@ -76,14 +78,14 @@ std::pair<std::string, vector<array<int, 16>>> getDatabase() {
     return {"def", readDatabase(cin)};
 }
 
-vector<Board> getBoards(const DisjointDatabase& db) {
+vector<Board> getBoards(const DisjointDatabase& db, const WalkingDistance& wd) {
     if (InputParser::boardExists()) {
         ifstream input(InputParser::getBoard());
 
-        return readBoards(input, db);
+        return readBoards(input, db, wd);
     }
 
-    return readBoards(cin, db);
+    return readBoards(cin, db, wd);
 }
 
 int main(int argc, const char* argv[]) {
@@ -107,8 +109,13 @@ int main(int argc, const char* argv[]) {
     DisjointDatabase db(dbName, grids);
     END_TIMER(db);
 
+    // Setup WD
+    START_TIMER(wd);
+    WalkingDistance wd({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0});
+    END_TIMER(db);
+
     // Reading board file
-    auto startBoards(getBoards(db));
+    auto startBoards(getBoards(db, wd));
 
     // Setup search
     Idastar search;

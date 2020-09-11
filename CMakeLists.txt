@@ -1,14 +1,14 @@
 cmake_minimum_required (VERSION 3.15)
 project (puzzle)
 
-add_executable(puzzle src/main.cpp src/Board.cpp src/Direction.cpp src/DisjointDatabase.cpp src/Idastar.cpp src/InputParser.cpp src/PartialDatabase.cpp src/Pattern.cpp)
+add_executable(puzzle src/main.cpp src/Board.cpp src/Direction.cpp src/DisjointDatabase.cpp src/Idastar.cpp src/InputParser.cpp src/PartialDatabase.cpp src/Pattern.cpp src/WalkingDistance.cpp)
 target_include_directories(puzzle PUBLIC include)
 set_target_properties(puzzle PROPERTIES
   CXX_STANDARD 17
   CXX_STANDARD_REQUIRED YES
   CXX_EXTENSIONS NO
 )
-target_compile_options(puzzle PUBLIC -O3 -g)
+target_compile_options(puzzle PUBLIC -g)
 
 find_program(
   CLANG_TIDY_EXE

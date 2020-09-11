@@ -38,7 +38,8 @@ std::vector<Direction> Idastar::solve(Board start) {
                     break;
                 }
             }
-            limit = minCost;
+            // Always increment by 2 due to parity
+            limit += 2;
         }
 
         std::cout << "Nodes expanded: " << nodes << std::endl;
