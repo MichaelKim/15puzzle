@@ -5,6 +5,7 @@
 #include <iostream>
 #include <unordered_map>
 
+// Faster than computing on the fly
 constexpr std::array<std::array<bool, 4>, 16> Board::initMoveList() {
     std::array<std::array<bool, 4>, 16> canMoveList = {};
 
@@ -42,6 +43,7 @@ Board::Board(const std::array<int, 16>& g, const DisjointDatabase& d,
       canMoveList(initMoveList()),
       wdRowIndex(-1),
       wdColIndex(-1) {
+    // Find blank
     for (int i = 0; i < 16; i++) {
         if (g[i] == 0) blank = i;
     }
@@ -207,7 +209,7 @@ bool Board::canMove(Direction dir) {
 }
 
 // Pattern ID, pattern index
-std::tuple<uint64_t, uint64_t, int, int> Board::applyMove(Direction dir) {
+Board::MoveState Board::applyMove(Direction dir) {
     // Position of blank
     const auto& delta = deltas[static_cast<int>(dir)];
     // Position of sliding tile (and new blank)
@@ -321,19 +323,16 @@ std::tuple<uint64_t, uint64_t, int, int> Board::applyMove(Direction dir) {
     }
 
     // Update blank tile
+    auto oldBlank = blank;
     blank = newBlank;
 
-    return {oldPattern, oldMirrPattern, prevRowIndex, prevColIndex};
+    return {oldPattern, oldMirrPattern, prevRowIndex, prevColIndex, oldBlank};
 }
 
-void Board::undoMove(const std::tuple<uint64_t, uint64_t, int, int>& prev,
-                     Direction dir) {
-    const auto& [pattern, mirrPattern, prevRowIndex, prevColIndex] = prev;
+void Board::undoMove(const Board::MoveState& prev) {
+    const auto& [pattern, mirrPattern, prevRowIndex, prevColIndex, newBlank] =
+        prev;
 
-    // Position of blank
-    const auto& delta = deltas[static_cast<int>(dir)];
-    // Position of sliding tile
-    const auto newBlank = blank - delta;
     // Value of sliding tile
     const auto tile = getTile(newBlank);
 

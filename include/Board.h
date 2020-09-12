@@ -13,19 +13,18 @@ class Board {
 private:
     const int WIDTH = 4, HEIGHT = 4;
 
-    // Used for disjoint database
     int blank;  // Position of blank (since patterns don't store the blank)
-    std::array<int, 16> grid;            // Value to position mapping
-    std::array<int, 16> mirrGrid;        // Mirrored grid
-    std::vector<uint64_t> patterns;      // Pattern IDs
-    std::vector<uint64_t> mirrPatterns;  // Mirrored pattern IDs
-
-    // Lookup tables
-    const DisjointDatabase& database;  // Pattern heuristic
     // {0, -1}, {1, 0}, {0, 1}, {-1, 0}}
     const std::array<int, 4> deltas = {-WIDTH, 1, WIDTH, -1};  // Blank deltas
-    std::array<int, 16> tileDeltas;                            // Tile deltas
-    std::array<int, 16> mirror;  // Mirror position
+    std::array<int, 16> grid;      // Value to position mapping
+    std::array<int, 16> mirrGrid;  // Mirrored grid
+    std::array<int, 16> mirror;    // Mirror position
+
+    // Used for disjoint database
+    const DisjointDatabase& database;    // Pattern heuristic
+    std::array<int, 16> tileDeltas;      // Tile deltas
+    std::vector<uint64_t> patterns;      // Pattern IDs
+    std::vector<uint64_t> mirrPatterns;  // Mirrored pattern IDs
 
     // Used for walking distance
     const WalkingDistance& wdDb;
@@ -44,6 +43,14 @@ private:
     int getMirrTile(int posn) const;
     void setMirrTile(int posn, int tile);
 
+    struct MoveState {
+        uint64_t pattern;
+        uint64_t mirrPattern;
+        int rowIndex;
+        int colIndex;
+        int blank;
+    };
+
 public:
     Board(const std::array<int, 16>& g, const DisjointDatabase& d,
           const WalkingDistance& w);
@@ -51,9 +58,8 @@ public:
     int getHeuristic() const;
     bool canMove(Direction dir);
     std::vector<Direction> getMoves() const;
-    std::tuple<uint64_t, uint64_t, int, int> applyMove(Direction dir);
-    void undoMove(const std::tuple<uint64_t, uint64_t, int, int>& prev,
-                  Direction dir);
+    MoveState applyMove(Direction dir);
+    void undoMove(const MoveState& prev);
 
     friend std::ostream& operator<<(std::ostream& out, const Board& board);
 };

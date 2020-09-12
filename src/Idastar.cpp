@@ -76,7 +76,7 @@ bool Idastar::dfs(Board& node, int g, Direction prevMove) {
             return true;
         }
 
-        node.undoMove(prev, Direction::U);
+        node.undoMove(prev);
     }
 
     if (prevMove != Direction::L && node.canMove(Direction::R)) {
@@ -87,7 +87,7 @@ bool Idastar::dfs(Board& node, int g, Direction prevMove) {
             return true;
         }
 
-        node.undoMove(prev, Direction::R);
+        node.undoMove(prev);
     }
 
     if (prevMove != Direction::U && node.canMove(Direction::D)) {
@@ -98,7 +98,7 @@ bool Idastar::dfs(Board& node, int g, Direction prevMove) {
             return true;
         }
 
-        node.undoMove(prev, Direction::D);
+        node.undoMove(prev);
     }
 
     if (prevMove != Direction::R && node.canMove(Direction::L)) {
@@ -109,7 +109,7 @@ bool Idastar::dfs(Board& node, int g, Direction prevMove) {
             return true;
         }
 
-        node.undoMove(prev, Direction::L);
+        node.undoMove(prev);
     }
 
     return false;
