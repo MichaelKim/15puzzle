@@ -11,43 +11,37 @@ constexpr std::array<std::array<bool, 4>, 16> Board::initMoveList() {
 
     // Blank position
     for (int i = 0; i < 16; i++) {
-        // Direction
-        for (int j = 0; j < 4; j++) {
-            auto dir = static_cast<Direction>(j);
-            switch (dir) {
-                case Direction::U:
-                    canMoveList[i][j] = (i / 4) > 0;
-                    break;
-                case Direction::R:
-                    canMoveList[i][j] = (i % 4) < WIDTH - 1;
-                    break;
-                case Direction::D:
-                    canMoveList[i][j] = (i / 4) < HEIGHT - 1;
-                    break;
-                default:
-                    canMoveList[i][j] = (i % 4) > 0;
-                    break;
-            }
-        }
+        canMoveList[i][static_cast<int>(Direction::U)] = (i / 4) > 0;
+        canMoveList[i][static_cast<int>(Direction::R)] = (i % 4) < WIDTH - 1;
+        canMoveList[i][static_cast<int>(Direction::D)] = (i / 4) < HEIGHT - 1;
+        canMoveList[i][static_cast<int>(Direction::L)] = (i % 4) > 0;
     }
 
     return canMoveList;
 }
 
+constexpr std::array<int, 16> Board::calculateMirror() {
+    // Calculate mirror positions
+    // TODO: test with blank not in top-left or bottom-right
+    std::array<int, 16> mirror;
+    for (int i = 0; i < WIDTH * HEIGHT; i++) {
+        int y = i / WIDTH;
+        int x = i % WIDTH;
+        mirror[i] = (x * WIDTH) + y;
+    }
+    return mirror;
+}
+
 Board::Board(const std::array<int, 16>& g, const DisjointDatabase& d,
              const WalkingDistance& w)
-    : blank(0),
+    : blank(findBlank(g)),
       grid(g),
+      mirror(calculateMirror()),
       database(d),
       wdDb(w),
       canMoveList(initMoveList()),
       wdRowIndex(-1),
       wdColIndex(-1) {
-    // Find blank
-    for (int i = 0; i < 16; i++) {
-        if (g[i] == 0) blank = i;
-    }
-
     // Calculate deltas
     auto numPatterns = database.numPatterns();
 
@@ -60,22 +54,7 @@ Board::Board(const std::array<int, 16>& g, const DisjointDatabase& d,
     patterns = generatePatterns(grid, patternTiles);
 
     // Calculate tileDeltas
-    tileDeltas.fill(1);
-    for (int i = 0; i < numPatterns; i++) {
-        auto& tiles = patternTiles[i];
-        for (int j = tiles.size() - 2; j >= 0; j--) {
-            tileDeltas[tiles[j]] =
-                tileDeltas[tiles[j + 1]] * (WIDTH * HEIGHT - 1 - j);
-        }
-    }
-
-    // Calculate mirror positions
-    // TODO: test with blank not in top-left or bottom-right
-    for (int i = 0; i < WIDTH * HEIGHT; i++) {
-        int y = i / WIDTH;
-        int x = i % WIDTH;
-        mirror[i] = (x * WIDTH) + y;
-    }
+    tileDeltas = calculateDeltas(patternTiles);
 
     mirrGrid.fill(0);
     for (int i = 0; i < WIDTH * HEIGHT; i++) {
@@ -83,42 +62,30 @@ Board::Board(const std::array<int, 16>& g, const DisjointDatabase& d,
     }
     mirrPatterns = generatePatterns(mirrGrid, patternTiles);
 
-    // Walking distance
-    // Convert to WD tables
-    std::array<std::array<int, 4>, 4> rowTable{};
-    std::array<std::array<int, 4>, 4> colTable{};
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            int tile = grid[y * WIDTH + x];
-            if (tile > 0) {
-                rowTable[y][(tile - 1) / 4]++;
-                colTable[x][(tile - 1) % 4]++;
-            }
+    calculateWDIndex();
+}
+
+int Board::findBlank(const std::array<int, 16>& g) {
+    for (int i = 0; i < 16; i++) {
+        if (g[i] == 0) {
+            return i;
         }
     }
-    // Compress WD tables
-    uint64_t rowComp = 0;
-    uint64_t colComp = 0;
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            rowComp = (rowComp << 3) | rowTable[y][x];
-            colComp = (colComp << 3) | colTable[y][x];
+}
+
+std::array<int, 16> Board::calculateDeltas(
+    const std::vector<std::vector<int>>& patternTiles) {
+    std::array<int, 16> tileDeltas;
+    tileDeltas.fill(1);
+
+    for (auto& tiles : patternTiles) {
+        for (int j = tiles.size() - 2; j >= 0; j--) {
+            tileDeltas[tiles[j]] =
+                tileDeltas[tiles[j + 1]] * (WIDTH * HEIGHT - 1 - j);
         }
     }
 
-    // Convert to index
-    for (int i = 0; i < wdDb.tables.size(); i++) {
-        if (wdDb.tables[i] == rowComp) {
-            wdRowIndex = i;
-            break;
-        }
-    }
-    for (int i = 0; i < wdDb.tables.size(); i++) {
-        if (wdDb.tables[i] == colComp) {
-            wdColIndex = i;
-            break;
-        }
-    }
+    return tileDeltas;
 }
 
 std::vector<uint64_t> Board::generatePatterns(
@@ -158,6 +125,42 @@ std::vector<uint64_t> Board::generatePatterns(
     }
 
     return pat;
+}
+
+void Board::calculateWDIndex() {
+    std::array<std::array<int, 4>, 4> rowTable{};
+    std::array<std::array<int, 4>, 4> colTable{};
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            int tile = grid[y * WIDTH + x];
+            if (tile > 0) {
+                rowTable[y][(tile - 1) / 4]++;
+                colTable[x][(tile - 1) % 4]++;
+            }
+        }
+    }
+
+    // Compress WD tables
+    uint64_t rowComp = 0;
+    uint64_t colComp = 0;
+    for (int y = 0; y < HEIGHT; y++) {
+        for (int x = 0; x < WIDTH; x++) {
+            rowComp = (rowComp << 3) | rowTable[y][x];
+            colComp = (colComp << 3) | colTable[y][x];
+        }
+    }
+
+    // Convert to index
+    for (int i = 0; i < wdDb.tables.size(); i++) {
+        if (wdDb.tables[i] == rowComp) {
+            wdRowIndex = i;
+            if (wdColIndex != -1) return;
+        }
+        if (wdDb.tables[i] == colComp) {
+            wdColIndex = i;
+            if (wdRowIndex != -1) return;
+        }
+    }
 }
 
 int Board::getHeuristic() const {

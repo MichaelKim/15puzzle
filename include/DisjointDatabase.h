@@ -10,11 +10,15 @@ class DisjointDatabase {
 private:
     std::vector<PartialDatabase> databases;
 
+    std::vector<int> DisjointDatabase::loadDatabase(std::string filename,
+                                                    int size);
+
 public:
     DisjointDatabase(const std::string& name,
                      const std::vector<std::array<int, 16>>& grids);
 
     std::array<int, 16> where;
+    // The reflected positions of the tiles
     std::array<int, 16> mirrPos;
 
     std::size_t numPatterns() const;

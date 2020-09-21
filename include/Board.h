@@ -51,6 +51,12 @@ private:
         int blank;
     };
 
+    int findBlank(const std::array<int, 16>& g);
+    constexpr std::array<int, 16> calculateMirror();
+    std::array<int, 16> calculateDeltas(
+        const std::vector<std::vector<int>>& patternTiles);
+    void calculateWDIndex();
+
 public:
     Board(const std::array<int, 16>& g, const DisjointDatabase& d,
           const WalkingDistance& w);
