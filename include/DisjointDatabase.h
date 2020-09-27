@@ -9,9 +9,9 @@
 class DisjointDatabase {
 private:
     std::vector<PartialDatabase> databases;
+    std::vector<std::vector<int>> costs;
 
-    std::vector<int> DisjointDatabase::loadDatabase(std::string filename,
-                                                    int size);
+    std::vector<int> loadDatabase(std::string filename, int size);
 
 public:
     DisjointDatabase(const std::string& name,

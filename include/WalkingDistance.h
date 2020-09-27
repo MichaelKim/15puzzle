@@ -2,25 +2,17 @@
 #define WALKINGDISTANCE_H
 
 #include <array>
-#include <string>
-#include <vector>
 
-constexpr auto tableSize = 24964;
+namespace WalkingDistance {
 
-class WalkingDistance {
-    std::string filename;
+void load(const std::array<int, 16>& goal);
+void generate(const std::array<int, 16>& goal);
+void save();
 
-    void generateDists();
-    void saveDists();
+int getIndex(const std::array<int, 16>& grid, bool alongRow = true);
+int getHeuristic(int index);  // 2 bytes
+int edge(int index, int dir, int tile);
 
-public:
-    WalkingDistance(const std::array<int, 16>& solved);
-
-    int getHeuristic(const int index) const;
-
-    std::array<uint64_t, tableSize> tables;
-    std::array<int, tableSize> costs;
-    std::array<std::array<std::array<int, 4>, 2>, tableSize> edges;
-};
+};  // namespace WalkingDistance
 
 #endif  // WALKINGDISTANCE_H

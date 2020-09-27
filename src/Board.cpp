@@ -5,43 +5,23 @@
 #include <iostream>
 #include <unordered_map>
 
-// Faster than computing on the fly
-constexpr std::array<std::array<bool, 4>, 16> Board::initMoveList() {
-    std::array<std::array<bool, 4>, 16> canMoveList = {};
+#include "../include/Util.h"
+#include "../include/WalkingDistance.h"
 
-    // Blank position
+int findBlank(const std::array<int, 16>& g) {
     for (int i = 0; i < 16; i++) {
-        canMoveList[i][static_cast<int>(Direction::U)] = (i / 4) > 0;
-        canMoveList[i][static_cast<int>(Direction::R)] = (i % 4) < WIDTH - 1;
-        canMoveList[i][static_cast<int>(Direction::D)] = (i / 4) < HEIGHT - 1;
-        canMoveList[i][static_cast<int>(Direction::L)] = (i % 4) > 0;
+        if (g[i] == 0) {
+            return i;
+        }
     }
-
-    return canMoveList;
 }
 
-constexpr std::array<int, 16> Board::calculateMirror() {
-    // Calculate mirror positions
-    // TODO: test with blank not in top-left or bottom-right
-    std::array<int, 16> mirror;
-    for (int i = 0; i < WIDTH * HEIGHT; i++) {
-        int y = i / WIDTH;
-        int x = i % WIDTH;
-        mirror[i] = (x * WIDTH) + y;
-    }
-    return mirror;
-}
-
-Board::Board(const std::array<int, 16>& g, const DisjointDatabase& d,
-             const WalkingDistance& w)
+Board::Board(const std::array<int, 16>& g, const DisjointDatabase& d)
     : blank(findBlank(g)),
       grid(g),
-      mirror(calculateMirror()),
       database(d),
-      wdDb(w),
-      canMoveList(initMoveList()),
-      wdRowIndex(-1),
-      wdColIndex(-1) {
+      wdRowIndex(WalkingDistance::getIndex(g)),
+      wdColIndex(WalkingDistance::getIndex(g, false)) {
     // Calculate deltas
     auto numPatterns = database.numPatterns();
 
@@ -61,16 +41,6 @@ Board::Board(const std::array<int, 16>& g, const DisjointDatabase& d,
         mirrGrid[i] = database.mirrPos[grid[mirror[i]]];
     }
     mirrPatterns = generatePatterns(mirrGrid, patternTiles);
-
-    calculateWDIndex();
-}
-
-int Board::findBlank(const std::array<int, 16>& g) {
-    for (int i = 0; i < 16; i++) {
-        if (g[i] == 0) {
-            return i;
-        }
-    }
 }
 
 std::array<int, 16> Board::calculateDeltas(
@@ -127,46 +97,11 @@ std::vector<uint64_t> Board::generatePatterns(
     return pat;
 }
 
-void Board::calculateWDIndex() {
-    std::array<std::array<int, 4>, 4> rowTable{};
-    std::array<std::array<int, 4>, 4> colTable{};
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            int tile = grid[y * WIDTH + x];
-            if (tile > 0) {
-                rowTable[y][(tile - 1) / 4]++;
-                colTable[x][(tile - 1) % 4]++;
-            }
-        }
-    }
-
-    // Compress WD tables
-    uint64_t rowComp = 0;
-    uint64_t colComp = 0;
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            rowComp = (rowComp << 3) | rowTable[y][x];
-            colComp = (colComp << 3) | colTable[y][x];
-        }
-    }
-
-    // Convert to index
-    for (int i = 0; i < wdDb.tables.size(); i++) {
-        if (wdDb.tables[i] == rowComp) {
-            wdRowIndex = i;
-            if (wdColIndex != -1) return;
-        }
-        if (wdDb.tables[i] == colComp) {
-            wdColIndex = i;
-            if (wdRowIndex != -1) return;
-        }
-    }
-}
-
 int Board::getHeuristic() const {
     return std::max(std::max(database.getHeuristic(patterns),
                              database.getHeuristic(mirrPatterns)),
-                    wdDb.costs[wdRowIndex] + wdDb.costs[wdColIndex]);
+                    WalkingDistance::getHeuristic(wdRowIndex) +
+                        WalkingDistance::getHeuristic(wdColIndex));
 }
 
 std::vector<Direction> Board::getMoves() const {
@@ -245,12 +180,12 @@ Board::MoveState Board::applyMove(Direction dir) {
             patterns[index] += skipDelta + numSkips * tileDeltas[tile];
 
             // Update WD
-            wdRowIndex = wdDb.edges[wdRowIndex][1][(tile - 1) / 4];
+            wdRowIndex = WalkingDistance::edge(wdRowIndex, 1, (tile - 1) / 4);
             break;
         }
         case Direction::R:
             patterns[index] -= tileDeltas[tile];
-            wdColIndex = wdDb.edges[wdColIndex][0][(tile - 1) % 4];
+            wdColIndex = WalkingDistance::edge(wdColIndex, 0, (tile - 1) % 4);
             break;
         case Direction::D: {
             int numSkips = 1;
@@ -267,12 +202,12 @@ Board::MoveState Board::applyMove(Direction dir) {
             patterns[index] -= skipDelta + numSkips * tileDeltas[tile];
 
             // Update WD
-            wdRowIndex = wdDb.edges[wdRowIndex][0][(tile - 1) / 4];
+            wdRowIndex = WalkingDistance::edge(wdRowIndex, 0, (tile - 1) / 4);
             break;
         }
         default:
             patterns[index] += tileDeltas[tile];
-            wdColIndex = wdDb.edges[wdColIndex][1][(tile - 1) % 4];
+            wdColIndex = WalkingDistance::edge(wdColIndex, 1, (tile - 1) % 4);
             break;
     }
 

@@ -7,7 +7,6 @@
 
 #include "Direction.h"
 #include "DisjointDatabase.h"
-#include "WalkingDistance.h"
 
 class Board {
 private:
@@ -16,9 +15,19 @@ private:
     int blank;  // Position of blank (since patterns don't store the blank)
     // {0, -1}, {1, 0}, {0, 1}, {-1, 0}}
     const std::array<int, 4> deltas = {-WIDTH, 1, WIDTH, -1};  // Blank deltas
-    std::array<int, 16> grid;      // Value to position mapping
-    std::array<int, 16> mirrGrid;  // Mirrored grid
-    std::array<int, 16> mirror;    // Mirror position
+    std::array<int, 16> grid;              // Value to position mapping
+    std::array<int, 16> mirrGrid;          // Mirrored grid
+    std::array<int, 16> mirror = [this] {  // Mirror position
+        // Calculate mirror positions
+        // TODO: test with blank not in top-left or bottom-right
+        std::array<int, 16> mirror;
+        for (int i = 0; i < WIDTH * HEIGHT; i++) {
+            int y = i / WIDTH;
+            int x = i % WIDTH;
+            mirror[i] = (x * WIDTH) + y;
+        }
+        return mirror;
+    }();
 
     // Used for disjoint database
     const DisjointDatabase& database;    // Pattern heuristic
@@ -27,12 +36,23 @@ private:
     std::vector<uint64_t> mirrPatterns;  // Mirrored pattern IDs
 
     // Used for walking distance
-    const WalkingDistance& wdDb;
     int wdRowIndex;  // Chunk by row (1 2 3 4 / ...)
     int wdColIndex;  // Chunk by col (1 5 8 13 / ...)
 
-    constexpr std::array<std::array<bool, 4>, 16> initMoveList();
-    std::array<std::array<bool, 4>, 16> canMoveList;
+    // Faster than computing on the fly
+    std::array<std::array<bool, 4>, 16> canMoveList = [this] {
+        std::array<std::array<bool, 4>, 16> moves{};
+
+        // Blank position
+        for (int i = 0; i < 16; i++) {
+            moves[i][static_cast<int>(Direction::U)] = (i / 4) > 0;
+            moves[i][static_cast<int>(Direction::R)] = (i % 4) < WIDTH - 1;
+            moves[i][static_cast<int>(Direction::D)] = (i / 4) < HEIGHT - 1;
+            moves[i][static_cast<int>(Direction::L)] = (i % 4) > 0;
+        }
+
+        return moves;
+    }();
 
     std::vector<uint64_t> generatePatterns(
         const std::array<int, 16>& grid,
@@ -51,15 +71,11 @@ private:
         int blank;
     };
 
-    int findBlank(const std::array<int, 16>& g);
-    constexpr std::array<int, 16> calculateMirror();
     std::array<int, 16> calculateDeltas(
         const std::vector<std::vector<int>>& patternTiles);
-    void calculateWDIndex();
 
 public:
-    Board(const std::array<int, 16>& g, const DisjointDatabase& d,
-          const WalkingDistance& w);
+    Board(const std::array<int, 16>& g, const DisjointDatabase& d);
 
     int getHeuristic() const;
     bool canMove(Direction dir);

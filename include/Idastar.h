@@ -11,12 +11,12 @@ private:
     std::vector<Direction> path;
     int minCost;
     int limit;
-    uint64_t nodes;
+    long long nodes;
 
 public:
     Idastar();
 
-    std::vector<Direction> solve(Board start);
+    std::vector<Direction> solve(const Board& start);
     bool dfs(Board& root, int g, Direction prevMove);
 };
 

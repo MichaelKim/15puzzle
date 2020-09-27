@@ -50,8 +50,7 @@ vector<array<int, 16>> readDatabase(istream& input) {
     return grids;
 }
 
-vector<Board> readBoards(istream& input, const DisjointDatabase& db,
-                         const WalkingDistance& wd) {
+vector<Board> readBoards(istream& input, const DisjointDatabase& db) {
     int boardNum;
     input >> boardNum;
 
@@ -61,7 +60,7 @@ vector<Board> readBoards(istream& input, const DisjointDatabase& db,
         for (auto& tile : board) {
             input >> tile;
         }
-        boards.emplace_back(board, db, wd);
+        boards.emplace_back(board, db);
     }
     return boards;
 }
@@ -78,14 +77,14 @@ std::pair<std::string, vector<array<int, 16>>> getDatabase() {
     return {"def", readDatabase(cin)};
 }
 
-vector<Board> getBoards(const DisjointDatabase& db, const WalkingDistance& wd) {
+vector<Board> getBoards(const DisjointDatabase& db) {
     if (InputParser::boardExists()) {
         ifstream input(InputParser::getBoard());
 
-        return readBoards(input, db, wd);
+        return readBoards(input, db);
     }
 
-    return readBoards(cin, db, wd);
+    return readBoards(cin, db);
 }
 
 int main(int argc, const char* argv[]) {
@@ -111,11 +110,12 @@ int main(int argc, const char* argv[]) {
 
     // Setup WD
     START_TIMER(wd);
-    WalkingDistance wd({1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0});
+    WalkingDistance::load(
+        {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0});
     END_TIMER(db);
 
     // Reading board file
-    auto startBoards(getBoards(db, wd));
+    auto startBoards(getBoards(db));
 
     // Setup search
     Idastar search;

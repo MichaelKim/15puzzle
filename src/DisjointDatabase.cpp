@@ -10,7 +10,6 @@ DisjointDatabase::DisjointDatabase(
     // All partial grids, layered to one
     // This represents the solved grid
     std::array<int, 16> combined{};
-    std::vector<std::vector<int>> costs;
 
     for (int i = 0; i < grids.size(); i++) {
         std::cout << "Pattern #" << i << ":" << std::endl;
@@ -58,13 +57,13 @@ std::vector<int> DisjointDatabase::loadDatabase(std::string filename,
     return cost;
 }
 
-std::size_t DisjointDatabase::numPatterns() const { return databases.size(); }
+std::size_t DisjointDatabase::numPatterns() const { return costs.size(); }
 
 int DisjointDatabase::getHeuristic(
     const std::vector<uint64_t>& patterns) const {
     int totalDist = 0;
     for (size_t i = 0; i < patterns.size(); i++) {
-        totalDist += databases[i].distMap[patterns[i]];
+        totalDist += costs[i][patterns[i]];
     }
     return totalDist;
 }
