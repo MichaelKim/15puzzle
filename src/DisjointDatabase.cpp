@@ -3,16 +3,61 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <unordered_map>
 
-DisjointDatabase::DisjointDatabase(
-    const std::string& name, const std::vector<std::array<int, 16>>& grids)
-    : mirrPos({}) {
+#include "../include/Util.h"
+
+using Grid = DisjointDatabase::Grid;
+
+std::vector<std::vector<int>> patternTiles;
+std::vector<std::vector<int>> costs;
+std::array<int, 16> DisjointDatabase::where;
+Grid DisjointDatabase::tileDeltas;
+Grid DisjointDatabase::mirrPos{};
+
+std::vector<int> readDatabase(int index, int size) {
+    std::ifstream file("databases/def-" + std::to_string(index) + ".dat",
+                       std::ios::in | std::ios::binary);
+    std::vector<int> cost(size);
+
+    // Read database from file
+    for (auto& c : cost) {
+        file.read(reinterpret_cast<char*>(&c), sizeof(c));
+    }
+
+    return cost;
+}
+
+void calculatePatternTiles() {
+    using DisjointDatabase::where;
+
+    patternTiles.resize(costs.size());
+
+    for (int i = 1; i < 16; i++) {  // Ignore blank tile (0)
+        patternTiles[where[i]].push_back(i);
+    }
+}
+
+void calculateDeltas() {
+    using DisjointDatabase::tileDeltas;
+
+    DisjointDatabase::tileDeltas.fill(1);
+
+    for (auto& tiles : patternTiles) {
+        for (int j = tiles.size() - 2; j >= 0; j--) {
+            tileDeltas[tiles[j]] = tileDeltas[tiles[j + 1]] * (16 - 1 - j);
+        }
+    }
+}
+
+void DisjointDatabase::load(const std::vector<Grid>& grids) {
     // All partial grids, layered to one
     // This represents the solved grid
-    std::array<int, 16> combined{};
+    Grid combined{};
 
     for (int i = 0; i < grids.size(); i++) {
-        std::cout << "Pattern #" << i << ":" << std::endl;
+        DEBUG("Pattern #" << i << ':');
+
         int size = 1;      // # of entries in database
         int numTiles = 0;  // # of tiles in partial pattern
 
@@ -29,38 +74,56 @@ DisjointDatabase::DisjointDatabase(
             }
         }
 
-        costs.push_back(
-            loadDatabase("databases/def-" + std::to_string(i) + ".dat", size));
+        costs.push_back(readDatabase(i, size));
     }
 
     for (int i = 0; i < 16; i++) {
         if (combined[i] > 0) {
-            int y = i / 4;
-            int x = i % 4;
-            int mirr = x * 4 + y;
-            mirrPos[combined[mirr]] = combined[i];
+            mirrPos[combined[i]] = combined[mirror[i]];
         }
     }
+
+    calculatePatternTiles();
+    calculateDeltas();
 }
 
-std::vector<int> DisjointDatabase::loadDatabase(std::string filename,
-                                                int size) {
-    std::ifstream file(filename, std::ios::in | std::ios::binary);
-    std::vector<int> cost(size);
-    // Read database from file
-    uint64_t id = 0;
-    unsigned dist;
-    while (file.read((char*)&dist, sizeof(dist))) {
-        cost[id] = dist;
-        id++;
+std::vector<uint64_t> DisjointDatabase::calculatePatterns(const Grid& grid) {
+    std::vector<uint64_t> pat(costs.size(), 0);
+
+    for (int i = 0; i < costs.size(); i++) {
+        const auto& tiles = patternTiles[i];
+
+        // Calculate pattern
+        std::vector<int> startPos(16, 0);
+        std::unordered_map<int, int> before;
+        for (int j = 0; j < 16; j++) {
+            if (where[grid[j]] == i) {
+                // New tile found
+                int beforeCount = 0;
+
+                // Count number of preceding pattern tiles that's smaller
+                for (auto& it : before) {
+                    if (it.first < grid[j]) {
+                        beforeCount++;
+                    }
+                }
+
+                before[grid[j]] = beforeCount;
+                startPos[grid[j]] = j;
+            }
+        }
+
+        int j = 16;
+        for (auto tile : tiles) {
+            pat[i] *= j--;
+            pat[i] += startPos[tile] - before[tile];
+        }
     }
-    return cost;
+
+    return pat;
 }
 
-std::size_t DisjointDatabase::numPatterns() const { return costs.size(); }
-
-int DisjointDatabase::getHeuristic(
-    const std::vector<uint64_t>& patterns) const {
+int DisjointDatabase::getHeuristic(const std::vector<uint64_t>& patterns) {
     int totalDist = 0;
     for (size_t i = 0; i < patterns.size(); i++) {
         totalDist += costs[i][patterns[i]];

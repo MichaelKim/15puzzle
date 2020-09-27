@@ -14,94 +14,28 @@ int findBlank(const std::array<int, 16>& g) {
             return i;
         }
     }
+    assertm(0, "Board must have a blank");
 }
 
-Board::Board(const std::array<int, 16>& g, const DisjointDatabase& d)
+Board::Board(const std::array<int, 16>& g)
     : blank(findBlank(g)),
       grid(g),
-      database(d),
+      mirrGrid({}),
+      patterns(DisjointDatabase::calculatePatterns(g)),
       wdRowIndex(WalkingDistance::getIndex(g)),
       wdColIndex(WalkingDistance::getIndex(g, false)) {
-    // Calculate deltas
-    auto numPatterns = database.numPatterns();
-
-    // The tiles in each pattern
-    std::vector<std::vector<int>> patternTiles(numPatterns);
-    for (int i = 1; i < WIDTH * HEIGHT; i++) {  // Ignore blank tile (0)
-        patternTiles[database.where[i]].push_back(i);
-    }
-
-    patterns = generatePatterns(grid, patternTiles);
-
-    // Calculate tileDeltas
-    tileDeltas = calculateDeltas(patternTiles);
-
-    mirrGrid.fill(0);
     for (int i = 0; i < WIDTH * HEIGHT; i++) {
-        mirrGrid[i] = database.mirrPos[grid[mirror[i]]];
+        mirrGrid[i] =
+            DisjointDatabase::mirrPos[grid[DisjointDatabase::mirror[i]]];
     }
-    mirrPatterns = generatePatterns(mirrGrid, patternTiles);
-}
-
-std::array<int, 16> Board::calculateDeltas(
-    const std::vector<std::vector<int>>& patternTiles) {
-    std::array<int, 16> tileDeltas;
-    tileDeltas.fill(1);
-
-    for (auto& tiles : patternTiles) {
-        for (int j = tiles.size() - 2; j >= 0; j--) {
-            tileDeltas[tiles[j]] =
-                tileDeltas[tiles[j + 1]] * (WIDTH * HEIGHT - 1 - j);
-        }
-    }
-
-    return tileDeltas;
-}
-
-std::vector<uint64_t> Board::generatePatterns(
-    const std::array<int, 16>& grid,
-    const std::vector<std::vector<int>>& patternTiles) {
-    auto numPatterns = database.numPatterns();
-    std::vector<uint64_t> pat(numPatterns, 0);
-
-    for (int i = 0; i < numPatterns; i++) {
-        auto& tiles = patternTiles[i];
-
-        // Calculate pattern
-        std::vector<unsigned> startPos(WIDTH * HEIGHT, 0);
-        std::unordered_map<int, int> before;
-        for (int j = 0; j < WIDTH * HEIGHT; j++) {
-            if (database.where[grid[j]] == i) {
-                // New tile found
-                unsigned beforeCount = 0;
-
-                // Count number of preceding pattern tiles that's smaller
-                for (auto& it : before) {
-                    if (it.first < grid[j]) {
-                        beforeCount++;
-                    }
-                }
-
-                before[grid[j]] = beforeCount;
-                startPos[grid[j]] = j;
-            }
-        }
-
-        int j = WIDTH * HEIGHT;
-        for (auto tile : tiles) {
-            pat[i] *= j--;
-            pat[i] += startPos[tile] - before[tile];
-        }
-    }
-
-    return pat;
+    mirrPatterns = DisjointDatabase::calculatePatterns(mirrGrid);
 }
 
 int Board::getHeuristic() const {
-    return std::max(std::max(database.getHeuristic(patterns),
-                             database.getHeuristic(mirrPatterns)),
-                    WalkingDistance::getHeuristic(wdRowIndex) +
-                        WalkingDistance::getHeuristic(wdColIndex));
+    return std::max(std::max(DisjointDatabase::getHeuristic(patterns),
+                             DisjointDatabase::getHeuristic(mirrPatterns)),
+                    WalkingDistance::costs[wdRowIndex] +
+                        WalkingDistance::costs[wdColIndex]);
 }
 
 std::vector<Direction> Board::getMoves() const {
@@ -159,7 +93,8 @@ Board::MoveState Board::applyMove(Direction dir) {
     setTile(blank, tile);
 
     // Update pattern
-    int index = database.where[tile];   // Which pattern the sliding tile is in
+    int index =
+        DisjointDatabase::where[tile];  // Which pattern the sliding tile is in
     auto oldPattern = patterns[index];  // Storing for undo
 
     auto prevRowIndex = wdRowIndex;
@@ -170,53 +105,55 @@ Board::MoveState Board::applyMove(Direction dir) {
             int skipDelta = 0;
             for (int i = 1; i <= WIDTH; i++) {
                 int skip = getTile(i + newBlank);
-                if (database.where[skip] != index) {
+                if (DisjointDatabase::where[skip] != index) {
                     numSkips++;  // Blank
                 } else if (skip > tile) {
                     numSkips++;  // Greater
-                    skipDelta += tileDeltas[skip];
+                    skipDelta += DisjointDatabase::tileDeltas[skip];
                 }
             }
-            patterns[index] += skipDelta + numSkips * tileDeltas[tile];
+            patterns[index] +=
+                skipDelta + numSkips * DisjointDatabase::tileDeltas[tile];
 
             // Update WD
-            wdRowIndex = WalkingDistance::edge(wdRowIndex, 1, (tile - 1) / 4);
+            wdRowIndex = WalkingDistance::edges[wdRowIndex][1][(tile - 1) / 4];
             break;
         }
         case Direction::R:
-            patterns[index] -= tileDeltas[tile];
-            wdColIndex = WalkingDistance::edge(wdColIndex, 0, (tile - 1) % 4);
+            patterns[index] -= DisjointDatabase::tileDeltas[tile];
+            wdColIndex = WalkingDistance::edges[wdColIndex][0][(tile - 1) % 4];
             break;
         case Direction::D: {
             int numSkips = 1;
             int skipDelta = 0;
             for (int i = 1; i <= WIDTH; i++) {
                 int skip = getTile(i + blank);
-                if (database.where[skip] != index) {
+                if (DisjointDatabase::where[skip] != index) {
                     numSkips++;
                 } else if (skip > tile) {
                     numSkips++;
-                    skipDelta += tileDeltas[skip];
+                    skipDelta += DisjointDatabase::tileDeltas[skip];
                 }
             }
-            patterns[index] -= skipDelta + numSkips * tileDeltas[tile];
+            patterns[index] -=
+                skipDelta + numSkips * DisjointDatabase::tileDeltas[tile];
 
             // Update WD
-            wdRowIndex = WalkingDistance::edge(wdRowIndex, 0, (tile - 1) / 4);
+            wdRowIndex = WalkingDistance::edges[wdRowIndex][0][(tile - 1) / 4];
             break;
         }
         default:
-            patterns[index] += tileDeltas[tile];
-            wdColIndex = WalkingDistance::edge(wdColIndex, 1, (tile - 1) % 4);
+            patterns[index] += DisjointDatabase::tileDeltas[tile];
+            wdColIndex = WalkingDistance::edges[wdColIndex][1][(tile - 1) % 4];
             break;
     }
 
     // Update mirror grid, pattern
-    auto mirrBlank = mirror[blank];
-    auto mirrNewBlank = mirror[newBlank];
+    auto mirrBlank = DisjointDatabase::mirror[blank];
+    auto mirrNewBlank = DisjointDatabase::mirror[newBlank];
     auto mirrTile = getMirrTile(mirrNewBlank);
     setMirrTile(mirrBlank, mirrTile);
-    int mirrIndex = database.where[mirrTile];
+    int mirrIndex = DisjointDatabase::where[mirrTile];
     auto oldMirrPattern = mirrPatterns[mirrIndex];
 
     switch (dir) {
@@ -225,38 +162,38 @@ Board::MoveState Board::applyMove(Direction dir) {
             int skipDelta = 0;
             for (int i = 1; i <= WIDTH; i++) {
                 int skip = getMirrTile(i + mirrNewBlank);
-                if (database.where[skip] != mirrIndex) {
+                if (DisjointDatabase::where[skip] != mirrIndex) {
                     numSkips++;
                 } else if (skip > mirrTile) {
                     numSkips++;
-                    skipDelta += tileDeltas[skip];
+                    skipDelta += DisjointDatabase::tileDeltas[skip];
                 }
             }
             mirrPatterns[mirrIndex] +=
-                skipDelta + numSkips * tileDeltas[mirrTile];
+                skipDelta + numSkips * DisjointDatabase::tileDeltas[mirrTile];
             break;
         }
         case Direction::D:
-            mirrPatterns[mirrIndex] -= tileDeltas[mirrTile];
+            mirrPatterns[mirrIndex] -= DisjointDatabase::tileDeltas[mirrTile];
             break;
         case Direction::R: {
             int numSkips = 1;
             int skipDelta = 0;
             for (int i = 1; i <= WIDTH; i++) {
                 int skip = getMirrTile(i + mirrBlank);
-                if (database.where[skip] != mirrIndex) {
+                if (DisjointDatabase::where[skip] != mirrIndex) {
                     numSkips++;
                 } else if (skip > mirrTile) {
                     numSkips++;
-                    skipDelta += tileDeltas[skip];
+                    skipDelta += DisjointDatabase::tileDeltas[skip];
                 }
             }
             mirrPatterns[mirrIndex] -=
-                skipDelta + numSkips * tileDeltas[mirrTile];
+                skipDelta + numSkips * DisjointDatabase::tileDeltas[mirrTile];
             break;
         }
         default:
-            mirrPatterns[mirrIndex] += tileDeltas[mirrTile];
+            mirrPatterns[mirrIndex] += DisjointDatabase::tileDeltas[mirrTile];
             break;
     }
 
@@ -278,15 +215,15 @@ void Board::undoMove(const Board::MoveState& prev) {
     setTile(blank, tile);
 
     // Restore saved pattern ID
-    int index = database.where[tile];
+    int index = DisjointDatabase::where[tile];
     patterns[index] = pattern;
 
     // Update mirrored grid
-    auto mirrBlank = mirror[blank];
-    auto mirrNewBlank = mirror[newBlank];
+    auto mirrBlank = DisjointDatabase::mirror[blank];
+    auto mirrNewBlank = DisjointDatabase::mirror[newBlank];
     auto mirrTile = getMirrTile(mirrNewBlank);
     setMirrTile(mirrBlank, mirrTile);
-    int mirrIndex = database.where[mirrTile];
+    int mirrIndex = DisjointDatabase::where[mirrTile];
     mirrPatterns[mirrIndex] = mirrPattern;
 
     // Update blank tile

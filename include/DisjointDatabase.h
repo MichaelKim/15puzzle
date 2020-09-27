@@ -2,27 +2,32 @@
 #define DISJOINTDATABASE_H
 
 #include <array>
+#include <string>
 #include <vector>
 
-#include "PartialDatabase.h"
+namespace DisjointDatabase {
 
-class DisjointDatabase {
-private:
-    std::vector<PartialDatabase> databases;
-    std::vector<std::vector<int>> costs;
+using Grid = std::array<int, 16>;
 
-    std::vector<int> loadDatabase(std::string filename, int size);
+extern std::array<int, 16> where;
+extern Grid tileDeltas;
+extern Grid mirrPos;
 
-public:
-    DisjointDatabase(const std::string& name,
-                     const std::vector<std::array<int, 16>>& grids);
+constexpr auto mirror = [] {
+    Grid m{};
+    // TODO: test with blank not in top-left or bottom-right
+    for (int i = 0; i < 16; i++) {
+        int y = i / 4;
+        int x = i % 4;
+        m[i] = (x * 4) + y;
+    }
+    return m;
+}();
 
-    std::array<int, 16> where;
-    // The reflected positions of the tiles
-    std::array<int, 16> mirrPos;
+void load(const std::vector<Grid>& grids);
+std::vector<uint64_t> calculatePatterns(const Grid& grid);
+int getHeuristic(const std::vector<uint64_t>& patterns);
 
-    std::size_t numPatterns() const;
-    int getHeuristic(const std::vector<uint64_t>& patterns) const;
-};
+}  // namespace DisjointDatabase
 
 #endif  // DISJOINTDATABASE_H

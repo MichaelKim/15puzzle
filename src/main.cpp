@@ -50,7 +50,7 @@ vector<array<int, 16>> readDatabase(istream& input) {
     return grids;
 }
 
-vector<Board> readBoards(istream& input, const DisjointDatabase& db) {
+vector<Board> readBoards(istream& input) {
     int boardNum;
     input >> boardNum;
 
@@ -60,7 +60,7 @@ vector<Board> readBoards(istream& input, const DisjointDatabase& db) {
         for (auto& tile : board) {
             input >> tile;
         }
-        boards.emplace_back(board, db);
+        boards.emplace_back(board);
     }
     return boards;
 }
@@ -77,14 +77,14 @@ std::pair<std::string, vector<array<int, 16>>> getDatabase() {
     return {"def", readDatabase(cin)};
 }
 
-vector<Board> getBoards(const DisjointDatabase& db) {
+vector<Board> getBoards() {
     if (InputParser::boardExists()) {
         ifstream input(InputParser::getBoard());
 
-        return readBoards(input, db);
+        return readBoards(input);
     }
 
-    return readBoards(cin, db);
+    return readBoards(cin);
 }
 
 int main(int argc, const char* argv[]) {
@@ -105,7 +105,7 @@ int main(int argc, const char* argv[]) {
 
     // Setup database
     START_TIMER(db);
-    DisjointDatabase db(dbName, grids);
+    DisjointDatabase::load(grids);
     END_TIMER(db);
 
     // Setup WD
@@ -115,7 +115,7 @@ int main(int argc, const char* argv[]) {
     END_TIMER(db);
 
     // Reading board file
-    auto startBoards(getBoards(db));
+    auto startBoards(getBoards());
 
     // Setup search
     Idastar search;

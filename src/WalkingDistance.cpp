@@ -11,11 +11,14 @@ using Board = std::array<int, 16>;
 using Table = std::array<std::array<int, 4>, 4>;
 using Hash = uint_fast64_t;
 
-constexpr auto TABLE_SIZE = 24964;
+using WalkingDistance::costs;
+using WalkingDistance::edges;
+using WalkingDistance::TABLE_SIZE;
 
 std::array<uint_fast64_t, TABLE_SIZE> tables;
-std::array<int, TABLE_SIZE> costs;
-std::array<std::array<std::array<int, 4>, 2>, TABLE_SIZE> edges;
+std::array<int, TABLE_SIZE> WalkingDistance::costs;
+std::array<std::array<std::array<int, 4>, 2>, TABLE_SIZE>
+    WalkingDistance::edges;
 
 std::array<std::array<int, 4>, 4> calculateTable(
     const std::array<int, 16>& grid, bool alongRow = true) {
@@ -70,32 +73,7 @@ std::pair<Table, int> hashToTable(Hash hash) {
     return {table, rowSpace};
 }
 
-void WalkingDistance::load(const Board& goal) {
-    std::ifstream file("databases/def-wd.dat", std::ios::in | std::ios::binary);
-    if (!file.good()) {
-        // Database file missing, generate database
-        DEBUG("Generating WD database");
-        generate(goal);
-        save();
-        return;
-    }
-
-    // Read database from file
-    DEBUG("Parsing database");
-
-    for (int i = 0; i < TABLE_SIZE; i++) {
-        file.read(reinterpret_cast<char*>(&tables[i]), sizeof(tables[i]));
-        file.read(reinterpret_cast<char*>(&costs[i]), sizeof(costs[i]));
-        for (int j = 0; j < 2; j++) {
-            for (int k = 0; k < 4; k++) {
-                file.read(reinterpret_cast<char*>(&edges[i][j][k]),
-                          sizeof(edges[i][j][k]));
-            }
-        }
-    }
-}
-
-void WalkingDistance::generate(const std::array<int, 16>& goal) {
+void generate(const std::array<int, 16>& goal) {
     // Initial table
     auto comp = calculateHash(calculateTable(goal));
 
@@ -176,7 +154,7 @@ void WalkingDistance::generate(const std::array<int, 16>& goal) {
     }
 }
 
-void WalkingDistance::save() {
+void save() {
     std::ofstream file("databases/def-wd.dat",
                        std::ios::out | std::ios::binary);
     if (!file.good()) {
@@ -197,6 +175,31 @@ void WalkingDistance::save() {
     }
 }
 
+void WalkingDistance::load(const Board& goal) {
+    std::ifstream file("databases/def-wd.dat", std::ios::in | std::ios::binary);
+    if (!file.good()) {
+        // Database file missing, generate database
+        DEBUG("Generating WD database");
+        generate(goal);
+        save();
+        return;
+    }
+
+    // Read database from file
+    DEBUG("Parsing database");
+
+    for (int i = 0; i < TABLE_SIZE; i++) {
+        file.read(reinterpret_cast<char*>(&tables[i]), sizeof(tables[i]));
+        file.read(reinterpret_cast<char*>(&costs[i]), sizeof(costs[i]));
+        for (int j = 0; j < 2; j++) {
+            for (int k = 0; k < 4; k++) {
+                file.read(reinterpret_cast<char*>(&edges[i][j][k]),
+                          sizeof(edges[i][j][k]));
+            }
+        }
+    }
+}
+
 int WalkingDistance::getIndex(const std::array<int, 16>& grid, bool alongRow) {
     auto hash = calculateHash(calculateTable(grid, alongRow));
 
@@ -206,10 +209,4 @@ int WalkingDistance::getIndex(const std::array<int, 16>& grid, bool alongRow) {
     auto rowIndex = std::distance(tables.begin(), it);
 
     return rowIndex;
-}
-
-int WalkingDistance::getHeuristic(int index) { return costs[index]; }
-
-int WalkingDistance::edge(int index, int dir, int tile) {
-    return edges[index][dir][tile];
 }
