@@ -1,6 +1,5 @@
 #include "../include/Pattern.h"
 
-#include <iostream>
 #include <unordered_map>
 
 PatternGroup::PatternGroup(const std::array<int, 16>& grid) {
@@ -12,7 +11,6 @@ PatternGroup::PatternGroup(const std::array<int, 16>& grid) {
 
     // Calculate starting ID and starting position
     std::unordered_map<int, int> before;
-    std::vector<int> tiles;
     std::array<int, 16> pos;
     pos.fill(0);
 

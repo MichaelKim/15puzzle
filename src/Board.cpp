@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <iomanip>
-#include <iostream>
 #include <unordered_map>
 
 #include "../include/Util.h"
@@ -116,12 +115,14 @@ Board::MoveState Board::applyMove(Direction dir) {
                 skipDelta + numSkips * DisjointDatabase::tileDeltas[tile];
 
             // Update WD
-            wdRowIndex = WalkingDistance::edges[wdRowIndex][1][(tile - 1) / 4];
+            wdRowIndex = WalkingDistance::edges[wdRowIndex][1]
+                                               [WalkingDistance::row[tile]];
             break;
         }
         case Direction::R:
             patterns[index] -= DisjointDatabase::tileDeltas[tile];
-            wdColIndex = WalkingDistance::edges[wdColIndex][0][(tile - 1) % 4];
+            wdColIndex = WalkingDistance::edges[wdColIndex][0]
+                                               [WalkingDistance::col[tile]];
             break;
         case Direction::D: {
             int numSkips = 1;
@@ -139,12 +140,14 @@ Board::MoveState Board::applyMove(Direction dir) {
                 skipDelta + numSkips * DisjointDatabase::tileDeltas[tile];
 
             // Update WD
-            wdRowIndex = WalkingDistance::edges[wdRowIndex][0][(tile - 1) / 4];
+            wdRowIndex = WalkingDistance::edges[wdRowIndex][0]
+                                               [WalkingDistance::row[tile]];
             break;
         }
         default:
             patterns[index] += DisjointDatabase::tileDeltas[tile];
-            wdColIndex = WalkingDistance::edges[wdColIndex][1][(tile - 1) % 4];
+            wdColIndex = WalkingDistance::edges[wdColIndex][1]
+                                               [WalkingDistance::col[tile]];
             break;
     }
 
@@ -237,7 +240,7 @@ void Board::undoMove(const Board::MoveState& prev) {
 std::ostream& operator<<(std::ostream& out, const Board& board) {
     for (int y = 0; y < board.HEIGHT; y++) {
         for (int x = 0; x < board.WIDTH; x++) {
-            const int i = y * board.WIDTH + x;
+            int i = y * board.WIDTH + x;
             if (i == board.blank) {
                 out << std::setw(3) << 0;
             } else {

@@ -1,13 +1,15 @@
 #include "../include/DisjointDatabase.h"
 
 #include <fstream>
-#include <iomanip>
-#include <iostream>
+#include <queue>
 #include <unordered_map>
 
+#include "../include/Pattern.h"
 #include "../include/Util.h"
 
 using Grid = DisjointDatabase::Grid;
+
+constexpr auto INF = 1000;
 
 std::vector<std::vector<int>> patternTiles;
 std::vector<std::vector<int>> costs;
@@ -15,9 +17,81 @@ std::array<int, 16> DisjointDatabase::where;
 Grid DisjointDatabase::tileDeltas;
 Grid DisjointDatabase::mirrPos{};
 
-std::vector<int> readDatabase(int index, int size) {
-    std::ifstream file("databases/def-" + std::to_string(index) + ".dat",
-                       std::ios::in | std::ios::binary);
+std::vector<int> generatePattern(const Grid& pattern, int size) {
+    PatternGroup group(pattern);
+
+    // For logging
+    int count = 0;
+    int dist = 0;
+
+    std::queue<std::pair<Pattern, int>> bfs;
+    const auto& start = group.initPattern;
+    bfs.push({start, 0});
+
+    std::vector<int> costs(size, INF);
+    costs[start.id] = 0;
+
+    while (!bfs.empty()) {
+        const auto& [curr, currDist] = bfs.front();
+
+        // Logging
+        if (currDist > dist) {
+            DEBUG(dist << ": " << count);
+            dist = currDist;
+            count = 1;
+        } else {
+            count++;
+        }
+
+        for (auto tile : group.tiles) {
+            for (int j = 0; j < 4; j++) {
+                auto dir = static_cast<Direction>(j);
+                if (group.canShift(curr, tile, dir)) {
+                    auto next = group.shiftCell(curr, tile, dir);
+
+                    // Haven't found this board yet
+                    if (costs[next.id] == INF) {
+                        costs[next.id] = currDist + 1;
+                        bfs.push({std::move(next), currDist + 1});
+                    }
+                }
+            }
+        }
+
+        bfs.pop();
+    }
+
+    return costs;
+}
+
+void savePattern(const std::vector<int>& costs, const std::string& filename) {
+    std::ofstream file(filename, std::ios::out | std::ios::binary);
+    if (!file.good()) {
+        std::cerr << "Could not generate database file: " + filename
+                  << std::endl;
+        return;
+    }
+
+    for (auto c : costs) {
+        file.write(reinterpret_cast<char*>(&c), sizeof(c));
+    }
+}
+
+std::vector<int> loadPattern(const Grid& pattern, const std::string& filename,
+                             int size) {
+    std::ifstream file(filename, std::ios::in | std::ios::binary);
+    if (!file.good()) {
+        // Database file missing, generate database
+        DEBUG("Generating pattern");
+
+        auto cost = generatePattern(pattern, size);
+        savePattern(cost, filename);
+        return cost;
+    }
+
+    // Read database from file
+    DEBUG("Parsing pattern");
+
     std::vector<int> cost(size);
 
     // Read database from file
@@ -50,19 +124,19 @@ void calculateDeltas() {
     }
 }
 
-void DisjointDatabase::load(const std::vector<Grid>& grids) {
+void DisjointDatabase::load(const std::vector<Grid>& patterns) {
     // All partial grids, layered to one
     // This represents the solved grid
     Grid combined{};
 
-    for (int i = 0; i < grids.size(); i++) {
+    for (int i = 0; i < patterns.size(); i++) {
         DEBUG("Pattern #" << i << ':');
 
         int size = 1;      // # of entries in database
         int numTiles = 0;  // # of tiles in partial pattern
 
         for (int j = 0; j < 16; j++) {
-            int tile = grids[i][j];
+            int tile = patterns[i][j];
             if (tile > 0) {
                 size *= 16 - numTiles;
                 numTiles++;
@@ -74,7 +148,8 @@ void DisjointDatabase::load(const std::vector<Grid>& grids) {
             }
         }
 
-        costs.push_back(readDatabase(i, size));
+        costs.push_back(loadPattern(
+            patterns[i], "databases/def-" + std::to_string(i) + ".dat", size));
     }
 
     for (int i = 0; i < 16; i++) {

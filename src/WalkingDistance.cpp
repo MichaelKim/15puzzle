@@ -11,8 +11,10 @@ using Board = std::array<int, 16>;
 using Table = std::array<std::array<int, 4>, 4>;
 using Hash = uint_fast64_t;
 
+using WalkingDistance::col;
 using WalkingDistance::costs;
 using WalkingDistance::edges;
+using WalkingDistance::row;
 using WalkingDistance::TABLE_SIZE;
 
 std::array<uint_fast64_t, TABLE_SIZE> tables;
@@ -20,8 +22,10 @@ std::array<int, TABLE_SIZE> WalkingDistance::costs;
 std::array<std::array<std::array<int, 4>, 2>, TABLE_SIZE>
     WalkingDistance::edges;
 
-std::array<std::array<int, 4>, 4> calculateTable(
-    const std::array<int, 16>& grid, bool alongRow = true) {
+std::array<int, 16> WalkingDistance::row;  // Row #
+std::array<int, 16> WalkingDistance::col;  // Column #
+
+Table calculateTable(const Board& grid, bool alongRow = true) {
     Table table{};
 
     for (int y = 0; y < 4; y++) {
@@ -29,9 +33,9 @@ std::array<std::array<int, 4>, 4> calculateTable(
             int tile = grid[y * 4 + x];
             if (tile > 0) {
                 if (alongRow) {
-                    table[y][(tile - 1) / 4]++;
+                    table[y][row[tile]]++;
                 } else {
-                    table[x][(tile - 1) % 4]++;
+                    table[x][col[tile]]++;
                 }
             }
         }
@@ -73,7 +77,7 @@ std::pair<Table, int> hashToTable(Hash hash) {
     return {table, rowSpace};
 }
 
-void generate(const std::array<int, 16>& goal) {
+void generate(const Board& goal) {
     // Initial table
     auto comp = calculateHash(calculateTable(goal));
 
@@ -176,6 +180,11 @@ void save() {
 }
 
 void WalkingDistance::load(const Board& goal) {
+    for (int i = 0; i < 16; i++) {
+        row[goal[i]] = i / 4;
+        col[goal[i]] = i % 4;
+    }
+
     std::ifstream file("databases/def-wd.dat", std::ios::in | std::ios::binary);
     if (!file.good()) {
         // Database file missing, generate database
@@ -200,13 +209,13 @@ void WalkingDistance::load(const Board& goal) {
     }
 }
 
-int WalkingDistance::getIndex(const std::array<int, 16>& grid, bool alongRow) {
+int WalkingDistance::getIndex(const Board& grid, bool alongRow) {
     auto hash = calculateHash(calculateTable(grid, alongRow));
 
     // Convert to index
     auto it = std::find(tables.begin(), tables.end(), hash);
     assertm(it != tables.end(), "Missing walking distance table");
-    auto rowIndex = std::distance(tables.begin(), it);
+    auto index = std::distance(tables.begin(), it);
 
-    return rowIndex;
+    return index;
 }

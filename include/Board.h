@@ -9,14 +9,14 @@
 #include "DisjointDatabase.h"
 
 class Board {
-private:
-    const int WIDTH = 4, HEIGHT = 4;
+    static constexpr int WIDTH = 4, HEIGHT = 4;
 
     // {0, -1}, {1, 0}, {0, 1}, {-1, 0}}
-    const std::array<int, 4> deltas = {-WIDTH, 1, WIDTH, -1};  // Blank deltas
+    static constexpr std::array<int, 4> deltas = {-WIDTH, 1, WIDTH,
+                                                  -1};  // Blank deltas
 
     // Faster than computing on the fly
-    std::array<std::array<bool, 4>, 16> canMoveList = [this] {
+    static constexpr auto canMoveList = [] {
         std::array<std::array<bool, 4>, 16> moves{};
 
         // Blank position
