@@ -2,14 +2,15 @@
 #define DISJOINTDATABASE_H
 
 #include <array>
-#include <string>
+#include <cstdint>
 #include <vector>
 
 namespace DisjointDatabase {
 
 using Grid = std::array<int, 16>;
+using Hash = uint64_t;
 
-extern std::array<int, 16> where;
+extern Grid where;
 extern Grid tileDeltas;
 extern Grid mirrPos;
 
@@ -25,8 +26,8 @@ constexpr auto mirror = [] {
 }();
 
 void load(const std::vector<Grid>& grids);
-std::vector<uint64_t> calculatePatterns(const Grid& grid);
-int getHeuristic(const std::vector<uint64_t>& patterns);
+std::vector<Hash> calculatePatterns(const Grid& grid);
+int getHeuristic(const std::vector<Hash>& patterns);
 
 }  // namespace DisjointDatabase
 

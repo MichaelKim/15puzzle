@@ -2,13 +2,17 @@
 #define WALKINGDISTANCE_H
 
 #include <array>
+#include <cstdint>
 
 namespace WalkingDistance {
 
-constexpr auto TABLE_SIZE = 24964;
+using Cost = uint_fast8_t;
+using Index = uint_fast16_t;
 
-extern std::array<int, TABLE_SIZE> costs;
-extern std::array<std::array<std::array<int, 4>, 2>, TABLE_SIZE> edges;
+constexpr Index TABLE_SIZE = 24964;
+
+extern std::array<Cost, TABLE_SIZE> costs;
+extern std::array<std::array<std::array<Index, 4>, 2>, TABLE_SIZE> edges;
 extern std::array<int, 16> row;
 extern std::array<int, 16> col;
 

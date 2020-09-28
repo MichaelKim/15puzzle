@@ -9,7 +9,9 @@
 
 using Board = std::array<int, 16>;
 using Table = std::array<std::array<int, 4>, 4>;
-using Hash = uint_fast64_t;
+using Hash = uint_fast64_t;            // 48-bit encoding
+using Cost = WalkingDistance::Cost;    // Max = 36
+using Index = WalkingDistance::Index;  // Max = TABLE_SIZE
 
 using WalkingDistance::col;
 using WalkingDistance::costs;
@@ -17,9 +19,9 @@ using WalkingDistance::edges;
 using WalkingDistance::row;
 using WalkingDistance::TABLE_SIZE;
 
-std::array<uint_fast64_t, TABLE_SIZE> tables;
-std::array<int, TABLE_SIZE> WalkingDistance::costs;
-std::array<std::array<std::array<int, 4>, 2>, TABLE_SIZE>
+std::array<Hash, TABLE_SIZE> tables;
+std::array<Cost, TABLE_SIZE> WalkingDistance::costs;
+std::array<std::array<std::array<Index, 4>, 2>, TABLE_SIZE>
     WalkingDistance::edges;
 
 std::array<int, 16> WalkingDistance::row;  // Row #
@@ -92,7 +94,7 @@ void generate(const Board& goal) {
 
     for (int left = 0, right = 1; left < right; left++) {
         auto currTable = tables[left];
-        int currCost = costs[left] + 1;
+        Cost currCost = costs[left] + 1;
 
         auto [table, rowSpace] = hashToTable(currTable);
 

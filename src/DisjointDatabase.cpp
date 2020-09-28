@@ -8,27 +8,32 @@
 #include "../include/Util.h"
 
 using Grid = DisjointDatabase::Grid;
+using Hash = DisjointDatabase::Hash;
+using Cost = uint_fast8_t;
 
-constexpr auto INF = 1000;
+using DisjointDatabase::tileDeltas;
+using DisjointDatabase::where;
+
+constexpr Cost INF = 81;
 
 std::vector<std::vector<int>> patternTiles;
-std::vector<std::vector<int>> costs;
-std::array<int, 16> DisjointDatabase::where;
+std::vector<std::vector<Cost>> costs;
+Grid DisjointDatabase::where;
 Grid DisjointDatabase::tileDeltas;
 Grid DisjointDatabase::mirrPos{};
 
-std::vector<int> generatePattern(const Grid& pattern, int size) {
+std::vector<Cost> generatePattern(const Grid& pattern, int size) {
     PatternGroup group(pattern);
 
     // For logging
     int count = 0;
-    int dist = 0;
+    Cost dist = 0;
 
-    std::queue<std::pair<Pattern, int>> bfs;
+    std::queue<std::pair<Pattern, Cost>> bfs;
     const auto& start = group.initPattern;
     bfs.push({start, 0});
 
-    std::vector<int> costs(size, INF);
+    std::vector<Cost> costs(size, INF);
     costs[start.id] = 0;
 
     while (!bfs.empty()) {
@@ -36,7 +41,7 @@ std::vector<int> generatePattern(const Grid& pattern, int size) {
 
         // Logging
         if (currDist > dist) {
-            DEBUG(dist << ": " << count);
+            DEBUG((int)dist << ": " << count);
             dist = currDist;
             count = 1;
         } else {
@@ -64,7 +69,7 @@ std::vector<int> generatePattern(const Grid& pattern, int size) {
     return costs;
 }
 
-void savePattern(const std::vector<int>& costs, const std::string& filename) {
+void savePattern(const std::vector<Cost>& costs, const std::string& filename) {
     std::ofstream file(filename, std::ios::out | std::ios::binary);
     if (!file.good()) {
         std::cerr << "Could not generate database file: " + filename
@@ -77,8 +82,8 @@ void savePattern(const std::vector<int>& costs, const std::string& filename) {
     }
 }
 
-std::vector<int> loadPattern(const Grid& pattern, const std::string& filename,
-                             int size) {
+std::vector<Cost> loadPattern(const Grid& pattern, const std::string& filename,
+                              int size) {
     std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (!file.good()) {
         // Database file missing, generate database
@@ -92,7 +97,7 @@ std::vector<int> loadPattern(const Grid& pattern, const std::string& filename,
     // Read database from file
     DEBUG("Parsing pattern");
 
-    std::vector<int> cost(size);
+    std::vector<Cost> cost(size);
 
     // Read database from file
     for (auto& c : cost) {
@@ -103,8 +108,6 @@ std::vector<int> loadPattern(const Grid& pattern, const std::string& filename,
 }
 
 void calculatePatternTiles() {
-    using DisjointDatabase::where;
-
     patternTiles.resize(costs.size());
 
     for (int i = 1; i < 16; i++) {  // Ignore blank tile (0)
@@ -113,8 +116,6 @@ void calculatePatternTiles() {
 }
 
 void calculateDeltas() {
-    using DisjointDatabase::tileDeltas;
-
     DisjointDatabase::tileDeltas.fill(1);
 
     for (auto& tiles : patternTiles) {
@@ -162,12 +163,10 @@ void DisjointDatabase::load(const std::vector<Grid>& patterns) {
     calculateDeltas();
 }
 
-std::vector<uint64_t> DisjointDatabase::calculatePatterns(const Grid& grid) {
-    std::vector<uint64_t> pat(costs.size(), 0);
+std::vector<Hash> DisjointDatabase::calculatePatterns(const Grid& grid) {
+    std::vector<Hash> pat(costs.size(), 0);
 
     for (int i = 0; i < costs.size(); i++) {
-        const auto& tiles = patternTiles[i];
-
         // Calculate pattern
         std::vector<int> startPos(16, 0);
         std::unordered_map<int, int> before;
@@ -189,7 +188,7 @@ std::vector<uint64_t> DisjointDatabase::calculatePatterns(const Grid& grid) {
         }
 
         int j = 16;
-        for (auto tile : tiles) {
+        for (auto tile : patternTiles[i]) {
             pat[i] *= j--;
             pat[i] += startPos[tile] - before[tile];
         }
@@ -198,7 +197,7 @@ std::vector<uint64_t> DisjointDatabase::calculatePatterns(const Grid& grid) {
     return pat;
 }
 
-int DisjointDatabase::getHeuristic(const std::vector<uint64_t>& patterns) {
+int DisjointDatabase::getHeuristic(const std::vector<Hash>& patterns) {
     int totalDist = 0;
     for (size_t i = 0; i < patterns.size(); i++) {
         totalDist += costs[i][patterns[i]];
