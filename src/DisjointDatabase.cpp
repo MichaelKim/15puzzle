@@ -57,7 +57,7 @@ std::vector<Cost> generatePattern(const Grid& pattern, int size) {
                     // Haven't found this board yet
                     if (costs[next.id] == INF) {
                         costs[next.id] = currDist + 1;
-                        bfs.push({std::move(next), currDist + 1});
+                        bfs.push({next, currDist + 1});
                     }
                 }
             }
