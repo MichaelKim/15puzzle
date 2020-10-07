@@ -2,19 +2,21 @@
 
 #include <unordered_map>
 
-PatternGroup::PatternGroup(const std::array<int, 16>& grid) {
+PatternGroup::PatternGroup(const std::vector<int>& grid, int width, int height)
+    : WIDTH(width), HEIGHT(height), deltas(width * height, 1) {
+    auto length = width * height;
+
     // Calculate compressed grid
     uint64_t g = 0;
-    for (int i = WIDTH * HEIGHT; i--;) {
+    for (int i = length; i--;) {
         g = (g << 4) + grid[i];
     }
 
     // Calculate starting ID and starting position
     std::unordered_map<int, int> before;
-    std::array<int, 16> pos;
-    pos.fill(0);
+    std::vector<int> pos(length, 0);
 
-    for (int i = 0; i < WIDTH * HEIGHT; i++) {
+    for (int i = 0; i < length; i++) {
         if (grid[i] > 0) {
             // New tile found
             int beforeCount = 0;
@@ -35,7 +37,7 @@ PatternGroup::PatternGroup(const std::array<int, 16>& grid) {
     }
 
     // Calculate id
-    int j = WIDTH * HEIGHT;
+    int j = length;
     uint64_t id = 0;
     for (auto tile : tiles) {
         id *= j--;
@@ -45,9 +47,8 @@ PatternGroup::PatternGroup(const std::array<int, 16>& grid) {
     initPattern = Pattern{pos, id, g};
 
     // Calculate deltas
-    deltas.fill(1);
     for (int i = tiles.size() - 1; i--;) {
-        deltas[tiles[i]] = deltas[tiles[i + 1]] * (WIDTH * HEIGHT - 1 - i);
+        deltas[tiles[i]] = deltas[tiles[i + 1]] * (length - 1 - i);
     }
 }
 

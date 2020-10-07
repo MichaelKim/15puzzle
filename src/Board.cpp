@@ -7,8 +7,10 @@
 #include "../include/Util.h"
 #include "../include/WalkingDistance.h"
 
-int findBlank(const std::array<int, 16>& g) {
-    for (int i = 0; i < 16; i++) {
+// WIDTH < HEIGHT
+
+int findBlank(const std::vector<int>& g) {
+    for (int i = 0; i < g.size(); i++) {
         if (g[i] == 0) {
             return i;
         }
@@ -16,13 +18,35 @@ int findBlank(const std::array<int, 16>& g) {
     assertm(0, "Board must have a blank");
 }
 
-Board::Board(const std::array<int, 16>& g)
-    : blank(findBlank(g)),
+auto calcMoveList(int width, int height) {
+    // [index][direction]
+    std::vector<std::array<bool, 4>> moves(width * height,
+                                           std::array<bool, 4>{});
+
+    // Blank position
+    for (int i = 0; i < width * height; i++) {
+        moves[i][static_cast<int>(Direction::U)] = (i / width) > 0;
+        moves[i][static_cast<int>(Direction::R)] = (i % width) < width - 1;
+        moves[i][static_cast<int>(Direction::D)] = (i / width) < height - 1;
+        moves[i][static_cast<int>(Direction::L)] = (i % width) > 0;
+    }
+
+    return moves;
+}
+
+Board::Board(const std::vector<int>& g, int width, int height)
+    : WIDTH(width),
+      HEIGHT(height),
+      deltas({-width, 1, width, -1}),
+      canMoveList(calcMoveList(width, height)),
+      blank(findBlank(g)),
       grid(g),
-      mirrGrid({}),
+      mirrGrid(width * height),
       patterns(DisjointDatabase::calculatePatterns(g)),
       wdRowIndex(WalkingDistance::getIndex(g)),
       wdColIndex(WalkingDistance::getIndex(g, false)) {
+    assertm(g.size() == width * height, "Wrong board dimensions");
+
     for (int i = 0; i < WIDTH * HEIGHT; i++) {
         mirrGrid[i] =
             DisjointDatabase::mirrPos[grid[DisjointDatabase::mirror[i]]];

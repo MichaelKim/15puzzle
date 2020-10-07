@@ -9,21 +9,27 @@
 
 using Grid = DisjointDatabase::Grid;
 using Hash = DisjointDatabase::Hash;
-using Cost = uint_fast8_t;
+using Cost = int;
 
+using DisjointDatabase::height;
 using DisjointDatabase::tileDeltas;
 using DisjointDatabase::where;
+using DisjointDatabase::width;
 
-constexpr Cost INF = 81;
+constexpr Cost INF = 1E6;
+
+int DisjointDatabase::width;
+int DisjointDatabase::height;
 
 std::vector<std::vector<int>> patternTiles;
 std::vector<std::vector<Cost>> costs;
 Grid DisjointDatabase::where;
 Grid DisjointDatabase::tileDeltas;
-Grid DisjointDatabase::mirrPos{};
+Grid DisjointDatabase::mirrPos;
+Grid DisjointDatabase::mirror;
 
 std::vector<Cost> generatePattern(const Grid& pattern, int size) {
-    PatternGroup group(pattern);
+    PatternGroup group(pattern, width, height);
 
     // For logging
     int count = 0;
@@ -110,13 +116,14 @@ std::vector<Cost> loadPattern(const Grid& pattern, const std::string& filename,
 void calculatePatternTiles() {
     patternTiles.resize(costs.size());
 
-    for (int i = 1; i < 16; i++) {  // Ignore blank tile (0)
+    for (int i = 1; i < width * height; i++) {  // Ignore blank tile (0)
         patternTiles[where[i]].push_back(i);
     }
 }
 
 void calculateDeltas() {
-    DisjointDatabase::tileDeltas.fill(1);
+    tileDeltas =
+        std::vector<int>(DisjointDatabase::width * DisjointDatabase::height, 1);
 
     for (auto& tiles : patternTiles) {
         for (int j = tiles.size() - 2; j >= 0; j--) {
@@ -125,10 +132,24 @@ void calculateDeltas() {
     }
 }
 
-void DisjointDatabase::load(const std::vector<Grid>& patterns) {
+void DisjointDatabase::load(const std::vector<Grid>& patterns, int w, int h) {
+    width = w;
+    height = h;
+    auto length = w * h;
+
+    where = std::vector<int>(length, -1);
+    mirrPos = std::vector<int>(length, 0);
+    mirror = std::vector<int>(length);
+    // TODO: test with blank not in top-left or bottom-right
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            mirror[y * width + x] = x * width + y;
+        }
+    }
+
     // All partial grids, layered to one
     // This represents the solved grid
-    Grid combined{};
+    Grid combined(length, 0);
 
     for (int i = 0; i < patterns.size(); i++) {
         DEBUG("Pattern #" << i << ':');
@@ -136,16 +157,14 @@ void DisjointDatabase::load(const std::vector<Grid>& patterns) {
         int size = 1;      // # of entries in database
         int numTiles = 0;  // # of tiles in partial pattern
 
-        for (int j = 0; j < 16; j++) {
+        for (int j = 0; j < length; j++) {
             int tile = patterns[i][j];
             if (tile > 0) {
-                size *= 16 - numTiles;
+                size *= length - numTiles;
                 numTiles++;
 
                 where[tile] = i;
                 combined[j] = tile;
-            } else {
-                where[tile] = -1;
             }
         }
 
@@ -153,7 +172,7 @@ void DisjointDatabase::load(const std::vector<Grid>& patterns) {
             patterns[i], "databases/def-" + std::to_string(i) + ".dat", size));
     }
 
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < length; i++) {
         if (combined[i] > 0) {
             mirrPos[combined[i]] = combined[mirror[i]];
         }
@@ -164,13 +183,14 @@ void DisjointDatabase::load(const std::vector<Grid>& patterns) {
 }
 
 std::vector<Hash> DisjointDatabase::calculatePatterns(const Grid& grid) {
+    auto length = width * height;
     std::vector<Hash> pat(costs.size(), 0);
 
     for (int i = 0; i < costs.size(); i++) {
         // Calculate pattern
-        std::vector<int> startPos(16, 0);
+        std::vector<int> startPos(length, 0);
         std::unordered_map<int, int> before;
-        for (int j = 0; j < 16; j++) {
+        for (int j = 0; j < length; j++) {
             if (where[grid[j]] == i) {
                 // New tile found
                 int beforeCount = 0;
@@ -187,7 +207,7 @@ std::vector<Hash> DisjointDatabase::calculatePatterns(const Grid& grid) {
             }
         }
 
-        int j = 16;
+        int j = length;
         for (auto tile : patternTiles[i]) {
             pat[i] *= j--;
             pat[i] += startPos[tile] - before[tile];

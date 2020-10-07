@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+#include <vector>
 
 namespace WalkingDistance {
 
@@ -12,13 +13,15 @@ using Index = uint_fast16_t;
 constexpr Index TABLE_SIZE = 24964;
 
 extern std::array<Cost, TABLE_SIZE> costs;
-extern std::array<std::array<std::array<Index, 4>, 2>, TABLE_SIZE> edges;
-extern std::array<int, 16> row;
-extern std::array<int, 16> col;
+extern std::array<std::array<std::vector<Index>, 2>, TABLE_SIZE> edges;
+extern std::vector<int> row;
+extern std::vector<int> col;
+extern int width;
+extern int height;
 
-void load(const std::array<int, 16>& goal);
+void load(const std::vector<int>& goal, int width, int height);
 
-int getIndex(const std::array<int, 16>& grid, bool alongRow = true);
+int getIndex(const std::vector<int>& grid, bool alongRow = true);
 
 };  // namespace WalkingDistance
 

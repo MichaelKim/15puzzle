@@ -9,31 +9,19 @@
 #include "DisjointDatabase.h"
 
 class Board {
-    static constexpr int WIDTH = 4, HEIGHT = 4;
+    const int WIDTH;
+    const int HEIGHT;
 
     // {0, -1}, {1, 0}, {0, 1}, {-1, 0}}
-    static constexpr std::array<int, 4> deltas = {-WIDTH, 1, WIDTH,
-                                                  -1};  // Blank deltas
+    const std::array<int, 4> deltas;  // Blank deltas
 
     // Faster than computing on the fly
-    static constexpr auto canMoveList = [] {
-        std::array<std::array<bool, 4>, 16> moves{};
-
-        // Blank position
-        for (int i = 0; i < 16; i++) {
-            moves[i][static_cast<int>(Direction::U)] = (i / 4) > 0;
-            moves[i][static_cast<int>(Direction::R)] = (i % 4) < WIDTH - 1;
-            moves[i][static_cast<int>(Direction::D)] = (i / 4) < HEIGHT - 1;
-            moves[i][static_cast<int>(Direction::L)] = (i % 4) > 0;
-        }
-
-        return moves;
-    }();
+    const std::vector<std::array<bool, 4>> canMoveList;
 
     // Tiles
     int blank;  // Position of blank (since patterns don't store the blank)
-    std::array<int, 16> grid;      // Value to position mapping
-    std::array<int, 16> mirrGrid;  // Mirrored grid
+    std::vector<int> grid;      // Value to position mapping
+    std::vector<int> mirrGrid;  // Mirrored grid
 
     // Used for disjoint database
     std::vector<uint64_t> patterns;      // Pattern IDs
@@ -57,7 +45,7 @@ class Board {
     };
 
 public:
-    Board(const std::array<int, 16>& g);
+    Board(const std::vector<int>& g, int width, int height);
 
     int getHeuristic() const;
     bool canMove(Direction dir);

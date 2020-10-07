@@ -13,7 +13,7 @@
 #include "../include/Util.h"
 #include "../include/WalkingDistance.h"
 
-// Fixed board size: 4x4
+// Dynamic board size
 // Dynamic database pattern
 
 using namespace std;
@@ -36,11 +36,11 @@ void usage() {
          << endl;
 }
 
-vector<array<int, 16>> readDatabase(istream& input) {
-    int databaseNum;
-    input >> databaseNum;
+vector<vector<int>> readDatabase(istream& input) {
+    int width, height, databaseNum;
+    input >> width >> height >> databaseNum;
 
-    vector<array<int, 16>> grids(databaseNum, array<int, 16>());
+    vector<vector<int>> grids(databaseNum, vector<int>(width * height, 0));
     for (auto& grid : grids) {
         for (auto& tile : grid) {
             input >> tile;
@@ -51,21 +51,21 @@ vector<array<int, 16>> readDatabase(istream& input) {
 }
 
 vector<Board> readBoards(istream& input) {
-    int boardNum;
-    input >> boardNum;
+    int width, height, boardNum;
+    input >> width >> height >> boardNum;
 
     vector<Board> boards;
     for (int i = 0; i < boardNum; i++) {
-        array<int, 16> board;
+        std::vector<int> board(width * height, 0);
         for (auto& tile : board) {
             input >> tile;
         }
-        boards.emplace_back(board);
+        boards.emplace_back(board, width, height);
     }
     return boards;
 }
 
-std::pair<std::string, vector<array<int, 16>>> getDatabase() {
+std::pair<std::string, vector<vector<int>>> getDatabase() {
     if (InputParser::databaseExists()) {
         auto dbPath = InputParser::getDatabase();
         auto dbName = dbPath.substr(dbPath.find_last_of('/') + 1);
@@ -105,13 +105,13 @@ int main(int argc, const char* argv[]) {
 
     // Setup database
     START_TIMER(db);
-    DisjointDatabase::load(grids);
+    DisjointDatabase::load(grids, 4, 4);
     END_TIMER(db);
 
     // Setup WD
     START_TIMER(wd);
     WalkingDistance::load(
-        {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0});
+        {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0}, 4, 4);
     END_TIMER(db);
 
     // Reading board file

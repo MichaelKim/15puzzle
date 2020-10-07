@@ -7,8 +7,8 @@
 
 #include "../include/Util.h"
 
-using Board = std::array<int, 16>;
-using Table = std::array<std::array<int, 4>, 4>;
+using Board = std::vector<int>;
+using Table = std::vector<std::vector<int>>;
 using Hash = uint_fast64_t;            // 48-bit encoding
 using Cost = WalkingDistance::Cost;    // Max = 36
 using Index = WalkingDistance::Index;  // Max = TABLE_SIZE
@@ -16,19 +16,24 @@ using Index = WalkingDistance::Index;  // Max = TABLE_SIZE
 using WalkingDistance::col;
 using WalkingDistance::costs;
 using WalkingDistance::edges;
+using WalkingDistance::height;
 using WalkingDistance::row;
 using WalkingDistance::TABLE_SIZE;
+using WalkingDistance::width;
 
 std::array<Hash, TABLE_SIZE> tables;
 std::array<Cost, TABLE_SIZE> WalkingDistance::costs;
-std::array<std::array<std::array<Index, 4>, 2>, TABLE_SIZE>
+std::array<std::array<std::vector<Index>, 2>, TABLE_SIZE>
     WalkingDistance::edges;
 
-std::array<int, 16> WalkingDistance::row;  // Row #
-std::array<int, 16> WalkingDistance::col;  // Column #
+std::vector<int> WalkingDistance::row;  // Row #
+std::vector<int> WalkingDistance::col;  // Column #
+
+int WalkingDistance::width;
+int WalkingDistance::height;
 
 Table calculateTable(const Board& grid, bool alongRow = true) {
-    Table table{};
+    Table table(height, std::vector<int>(width, 0));
 
     for (int y = 0; y < 4; y++) {
         for (int x = 0; x < 4; x++) {
@@ -50,9 +55,9 @@ Hash calculateHash(const Table& table) {
     // Compress WD tables
     Hash hash = 0;
 
-    for (int y = 0; y < 4; y++) {
-        for (int x = 0; x < 4; x++) {
-            hash = (hash << 3) | table[y][x];
+    for (auto& row : table) {
+        for (auto val : row) {
+            hash = (hash << 3) | val;
         }
     }
 
@@ -60,18 +65,18 @@ Hash calculateHash(const Table& table) {
 }
 
 std::pair<Table, int> hashToTable(Hash hash) {
-    Table table{};
+    Table table(height, std::vector<int>(width, 0));
     int rowSpace = 0;
 
-    for (int y = 3; y >= 0; y--) {
+    for (int y = height - 1; y >= 0; y--) {
         int count = 0;
-        for (int x = 3; x >= 0; x--) {
+        for (int x = width - 1; x >= 0; x--) {
             table[y][x] = hash & 7;
             hash >>= 3;
 
             count += table[y][x];
         }
-        if (count == 3) {
+        if (count == width - 1) {
             rowSpace = y;
         }
     }
@@ -87,9 +92,7 @@ void generate(const Board& goal) {
     tables[0] = comp;
     costs[0] = 0;
     for (int i = 0; i < 2; i++) {
-        for (int j = 0; j < 4; j++) {
-            edges[0][i][j] = TABLE_SIZE;
-        }
+        edges[0][i] = std::vector<Index>(width, TABLE_SIZE);
     }
 
     for (int left = 0, right = 1; left < right; left++) {
@@ -98,8 +101,8 @@ void generate(const Board& goal) {
 
         auto [table, rowSpace] = hashToTable(currTable);
 
-        if (int rowTile = rowSpace + 1; rowTile < 4) {
-            for (int x = 0; x < 4; x++) {
+        if (int rowTile = rowSpace + 1; rowTile < height) {
+            for (int x = 0; x < width; x++) {
                 if (table[rowTile][x]) {
                     table[rowTile][x]--;
                     table[rowSpace][x]++;
@@ -112,9 +115,8 @@ void generate(const Board& goal) {
                         tables[right] = newComp;
                         costs[right] = currCost;
                         for (int j = 0; j < 2; j++) {
-                            for (int k = 0; k < 4; k++) {
-                                edges[right][j][k] = TABLE_SIZE;
-                            }
+                            edges[right][j] =
+                                std::vector<Index>(width, TABLE_SIZE);
                         }
                         right++;
                     }
@@ -129,7 +131,7 @@ void generate(const Board& goal) {
         }
 
         if (int rowTile = rowSpace - 1; rowTile >= 0) {
-            for (int x = 0; x < 4; x++) {
+            for (int x = 0; x < width; x++) {
                 if (table[rowTile][x]) {
                     table[rowTile][x]--;
                     table[rowSpace][x]++;
@@ -142,9 +144,8 @@ void generate(const Board& goal) {
                         tables[right] = newComp;
                         costs[right] = currCost;
                         for (int j = 0; j < 2; j++) {
-                            for (int k = 0; k < 4; k++) {
-                                edges[right][j][k] = TABLE_SIZE;
-                            }
+                            edges[right][j] =
+                                std::vector<Index>(width, TABLE_SIZE);
                         }
                         right++;
                     }
@@ -173,7 +174,7 @@ void save() {
         file.write(reinterpret_cast<char*>(&tables[i]), sizeof(tables[i]));
         file.write(reinterpret_cast<char*>(&costs[i]), sizeof(costs[i]));
         for (int j = 0; j < 2; j++) {
-            for (int k = 0; k < 4; k++) {
+            for (int k = 0; k < width; k++) {
                 file.write(reinterpret_cast<char*>(&edges[i][j][k]),
                            sizeof(edges[i][j][k]));
             }
@@ -181,10 +182,17 @@ void save() {
     }
 }
 
-void WalkingDistance::load(const Board& goal) {
-    for (int i = 0; i < 16; i++) {
-        row[goal[i]] = i / 4;
-        col[goal[i]] = i % 4;
+void WalkingDistance::load(const std::vector<int>& goal, int w, int h) {
+    width = w;
+    height = h;
+    auto length = w * h;
+
+    row = std::vector<int>(length);
+    col = std::vector<int>(length);
+
+    for (int i = 0; i < length; i++) {
+        row[goal[i]] = i / width;
+        col[goal[i]] = i % width;
     }
 
     std::ifstream file("databases/def-wd.dat", std::ios::in | std::ios::binary);
@@ -203,7 +211,8 @@ void WalkingDistance::load(const Board& goal) {
         file.read(reinterpret_cast<char*>(&tables[i]), sizeof(tables[i]));
         file.read(reinterpret_cast<char*>(&costs[i]), sizeof(costs[i]));
         for (int j = 0; j < 2; j++) {
-            for (int k = 0; k < 4; k++) {
+            edges[i][j] = std::vector<Index>(width);
+            for (int k = 0; k < width; k++) {
                 file.read(reinterpret_cast<char*>(&edges[i][j][k]),
                           sizeof(edges[i][j][k]));
             }
