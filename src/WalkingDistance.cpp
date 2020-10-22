@@ -1,9 +1,7 @@
 #include "../include/WalkingDistance.h"
 
 #include <algorithm>
-#include <cstdint>
 #include <fstream>
-#include <unordered_map>
 
 #include "../include/Util.h"
 
@@ -161,9 +159,8 @@ void generate(const Board& goal) {
     }
 }
 
-void save() {
-    std::ofstream file("databases/def-wd.dat",
-                       std::ios::out | std::ios::binary);
+void save(std::string filename) {
+    std::ofstream file(filename, std::ios::out | std::ios::binary);
     if (!file.good()) {
         std::cerr << "Could not generate database file: databases/def-wd.dat"
                   << std::endl;
@@ -182,7 +179,10 @@ void save() {
     }
 }
 
-void WalkingDistance::load(const std::vector<int>& goal, int w, int h) {
+void WalkingDistance::load(const std::vector<int>& goal, std::string name,
+                           int w, int h) {
+    assertm(w == h, "Walking Distance requires square boards");
+
     width = w;
     height = h;
     auto length = w * h;
@@ -195,12 +195,13 @@ void WalkingDistance::load(const std::vector<int>& goal, int w, int h) {
         col[goal[i]] = i % width;
     }
 
-    std::ifstream file("databases/def-wd.dat", std::ios::in | std::ios::binary);
+    std::string filename = "databases/" + name + "-wd.dat";
+    std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (!file.good()) {
         // Database file missing, generate database
         DEBUG("Generating WD database");
         generate(goal);
-        save();
+        save(filename);
         return;
     }
 

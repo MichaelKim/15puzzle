@@ -122,17 +122,18 @@ void calculatePatternTiles() {
 }
 
 void calculateDeltas() {
-    tileDeltas =
-        std::vector<int>(DisjointDatabase::width * DisjointDatabase::height, 1);
+    tileDeltas = std::vector<int>(width * height, 1);
 
     for (auto& tiles : patternTiles) {
         for (int j = tiles.size() - 2; j >= 0; j--) {
-            tileDeltas[tiles[j]] = tileDeltas[tiles[j + 1]] * (16 - 1 - j);
+            tileDeltas[tiles[j]] =
+                tileDeltas[tiles[j + 1]] * (width * height - 1 - j);
         }
     }
 }
 
-void DisjointDatabase::load(const std::vector<Grid>& patterns, int w, int h) {
+void DisjointDatabase::load(const std::vector<Grid>& patterns, std::string name,
+                            int w, int h) {
     width = w;
     height = h;
     auto length = w * h;
@@ -169,7 +170,8 @@ void DisjointDatabase::load(const std::vector<Grid>& patterns, int w, int h) {
         }
 
         costs.push_back(loadPattern(
-            patterns[i], "databases/def-" + std::to_string(i) + ".dat", size));
+            patterns[i], "databases/" + name + "-" + std::to_string(i) + ".dat",
+            size));
     }
 
     for (int i = 0; i < length; i++) {

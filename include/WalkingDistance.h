@@ -3,6 +3,7 @@
 
 #include <array>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace WalkingDistance {
@@ -19,7 +20,8 @@ extern std::vector<int> col;
 extern int width;
 extern int height;
 
-void load(const std::vector<int>& goal, int width, int height);
+void load(const std::vector<int>& goal, std::string name, int width,
+          int height);
 
 int getIndex(const std::vector<int>& grid, bool alongRow = true);
 

@@ -36,7 +36,13 @@ void usage() {
          << endl;
 }
 
-vector<vector<int>> readDatabase(istream& input) {
+struct DBData {
+    int width;
+    int height;
+    vector<vector<int>> grids;
+};
+
+DBData readDatabase(istream& input) {
     int width, height, databaseNum;
     input >> width >> height >> databaseNum;
 
@@ -47,7 +53,7 @@ vector<vector<int>> readDatabase(istream& input) {
         }
     }
 
-    return grids;
+    return {width, height, grids};
 }
 
 vector<Board> readBoards(istream& input) {
@@ -65,7 +71,7 @@ vector<Board> readBoards(istream& input) {
     return boards;
 }
 
-std::pair<std::string, vector<vector<int>>> getDatabase() {
+std::pair<std::string, DBData> getDatabase() {
     if (InputParser::databaseExists()) {
         auto dbPath = InputParser::getDatabase();
         auto dbName = dbPath.substr(dbPath.find_last_of('/') + 1);
@@ -87,6 +93,19 @@ vector<Board> getBoards() {
     return readBoards(cin);
 }
 
+vector<int> combine(vector<vector<int>> grids) {
+    vector<int> solution(grids[0].size(), 0);
+    for (auto& grid : grids) {
+        assertm(grid.size() == solution.size(), "Mismatching pattern sizes");
+        for (int i = 0; i < grid.size(); i++) {
+            if (grid[i] != 0) {
+                solution[i] = grid[i];
+            }
+        }
+    }
+    return solution;
+}
+
 int main(int argc, const char* argv[]) {
     InputParser::parse(argc, argv);
 
@@ -97,21 +116,22 @@ int main(int argc, const char* argv[]) {
     }
 
     // Reading database file
-    const auto [dbName, grids] = getDatabase();
+    const auto [dbName, dbData] = getDatabase();
+    const auto [width, height, grids] = dbData;
     if (grids.empty()) {
         cerr << "Error: must have at least one database" << endl;
         return 1;
     }
+    const auto solution = combine(grids);
 
     // Setup database
     START_TIMER(db);
-    DisjointDatabase::load(grids, 4, 4);
+    DisjointDatabase::load(grids, dbName, width, height);
     END_TIMER(db);
 
     // Setup WD
     START_TIMER(wd);
-    WalkingDistance::load(
-        {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0}, 4, 4);
+    WalkingDistance::load(solution, dbName, width, height);
     END_TIMER(db);
 
     // Reading board file
