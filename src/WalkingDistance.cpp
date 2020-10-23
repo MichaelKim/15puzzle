@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <limits>
 
 #include "../include/Util.h"
 
@@ -16,13 +17,11 @@ using WalkingDistance::costs;
 using WalkingDistance::edges;
 using WalkingDistance::height;
 using WalkingDistance::row;
-using WalkingDistance::TABLE_SIZE;
 using WalkingDistance::width;
 
-std::array<Hash, TABLE_SIZE> tables;
-std::array<Cost, TABLE_SIZE> WalkingDistance::costs;
-std::array<std::array<std::vector<Index>, 2>, TABLE_SIZE>
-    WalkingDistance::edges;
+std::vector<Hash> tables;
+std::vector<Cost> WalkingDistance::costs;
+std::vector<std::array<std::vector<Index>, 2>> WalkingDistance::edges;
 
 std::vector<int> WalkingDistance::row;  // Row #
 std::vector<int> WalkingDistance::col;  // Column #
@@ -33,9 +32,9 @@ int WalkingDistance::height;
 Table calculateTable(const Board& grid, bool alongRow = true) {
     Table table(height, std::vector<int>(width, 0));
 
-    for (int y = 0; y < 4; y++) {
-        for (int x = 0; x < 4; x++) {
-            int tile = grid[y * 4 + x];
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            int tile = grid[y * width + x];
             if (tile > 0) {
                 if (alongRow) {
                     table[y][row[tile]]++;
@@ -86,14 +85,33 @@ void generate(const Board& goal) {
     // Initial table
     auto comp = calculateHash(calculateTable(goal));
 
-    // Start of BFS
-    tables[0] = comp;
-    costs[0] = 0;
-    for (int i = 0; i < 2; i++) {
-        edges[0][i] = std::vector<Index>(width, TABLE_SIZE);
-    }
+    // Helper for assigning new edges quickly
+    std::array<std::vector<Index>, 2> newEdges;
+    newEdges.fill(std::vector<Index>(width, std::numeric_limits<Index>::max()));
 
-    for (int left = 0, right = 1; left < right; left++) {
+    auto add = [&newEdges](const Table& table, Cost cost) {
+        auto newComp = calculateHash(table);
+
+        auto it = std::find(tables.begin(), tables.end(), newComp);
+        auto index = std::distance(tables.begin(), it);
+        if (it == tables.end()) {
+            tables.push_back(newComp);
+            costs.push_back(cost);
+            edges.push_back(newEdges);
+        }
+        return index;
+    };
+
+    // Start of BFS
+    assertm(tables.size() == 0,
+            "Tables should be empty at start of generation");
+    assertm(costs.size() == 0, "Tables should be empty at start of generation");
+    assertm(edges.size() == 0, "Tables should be empty at start of generation");
+    tables.push_back(comp);
+    costs.push_back(0);
+    edges.push_back(newEdges);
+
+    for (int left = 0; left < tables.size(); left++) {
         auto currTable = tables[left];
         Cost currCost = costs[left] + 1;
 
@@ -105,22 +123,10 @@ void generate(const Board& goal) {
                     table[rowTile][x]--;
                     table[rowSpace][x]++;
 
-                    auto newComp = calculateHash(table);
+                    auto index = add(table, currCost);
 
-                    int i = 0;
-                    while (i < right && tables[i] != newComp) i++;
-                    if (i == right) {
-                        tables[right] = newComp;
-                        costs[right] = currCost;
-                        for (int j = 0; j < 2; j++) {
-                            edges[right][j] =
-                                std::vector<Index>(width, TABLE_SIZE);
-                        }
-                        right++;
-                    }
-
-                    edges[left][0][x] = i;
-                    edges[i][1][x] = left;
+                    edges[left][0][x] = index;
+                    edges[index][1][x] = left;
 
                     table[rowTile][x]++;
                     table[rowSpace][x]--;
@@ -134,22 +140,10 @@ void generate(const Board& goal) {
                     table[rowTile][x]--;
                     table[rowSpace][x]++;
 
-                    auto newComp = calculateHash(table);
+                    auto index = add(table, currCost);
 
-                    int i = 0;
-                    while (i < right && tables[i] != newComp) i++;
-                    if (i == right) {
-                        tables[right] = newComp;
-                        costs[right] = currCost;
-                        for (int j = 0; j < 2; j++) {
-                            edges[right][j] =
-                                std::vector<Index>(width, TABLE_SIZE);
-                        }
-                        right++;
-                    }
-
-                    edges[left][1][x] = i;
-                    edges[i][0][x] = left;
+                    edges[left][1][x] = index;
+                    edges[index][0][x] = left;
 
                     table[rowTile][x]++;
                     table[rowSpace][x]--;
@@ -167,7 +161,10 @@ void save(std::string filename) {
         return;
     }
 
-    for (int i = 0; i < TABLE_SIZE; i++) {
+    int size = tables.size();
+    file.write(reinterpret_cast<char*>(&size), sizeof(size));
+
+    for (int i = 0; i < size; i++) {
         file.write(reinterpret_cast<char*>(&tables[i]), sizeof(tables[i]));
         file.write(reinterpret_cast<char*>(&costs[i]), sizeof(costs[i]));
         for (int j = 0; j < 2; j++) {
@@ -179,23 +176,23 @@ void save(std::string filename) {
     }
 }
 
-void WalkingDistance::load(const std::vector<int>& goal, std::string name,
-                           int w, int h) {
+void WalkingDistance::load(const std::vector<int>& goal, int w, int h) {
     assertm(w == h, "Walking Distance requires square boards");
 
     width = w;
     height = h;
     auto length = w * h;
 
-    row = std::vector<int>(length);
-    col = std::vector<int>(length);
+    row.resize(length);
+    col.resize(length);
 
+    // Calculate row / column indices
     for (int i = 0; i < length; i++) {
         row[goal[i]] = i / width;
         col[goal[i]] = i % width;
     }
 
-    std::string filename = "databases/" + name + "-wd.dat";
+    std::string filename = "databases/" + std::to_string(w) + "-wd.dat";
     std::ifstream file(filename, std::ios::in | std::ios::binary);
     if (!file.good()) {
         // Database file missing, generate database
@@ -208,11 +205,18 @@ void WalkingDistance::load(const std::vector<int>& goal, std::string name,
     // Read database from file
     DEBUG("Parsing database");
 
-    for (int i = 0; i < TABLE_SIZE; i++) {
+    // Store size in .dat file
+    int size = 0;
+    file.read(reinterpret_cast<char*>(&size), sizeof(size));
+
+    costs.resize(size);
+    edges.resize(size);
+
+    for (int i = 0; i < size; i++) {
         file.read(reinterpret_cast<char*>(&tables[i]), sizeof(tables[i]));
         file.read(reinterpret_cast<char*>(&costs[i]), sizeof(costs[i]));
         for (int j = 0; j < 2; j++) {
-            edges[i][j] = std::vector<Index>(width);
+            edges[i][j].resize(width);
             for (int k = 0; k < width; k++) {
                 file.read(reinterpret_cast<char*>(&edges[i][j][k]),
                           sizeof(edges[i][j][k]));

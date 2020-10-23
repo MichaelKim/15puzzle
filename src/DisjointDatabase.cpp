@@ -1,6 +1,7 @@
 #include "../include/DisjointDatabase.h"
 
 #include <fstream>
+#include <limits>
 #include <queue>
 #include <unordered_map>
 
@@ -9,14 +10,14 @@
 
 using Grid = DisjointDatabase::Grid;
 using Hash = DisjointDatabase::Hash;
-using Cost = int;
+using Cost = uint_fast8_t;
 
 using DisjointDatabase::height;
 using DisjointDatabase::tileDeltas;
 using DisjointDatabase::where;
 using DisjointDatabase::width;
 
-constexpr Cost INF = 1E6;
+constexpr Cost INF = std::numeric_limits<Cost>::max();  // 255
 
 int DisjointDatabase::width;
 int DisjointDatabase::height;

@@ -131,7 +131,7 @@ int main(int argc, const char* argv[]) {
 
     // Setup WD
     START_TIMER(wd);
-    WalkingDistance::load(solution, dbName, width, height);
+    WalkingDistance::load(solution, width, height);
     END_TIMER(db);
 
     // Reading board file
