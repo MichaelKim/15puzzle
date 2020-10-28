@@ -209,6 +209,7 @@ void WalkingDistance::load(const std::vector<int>& goal, int w, int h) {
     int size = 0;
     file.read(reinterpret_cast<char*>(&size), sizeof(size));
 
+    tables.resize(size);
     costs.resize(size);
     edges.resize(size);
 
