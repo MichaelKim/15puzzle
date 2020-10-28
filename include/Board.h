@@ -52,6 +52,7 @@ public:
 
     int getHeuristic() const;
     bool canMove(Direction dir);
+    // Should be run only once at start of search
     std::vector<Direction> getMoves() const;
     MoveState applyMove(Direction dir);
     void undoMove(const MoveState& prev);

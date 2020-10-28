@@ -65,7 +65,6 @@ int Board::getHeuristic() const {
 }
 
 std::vector<Direction> Board::getMoves() const {
-    // Should be run only once at start of search
     if (blank < WIDTH) {           // top
         if (blank % WIDTH == 0) {  // left
             return {Direction::R, Direction::D};

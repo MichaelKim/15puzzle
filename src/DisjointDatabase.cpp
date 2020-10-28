@@ -1,7 +1,9 @@
 #include "../include/DisjointDatabase.h"
 
+#include <execution>
 #include <fstream>
 #include <limits>
+#include <numeric>
 #include <queue>
 #include <unordered_map>
 
@@ -139,9 +141,9 @@ void DisjointDatabase::load(const std::vector<Grid>& patterns, std::string name,
     height = h;
     auto length = w * h;
 
-    where = std::vector<int>(length, -1);
-    mirrPos = std::vector<int>(length, 0);
-    mirror = std::vector<int>(length);
+    where.resize(length, -1);
+    mirrPos.resize(length, 0);
+    mirror.resize(length);
     // TODO: test with blank not in top-left or bottom-right
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
@@ -221,9 +223,8 @@ std::vector<Hash> DisjointDatabase::calculatePatterns(const Grid& grid) {
 }
 
 int DisjointDatabase::getHeuristic(const std::vector<Hash>& patterns) {
-    int totalDist = 0;
-    for (size_t i = 0; i < patterns.size(); i++) {
-        totalDist += costs[i][patterns[i]];
-    }
-    return totalDist;
+    return std::transform_reduce(
+        std::execution::par_unseq, costs.begin(), costs.end(), patterns.begin(),
+        0, std::plus<>(),
+        [](const auto& cost, const auto& pattern) { return cost[pattern]; });
 }
