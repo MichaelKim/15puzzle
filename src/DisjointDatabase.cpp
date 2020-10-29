@@ -35,8 +35,9 @@ std::vector<Cost> generatePattern(const Grid& pattern, int size) {
     PatternGroup group(pattern, width, height);
 
     // For logging
-    int count = 0;
-    Cost dist = 0;
+    int count = 0;  // Per depth
+    int total = 0;  // Entire search
+    Cost dist = 0;  // Current depth
 
     std::queue<std::pair<Pattern, Cost>> bfs;
     const auto& start = group.initPattern;
@@ -50,12 +51,14 @@ std::vector<Cost> generatePattern(const Grid& pattern, int size) {
 
         // Logging
         if (currDist > dist) {
-            DEBUG((int)dist << ": " << count);
+            DEBUG((int)dist << ": " << count << ", " << (total * 100 / size)
+                            << "% (" << total << "/" << size << ")");
             dist = currDist;
             count = 1;
         } else {
             count++;
         }
+        total++;
 
         for (auto tile : group.tiles) {
             for (int j = 0; j < 4; j++) {
