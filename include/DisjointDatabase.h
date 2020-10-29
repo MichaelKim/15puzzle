@@ -1,23 +1,27 @@
 #ifndef DISJOINTDATABASE_H
 #define DISJOINTDATABASE_H
 
+#include <cstdint>
+#include <string>
 #include <vector>
 
-#include "PartialDatabase.h"
+namespace DisjointDatabase {
 
-class DisjointDatabase {
-private:
-    std::vector<PartialDatabase> databases;
+using Grid = std::vector<int>;
+using Hash = uint64_t;
 
-public:
-    DisjointDatabase(const std::string& name,
-                     const std::vector<std::vector<std::vector<int>>>& grids);
+extern int width;
+extern int height;
+extern Grid where;
+extern Grid tileDeltas;
+extern Grid mirrPos;
+extern Grid mirror;
 
-    std::vector<int> where;
-    std::vector<int> mirrPos;
+void load(const std::vector<Grid>& grids, std::string name, int width,
+          int height);
+std::vector<Hash> calculatePatterns(const Grid& grid);
+int getHeuristic(const std::vector<Hash>& patterns);
 
-    std::size_t numPatterns() const;
-    int getHeuristic(const std::vector<uint64_t>& patterns) const;
-};
+}  // namespace DisjointDatabase
 
 #endif  // DISJOINTDATABASE_H

@@ -1,80 +1,233 @@
 #include "../include/DisjointDatabase.h"
 
-#include <iostream>
+#include <execution>
+#include <fstream>
+#include <limits>
+#include <numeric>
+#include <queue>
+#include <unordered_map>
 
-DisjointDatabase::DisjointDatabase(
-    const std::string& name,
-    const std::vector<std::vector<std::vector<int>>>& grids) {
-    const auto WIDTH = grids[0][0].size();
-    const auto HEIGHT = grids[0].size();
+#include "../include/Pattern.h"
+#include "../include/Util.h"
 
-    where = std::vector<int>(WIDTH * HEIGHT, -1);
+using Grid = DisjointDatabase::Grid;
+using Hash = DisjointDatabase::Hash;
+using Cost = uint_fast8_t;
 
-    // All partial grids, layered to one
-    // This represents the solved grid
-    std::vector<std::vector<int>> combined(HEIGHT, std::vector<int>(WIDTH, 0));
+using DisjointDatabase::height;
+using DisjointDatabase::tileDeltas;
+using DisjointDatabase::where;
+using DisjointDatabase::width;
 
-    // The reflected positions of the tiles
-    mirrPos = std::vector<int>(WIDTH * HEIGHT, 0);
+constexpr Cost INF = std::numeric_limits<Cost>::max();  // 255
 
-    for (size_t i = 0; i < grids.size(); i++) {
-        PartialDatabase pd(grids[i], name, i);
+int DisjointDatabase::width;
+int DisjointDatabase::height;
 
-        for (auto tile : pd.tiles) {
-            if (where[tile] != -1) {
-                std::cout << "Error: patterns overlapping" << std::endl;
-                throw;
-            }
+std::vector<std::vector<int>> patternTiles;
+std::vector<std::vector<Cost>> costs;
+Grid DisjointDatabase::where;
+Grid DisjointDatabase::tileDeltas;
+Grid DisjointDatabase::mirrPos;
+Grid DisjointDatabase::mirror;
 
-            where[tile] = i;
+std::vector<Cost> generatePattern(const Grid& pattern, int size) {
+    PatternGroup group(pattern, width, height);
+
+    // For logging
+    int count = 0;  // Per depth
+    int total = 0;  // Entire search
+    Cost dist = 0;  // Current depth
+
+    std::queue<std::pair<Pattern, Cost>> bfs;
+    const auto& start = group.initPattern;
+    bfs.push({start, 0});
+
+    std::vector<Cost> costs(size, INF);
+    costs[start.id] = 0;
+
+    while (!bfs.empty()) {
+        const auto& [curr, currDist] = bfs.front();
+
+        // Logging
+        if (currDist > dist) {
+            DEBUG((int)dist << ": " << count << ", " << (total * 100 / size)
+                            << "% (" << total << "/" << size << ")");
+            dist = currDist;
+            count = 1;
+        } else {
+            count++;
         }
+        total++;
 
-        databases.push_back(pd);
+        for (auto tile : group.tiles) {
+            for (int j = 0; j < 4; j++) {
+                auto dir = static_cast<Direction>(j);
+                if (group.canShift(curr, tile, dir)) {
+                    auto next = group.shiftCell(curr, tile, dir);
 
-        // Calculate value to position mapping
-        for (int y = 0; y < HEIGHT; y++) {
-            for (int x = 0; x < WIDTH; x++) {
-                if (grids[i][y][x] > 0) {
-                    combined[y][x] = grids[i][y][x];
+                    // Haven't found this board yet
+                    if (costs[next.id] == INF) {
+                        costs[next.id] = currDist + 1;
+                        bfs.push({next, currDist + 1});
+                    }
                 }
             }
         }
+
+        bfs.pop();
     }
 
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            if (combined[y][x] > 0) {
-                mirrPos[combined[y][x]] = combined[x][y];
-            }
-        }
+    return costs;
+}
+
+void savePattern(const std::vector<Cost>& costs, const std::string& filename) {
+    std::ofstream file(filename, std::ios::out | std::ios::binary);
+    if (!file.good()) {
+        std::cerr << "Could not generate database file: " + filename
+                  << std::endl;
+        return;
     }
 
-    for (auto i : mirrPos) std::cout << i << " ";
-    std::cout << std::endl;
+    for (auto c : costs) {
+        file.write(reinterpret_cast<char*>(&c), sizeof(c));
+    }
+}
 
-    // Check that the patterns perfectly cover the board
-    // (except for the blank tile)
-    bool foundBlank = false;
-    for (auto i : where) {
-        if (i == -1) {
-            if (foundBlank) {
-                std::cout << "Error: found multiple blank tiles" << std::endl;
-                throw;
-            }
+std::vector<Cost> loadPattern(const Grid& pattern, const std::string& filename,
+                              int size) {
+    std::ifstream file(filename, std::ios::in | std::ios::binary);
+    if (!file.good()) {
+        // Database file missing, generate database
+        DEBUG("Generating pattern");
 
-            // Assume blank tile
-            foundBlank = true;
+        auto cost = generatePattern(pattern, size);
+        savePattern(cost, filename);
+        return cost;
+    }
+
+    // Read database from file
+    DEBUG("Parsing pattern");
+
+    std::vector<Cost> cost(size);
+
+    // Read database from file
+    for (auto& c : cost) {
+        file.read(reinterpret_cast<char*>(&c), sizeof(c));
+    }
+
+    return cost;
+}
+
+void calculatePatternTiles() {
+    patternTiles.resize(costs.size());
+
+    for (int i = 1; i < width * height; i++) {  // Ignore blank tile (0)
+        patternTiles[where[i]].push_back(i);
+    }
+}
+
+void calculateDeltas() {
+    tileDeltas = std::vector<int>(width * height, 1);
+
+    for (auto& tiles : patternTiles) {
+        for (int j = tiles.size() - 2; j >= 0; j--) {
+            tileDeltas[tiles[j]] =
+                tileDeltas[tiles[j + 1]] * (width * height - 1 - j);
         }
     }
 }
 
-std::size_t DisjointDatabase::numPatterns() const { return databases.size(); }
+void DisjointDatabase::load(const std::vector<Grid>& patterns, std::string name,
+                            int w, int h) {
+    width = w;
+    height = h;
+    auto length = w * h;
 
-int DisjointDatabase::getHeuristic(
-    const std::vector<uint64_t>& patterns) const {
-    int totalDist = 0;
-    for (size_t i = 0; i < patterns.size(); i++) {
-        totalDist += databases[i].distMap[patterns[i]];
+    where.resize(length, -1);
+    mirrPos.resize(length, 0);
+    mirror.resize(length);
+    // TODO: test with blank not in top-left or bottom-right
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            mirror[y * width + x] = x * width + y;
+        }
     }
-    return totalDist;
+
+    // All partial grids, layered to one
+    // This represents the solved grid
+    Grid combined(length, 0);
+
+    for (int i = 0; i < patterns.size(); i++) {
+        DEBUG("Pattern #" << i << ':');
+
+        int size = 1;      // # of entries in database
+        int numTiles = 0;  // # of tiles in partial pattern
+
+        for (int j = 0; j < length; j++) {
+            int tile = patterns[i][j];
+            if (tile > 0) {
+                size *= length - numTiles;
+                numTiles++;
+
+                where[tile] = i;
+                combined[j] = tile;
+            }
+        }
+
+        costs.push_back(loadPattern(
+            patterns[i], "databases/" + name + "-" + std::to_string(i) + ".dat",
+            size));
+    }
+
+    for (int i = 0; i < length; i++) {
+        if (combined[i] > 0) {
+            mirrPos[combined[i]] = combined[mirror[i]];
+        }
+    }
+
+    calculatePatternTiles();
+    calculateDeltas();
+}
+
+std::vector<Hash> DisjointDatabase::calculatePatterns(const Grid& grid) {
+    auto length = width * height;
+    std::vector<Hash> pat(costs.size(), 0);
+
+    for (int i = 0; i < costs.size(); i++) {
+        // Calculate pattern
+        std::vector<int> startPos(length, 0);
+        std::unordered_map<int, int> before;
+        for (int j = 0; j < length; j++) {
+            if (where[grid[j]] == i) {
+                // New tile found
+                int beforeCount = 0;
+
+                // Count number of preceding pattern tiles that's smaller
+                for (auto& it : before) {
+                    if (it.first < grid[j]) {
+                        beforeCount++;
+                    }
+                }
+
+                before[grid[j]] = beforeCount;
+                startPos[grid[j]] = j;
+            }
+        }
+
+        int j = length;
+        for (auto tile : patternTiles[i]) {
+            pat[i] *= j--;
+            pat[i] += startPos[tile] - before[tile];
+        }
+    }
+
+    return pat;
+}
+
+int DisjointDatabase::getHeuristic(const std::vector<Hash>& patterns) {
+    return std::transform_reduce(
+        std::execution::par_unseq, costs.begin(), costs.end(), patterns.begin(),
+        0, std::plus<>(),
+        [](const auto& cost, const auto& pattern) { return cost[pattern]; });
 }

@@ -1,3 +1,4 @@
+#include <array>
 #include <chrono>
 #include <fstream>
 #include <iostream>
@@ -10,6 +11,10 @@
 #include "../include/Idastar.h"
 #include "../include/InputParser.h"
 #include "../include/Util.h"
+#include "../include/WalkingDistance.h"
+
+// Dynamic board size
+// Dynamic database pattern
 
 using namespace std;
 
@@ -31,40 +36,42 @@ void usage() {
          << endl;
 }
 
-vector<vector<vector<int>>> readDatabase(istream& input) {
+struct DBData {
+    int width;
+    int height;
+    vector<vector<int>> grids;
+};
+
+DBData readDatabase(istream& input) {
     int width, height, databaseNum;
     input >> width >> height >> databaseNum;
 
-    vector<vector<vector<int>>> grids(
-        databaseNum, vector<vector<int>>(height, vector<int>(width, 0)));
-    for (int i = 0; i < databaseNum; i++) {
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                input >> grids[i][y][x];
-            }
+    vector<vector<int>> grids(databaseNum, vector<int>(width * height, 0));
+    for (auto& grid : grids) {
+        for (auto& tile : grid) {
+            input >> tile;
         }
     }
-    return grids;
+
+    return {width, height, grids};
 }
 
-vector<Board> readBoards(istream& input, const DisjointDatabase& db) {
+vector<Board> readBoards(istream& input) {
     int width, height, boardNum;
     input >> width >> height >> boardNum;
 
     vector<Board> boards;
     for (int i = 0; i < boardNum; i++) {
-        vector<vector<int>> board(height, vector<int>(width, 0));
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                input >> board[y][x];
-            }
+        std::vector<int> board(width * height, 0);
+        for (auto& tile : board) {
+            input >> tile;
         }
-        boards.emplace_back(board, db);
+        boards.emplace_back(board, width, height);
     }
     return boards;
 }
 
-std::pair<std::string, vector<vector<vector<int>>>> getDatabase() {
+std::pair<std::string, DBData> getDatabase() {
     if (InputParser::databaseExists()) {
         auto dbPath = InputParser::getDatabase();
         auto dbName = dbPath.substr(dbPath.find_last_of('/') + 1);
@@ -76,14 +83,27 @@ std::pair<std::string, vector<vector<vector<int>>>> getDatabase() {
     return {"def", readDatabase(cin)};
 }
 
-vector<Board> getBoards(const DisjointDatabase& db) {
+vector<Board> getBoards() {
     if (InputParser::boardExists()) {
         ifstream input(InputParser::getBoard());
 
-        return readBoards(input, db);
+        return readBoards(input);
     }
 
-    return readBoards(cin, db);
+    return readBoards(cin);
+}
+
+vector<int> combine(vector<vector<int>> grids) {
+    vector<int> solution(grids[0].size(), 0);
+    for (auto& grid : grids) {
+        assertm(grid.size() == solution.size(), "Mismatching pattern sizes");
+        for (int i = 0; i < grid.size(); i++) {
+            if (grid[i] != 0) {
+                solution[i] = grid[i];
+            }
+        }
+    }
+    return solution;
 }
 
 int main(int argc, const char* argv[]) {
@@ -96,19 +116,26 @@ int main(int argc, const char* argv[]) {
     }
 
     // Reading database file
-    const auto [dbName, grids] = getDatabase();
+    const auto [dbName, dbData] = getDatabase();
+    const auto [width, height, grids] = dbData;
     if (grids.empty()) {
         cerr << "Error: must have at least one database" << endl;
         return 1;
     }
+    const auto solution = combine(grids);
 
     // Setup database
     START_TIMER(db);
-    DisjointDatabase db(dbName, grids);
+    DisjointDatabase::load(grids, dbName, width, height);
+    END_TIMER(db);
+
+    // Setup WD
+    START_TIMER(wd);
+    WalkingDistance::load(solution, width, height);
     END_TIMER(db);
 
     // Reading board file
-    auto startBoards(getBoards(db));
+    auto startBoards(getBoards());
 
     // Setup search
     Idastar search;

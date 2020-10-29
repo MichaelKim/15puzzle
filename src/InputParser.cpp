@@ -6,7 +6,7 @@
 
 std::unordered_map<std::string, std::vector<std::string>> InputParser::tokens{};
 
-void InputParser::parse(int argc, const char* argv[]) {
+void InputParser::parse(int argc, const char** argv) {
     if (argc > 1 && argv[1][0] == '-') {
         std::string option;
         for (int i = 1; i < argc; i++) {

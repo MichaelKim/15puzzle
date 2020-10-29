@@ -1,6 +1,7 @@
 #ifndef PATTERN_H
 #define PATTERN_H
 
+#include <cstdint>
 #include <unordered_map>
 #include <vector>
 
@@ -15,14 +16,15 @@ struct Pattern {
 
 // Stores pre-computed values for family of Patterns
 class PatternGroup {
-    std::vector<int> deltas;
     const int WIDTH;
     const int HEIGHT;
 
-public:
-    PatternGroup(const std::vector<std::vector<int>>& grid, const int WIDTH,
-                 const int HEIGHT);
+    std::vector<int> deltas;
 
+public:
+    PatternGroup(const std::vector<int>& grid, int width, int height);
+
+    std::vector<int> tiles;
     Pattern initPattern;  // Initial pattern
 
     int getCell(const Pattern& pattern, int position) const;

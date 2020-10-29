@@ -2,46 +2,42 @@
 
 #include <unordered_map>
 
-PatternGroup::PatternGroup(const std::vector<std::vector<int>>& grid,
-                           const int WIDTH, const int HEIGHT)
-    : deltas(WIDTH * HEIGHT, 1), WIDTH(WIDTH), HEIGHT(HEIGHT) {
+PatternGroup::PatternGroup(const std::vector<int>& grid, int width, int height)
+    : WIDTH(width), HEIGHT(height), deltas(width * height, 1) {
+    auto length = width * height;
+
     // Calculate compressed grid
     uint64_t g = 0;
-    for (int y = HEIGHT; y--;) {
-        for (int x = WIDTH; x--;) {
-            g = (g << 4) + grid[y][x];
-        }
+    for (int i = length; i--;) {
+        g = (g << 4) + grid[i];
     }
 
     // Calculate starting ID and starting position
     std::unordered_map<int, int> before;
-    std::vector<int> tiles;
-    std::vector<int> pos(WIDTH * HEIGHT, 0);
+    std::vector<int> pos(length, 0);
 
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            if (grid[y][x] > 0) {
-                // New tile found
-                int beforeCount = 0;
+    for (int i = 0; i < length; i++) {
+        if (grid[i] > 0) {
+            // New tile found
+            int beforeCount = 0;
 
-                // Count number of preceding pattern tiles that's smaller
-                for (auto& it : before) {
-                    if (it.first < grid[y][x]) {
-                        beforeCount++;
-                    }
+            // Count number of preceding pattern tiles that's smaller
+            for (auto& it : before) {
+                if (it.first < grid[i]) {
+                    beforeCount++;
                 }
-
-                before[grid[y][x]] = beforeCount;
-                pos[grid[y][x]] = y * WIDTH + x;
-
-                // Store tile
-                tiles.push_back(grid[y][x]);
             }
+
+            before[grid[i]] = beforeCount;
+            pos[grid[i]] = i;
+
+            // Store tile
+            tiles.push_back(grid[i]);
         }
     }
 
     // Calculate id
-    int j = WIDTH * HEIGHT;
+    int j = length;
     uint64_t id = 0;
     for (auto tile : tiles) {
         id *= j--;
@@ -52,7 +48,7 @@ PatternGroup::PatternGroup(const std::vector<std::vector<int>>& grid,
 
     // Calculate deltas
     for (int i = tiles.size() - 1; i--;) {
-        deltas[tiles[i]] = deltas[tiles[i + 1]] * (WIDTH * HEIGHT - 1 - i);
+        deltas[tiles[i]] = deltas[tiles[i + 1]] * (length - 1 - i);
     }
 }
 
@@ -96,8 +92,8 @@ Pattern PatternGroup::shiftCell(Pattern next, int tile, Direction dir) {
 
             int numDelta = 1;
             int skipDelta = 0;
-            for (int i = posn - WIDTH + 1; i < posn; i++) {
-                auto skip = getCell(next, i);
+            for (int i = 1; i < WIDTH; i++) {
+                auto skip = getCell(next, i + posn - WIDTH);
                 if (skip == 0) {
                     numDelta++;
                 } else if (skip > tile) {
@@ -121,8 +117,8 @@ Pattern PatternGroup::shiftCell(Pattern next, int tile, Direction dir) {
 
             int numDelta = 1;
             int skipDelta = 0;
-            for (int i = posn + 1; i < posn + WIDTH; i++) {
-                auto skip = getCell(next, i);
+            for (int i = 1; i <= WIDTH; i++) {
+                auto skip = getCell(next, i + posn);
                 if (skip == 0) {
                     numDelta++;
                 } else if (skip > tile) {
