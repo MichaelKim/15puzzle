@@ -52,17 +52,17 @@ PatternGroup::PatternGroup(const std::vector<int>& grid, int width, int height)
     }
 }
 
-unsigned PatternGroup::getCell(const Pattern& pattern, int position) const {
+int PatternGroup::getCell(const Pattern& pattern, int position) const {
     auto i = position << 2;
     return (pattern.g & (0xfULL << i)) >> i;
 }
 
-void PatternGroup::setCell(Pattern& pattern, int position, unsigned tile) {
+void PatternGroup::setCell(Pattern& pattern, int position, int tile) {
     auto i = position << 2;
     pattern.g = (pattern.g & ~(0xfULL << i)) | ((uint64_t)tile << i);
 }
 
-bool PatternGroup::canShift(const Pattern& pattern, unsigned tile,
+bool PatternGroup::canShift(const Pattern& pattern, int tile,
                             Direction dir) const {
     auto posn = pattern.pos[tile];
 
@@ -80,7 +80,7 @@ bool PatternGroup::canShift(const Pattern& pattern, unsigned tile,
     }
 }
 
-Pattern PatternGroup::shiftCell(Pattern next, unsigned tile, Direction dir) {
+Pattern PatternGroup::shiftCell(Pattern next, int tile, Direction dir) {
     // Position of tile
     auto& posn = next.pos[tile];
     // Clear tile

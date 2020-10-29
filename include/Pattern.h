@@ -27,10 +27,10 @@ public:
     std::vector<int> tiles;
     Pattern initPattern;  // Initial pattern
 
-    unsigned getCell(const Pattern& pattern, int position) const;
-    void setCell(Pattern& pattern, int position, unsigned tile);
-    bool canShift(const Pattern& pattern, unsigned tile, Direction dir) const;
-    Pattern shiftCell(Pattern next, unsigned tile, Direction dir);
+    int getCell(const Pattern& pattern, int position) const;
+    void setCell(Pattern& pattern, int position, int tile);
+    bool canShift(const Pattern& pattern, int tile, Direction dir) const;
+    Pattern shiftCell(Pattern next, int tile, Direction dir);
 };
 
 #endif  // PATTERN_H
