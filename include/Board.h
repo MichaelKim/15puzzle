@@ -36,8 +36,7 @@ class Board {
     int getMirrTile(int posn) const;
     void setMirrTile(int posn, int tile);
 
-    int getDelta(int tile, int offset) const;
-    int getMirrDelta(int mirrTile, int offset) const;
+    int getDelta(const std::vector<int>& g, int tile, int offset) const;
 
     struct MoveState {
         uint64_t pattern;

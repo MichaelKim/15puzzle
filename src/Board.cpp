@@ -105,34 +105,18 @@ bool Board::canMove(Direction dir) {
     return canMoveList[blank][static_cast<int>(dir)];
 }
 
-inline int Board::getDelta(int tile, int offset) const {
+inline int Board::getDelta(const std::vector<int>& g, int tile,
+                           int offset) const {
+    // Which pattern the sliding tile is in
     const auto index = DisjointDatabase::where[tile];
     const auto delta = DisjointDatabase::tileDeltas[tile];
     return std::transform_reduce(
-        std::execution::par_unseq, grid.begin() + offset + 1,
-        grid.begin() + offset + WIDTH + 1, delta, std::plus<>(),
+        std::execution::par_unseq, g.begin() + offset + 1,
+        g.begin() + offset + WIDTH + 1, delta, std::plus<>(),
         [&index, &tile, &delta](const auto skip) {
             if (DisjointDatabase::where[skip] != index) {
                 return delta;
             } else if (skip > tile) {
-                return delta + DisjointDatabase::tileDeltas[skip];
-            } else {
-                return 0;
-            }
-        });
-}
-
-inline int Board::getMirrDelta(int mirrTile, int offset) const {
-    // Which pattern the sliding tile is in
-    const auto index = DisjointDatabase::where[mirrTile];
-    const auto delta = DisjointDatabase::tileDeltas[mirrTile];
-    return std::transform_reduce(
-        std::execution::par_unseq, mirrGrid.begin() + offset + 1,
-        mirrGrid.begin() + offset + WIDTH + 1, delta, std::plus<>(),
-        [&index, &mirrTile, &delta](const auto skip) {
-            if (DisjointDatabase::where[skip] != index) {
-                return delta;
-            } else if (skip > mirrTile) {
                 return delta + DisjointDatabase::tileDeltas[skip];
             } else {
                 return 0;
@@ -155,31 +139,6 @@ Board::MoveState Board::applyMove(Direction dir) {
         DisjointDatabase::where[tile];  // Which pattern the sliding tile is in
     const auto oldPattern = patterns[index];  // Storing for undo
 
-    const auto prevRowIndex = wdRowIndex;
-    const auto prevColIndex = wdColIndex;
-    switch (dir) {
-        case Direction::U:
-            patterns[index] += getDelta(tile, newBlank);
-            wdRowIndex = WalkingDistance::edges[wdRowIndex][1]
-                                               [WalkingDistance::row[tile]];
-            break;
-        case Direction::R:
-            patterns[index] -= DisjointDatabase::tileDeltas[tile];
-            wdColIndex = WalkingDistance::edges[wdColIndex][0]
-                                               [WalkingDistance::col[tile]];
-            break;
-        case Direction::D:
-            patterns[index] -= getDelta(tile, blank);
-            wdRowIndex = WalkingDistance::edges[wdRowIndex][0]
-                                               [WalkingDistance::row[tile]];
-            break;
-        default:
-            patterns[index] += DisjointDatabase::tileDeltas[tile];
-            wdColIndex = WalkingDistance::edges[wdColIndex][1]
-                                               [WalkingDistance::col[tile]];
-            break;
-    }
-
     // Update mirror grid, pattern
     const auto mirrBlank = DisjointDatabase::mirror[blank];
     const auto mirrNewBlank = DisjointDatabase::mirror[newBlank];
@@ -188,18 +147,39 @@ Board::MoveState Board::applyMove(Direction dir) {
     const auto mirrIndex = DisjointDatabase::where[mirrTile];
     const auto oldMirrPattern = mirrPatterns[mirrIndex];
 
+    // Walking Distance
+    const auto prevRowIndex = wdRowIndex;
+    const auto prevColIndex = wdColIndex;
+
     switch (dir) {
-        case Direction::L:
-            mirrPatterns[mirrIndex] += getMirrDelta(mirrTile, mirrNewBlank);
-            break;
-        case Direction::D:
-            mirrPatterns[mirrIndex] -= DisjointDatabase::tileDeltas[mirrTile];
+        case Direction::U:
+            patterns[index] += getDelta(grid, tile, newBlank);
+            wdRowIndex = WalkingDistance::edges[wdRowIndex][1]
+                                               [WalkingDistance::row[tile]];
+            // Mirrored L
+            mirrPatterns[mirrIndex] += DisjointDatabase::tileDeltas[mirrTile];
             break;
         case Direction::R:
-            mirrPatterns[mirrIndex] -= getMirrDelta(mirrTile, mirrBlank);
+            patterns[index] -= DisjointDatabase::tileDeltas[tile];
+            wdColIndex = WalkingDistance::edges[wdColIndex][0]
+                                               [WalkingDistance::col[tile]];
+            // Mirrored D
+            mirrPatterns[mirrIndex] -= getDelta(mirrGrid, mirrTile, mirrBlank);
             break;
-        default:
-            mirrPatterns[mirrIndex] += DisjointDatabase::tileDeltas[mirrTile];
+        case Direction::D:
+            patterns[index] -= getDelta(grid, tile, blank);
+            wdRowIndex = WalkingDistance::edges[wdRowIndex][0]
+                                               [WalkingDistance::row[tile]];
+            // Mirrored R
+            mirrPatterns[mirrIndex] -= DisjointDatabase::tileDeltas[mirrTile];
+            break;
+        case Direction::L:
+            patterns[index] += DisjointDatabase::tileDeltas[tile];
+            wdColIndex = WalkingDistance::edges[wdColIndex][1]
+                                               [WalkingDistance::col[tile]];
+            // Mirrored U
+            mirrPatterns[mirrIndex] +=
+                getDelta(mirrGrid, mirrTile, mirrNewBlank);
             break;
     }
 
