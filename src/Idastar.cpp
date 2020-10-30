@@ -24,6 +24,7 @@ Direction inverse(Direction move) {
 std::vector<Direction> Idastar::solve(const Board& start) {
     // Uses IDA* with additive pattern disjoint database heuristics
     DEBUG("Running single threaded");
+    DEBUG("Solving: \n" << start);
 
     path.clear();
     nodes = 1;
@@ -41,7 +42,7 @@ std::vector<Direction> Idastar::solve(const Board& start) {
 
     while (path.empty()) {
         minCost = INF;
-        DEBUG(" " << limit << ", " << nodes);
+        DEBUG(' ' << limit << ", " << nodes);
 
         for (auto startDir : startMoves) {
             auto copy = start;
@@ -64,18 +65,18 @@ bool Idastar::dfs(Board& node, int g, Direction prevMove) {
     auto h = node.getHeuristic();
     auto f = g + h;
 
-    if (f <= limit) {
-        if (h == 0) {
+    if (h == 0) [[unlikely]] {
             // Found goal state (heuristic = 0)
             return true;
         }
-    } else {
+    else if (f > limit) {
         // Exceeded search depth, store next smallest depth
         if (f < minCost) {
             minCost = f;
         }
         return false;
     }
+
     nodes += 1;
 
     for (int i = 0; i < 4; i++) {

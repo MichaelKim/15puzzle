@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <fstream>
@@ -56,22 +57,22 @@ DBData readDatabase(istream& input) {
     return {width, height, grids};
 }
 
-vector<Board> readBoards(istream& input) {
+vector<vector<int>> readBoards(istream& input) {
     int width, height, boardNum;
     input >> width >> height >> boardNum;
 
-    vector<Board> boards;
+    vector<vector<int>> boards;
     for (int i = 0; i < boardNum; i++) {
-        std::vector<int> board(width * height, 0);
+        vector<int> board(width * height, 0);
         for (auto& tile : board) {
             input >> tile;
         }
-        boards.emplace_back(board, width, height);
+        boards.push_back(board);
     }
     return boards;
 }
 
-std::pair<std::string, DBData> getDatabase() {
+pair<string, DBData> getDatabase() {
     if (InputParser::databaseExists()) {
         auto dbPath = InputParser::getDatabase();
         auto dbName = dbPath.substr(dbPath.find_last_of('/') + 1);
@@ -83,7 +84,7 @@ std::pair<std::string, DBData> getDatabase() {
     return {"def", readDatabase(cin)};
 }
 
-vector<Board> getBoards() {
+vector<vector<int>> getBoards() {
     if (InputParser::boardExists()) {
         ifstream input(InputParser::getBoard());
 
@@ -104,6 +105,39 @@ vector<int> combine(vector<vector<int>> grids) {
         }
     }
     return solution;
+}
+
+int getInversions(const vector<int>& board) {
+    int inversions = 0;
+    for (int i = 0; i < board.size(); i++) {
+        for (int j = i + 1; j < board.size(); j++) {
+            if (board[i] != 0 && board[j] != 0 && board[i] > board[j]) {
+                inversions++;
+            }
+        }
+    }
+    return inversions;
+}
+
+int getBlank(const vector<int>& board) {
+    auto it = find(board.begin(), board.end(), 0);
+    assertm(it != board.end(), "Blank must exist in board");
+    return distance(board.begin(), it);
+}
+
+bool solvable(const vector<int>& solution, int width, int height,
+              const vector<int>& board) {
+    int inversions = 0;
+    if (width % 2 == 1 || height % 2 == 1) {
+        // Odd side length
+        return (getInversions(solution) % 2) == (getInversions(board) % 2);
+    }
+
+    // Even side length
+    auto solutionBlankRow = getBlank(solution) / width;
+    auto boardBlankRow = getBlank(board) / width;
+    return getInversions(solution) % 2 !=
+           (getInversions(board) % 2 == (solutionBlankRow - boardBlankRow) % 2);
 }
 
 int main(int argc, const char* argv[]) {
@@ -135,48 +169,53 @@ int main(int argc, const char* argv[]) {
     END_TIMER(db);
 
     // Reading board file
-    auto startBoards(getBoards());
+    const auto startBoards(getBoards());
 
     // Setup search
     Idastar search;
 
     // Start search
+    vector<Board> boards;
     vector<vector<Direction>> answers;
     START_TIMER(solve);
     for (const auto& startBoard : startBoards) {
-        START_TIMER(singleSolve);
-        auto solution = search.solve(startBoard);
-        END_TIMER(singleSolve);
-
-        if (solution.empty()) {
-            cout << "No solution found!" << endl;
-        } else {
-            cout << "Solution: " << solution.size() << " steps" << endl;
-            for (auto dir : solution) {
-                cout << dir << " ";
-            }
-            cout << endl;
+        if (!solvable(solution, width, height, startBoard)) {
+            cout << "No solution possible!\n";
+            continue;
         }
 
+        Board b(startBoard, width, height);
+
+        START_TIMER(singleSolve);
+        auto solution = search.solve(b);
+        END_TIMER(singleSolve);
+
+        cout << "Solution: " << solution.size() << " moves\n";
+        for (auto dir : solution) {
+            cout << dir << ' ';
+        }
+        cout << '\n';
+
+        boards.push_back(b);
         answers.push_back(solution);
     }
     END_TIMER(solve);
 
     // Check solutions
     cout << "Checking solutions:" << endl;
-    for (auto i = 0; i < startBoards.size(); i++) {
-        auto b = startBoards[i];
+    for (auto i = 0; i < boards.size(); i++) {
+        auto board = boards[i];
         auto solution = answers[i];
 
         for (auto j = solution.size(); j--;) {
-            b.applyMove(solution[j]);
+            board.applyMove(solution[j]);
             if (InputParser::showInteractive()) {
-                cout << (solution.size() - j) << endl;
-                cout << b << endl;
-                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+                cout << (solution.size() - j) << '\n';
+                cout << board << '\n';
+                this_thread::sleep_for(chrono::milliseconds(200));
             }
         }
-        cout << b << endl;
+        cout << board << endl;
     }
 
     return 0;
