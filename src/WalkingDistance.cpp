@@ -14,14 +14,16 @@ using Index = WalkingDistance::Index;  // Max = TABLE_SIZE
 
 using WalkingDistance::col;
 using WalkingDistance::costs;
-using WalkingDistance::edges;
+using WalkingDistance::edgesDown;
+using WalkingDistance::edgesUp;
 using WalkingDistance::height;
 using WalkingDistance::row;
 using WalkingDistance::width;
 
 std::vector<Hash> tables;
 std::vector<Cost> WalkingDistance::costs;
-std::vector<std::array<std::vector<Index>, 2>> WalkingDistance::edges;
+std::vector<std::vector<Index>> WalkingDistance::edgesUp;
+std::vector<std::vector<Index>> WalkingDistance::edgesDown;
 
 std::vector<int> WalkingDistance::row;  // Row #
 std::vector<int> WalkingDistance::col;  // Column #
@@ -86,8 +88,7 @@ void generate(const Board& goal) {
     auto comp = calculateHash(calculateTable(goal));
 
     // Helper for assigning new edges quickly
-    std::array<std::vector<Index>, 2> newEdges;
-    newEdges.fill(std::vector<Index>(width, std::numeric_limits<Index>::max()));
+    std::vector<Index> newEdges(width, std::numeric_limits<Index>::max());
 
     auto add = [&newEdges](const Table& table, Cost cost) {
         auto newComp = calculateHash(table);
@@ -97,7 +98,8 @@ void generate(const Board& goal) {
         if (it == tables.end()) {
             tables.push_back(newComp);
             costs.push_back(cost);
-            edges.push_back(newEdges);
+            edgesUp.push_back(newEdges);
+            edgesDown.push_back(newEdges);
         }
         return index;
     };
@@ -106,10 +108,14 @@ void generate(const Board& goal) {
     assertm(tables.size() == 0,
             "Tables should be empty at start of generation");
     assertm(costs.size() == 0, "Tables should be empty at start of generation");
-    assertm(edges.size() == 0, "Tables should be empty at start of generation");
+    assertm(edgesUp.size() == 0,
+            "Tables should be empty at start of generation");
+    assertm(edgesDown.size() == 0,
+            "Tables should be empty at start of generation");
     tables.push_back(comp);
     costs.push_back(0);
-    edges.push_back(newEdges);
+    edgesUp.push_back(newEdges);
+    edgesDown.push_back(newEdges);
 
     for (int left = 0; left < tables.size(); left++) {
         auto currTable = tables[left];
@@ -125,8 +131,8 @@ void generate(const Board& goal) {
 
                     auto index = add(table, currCost);
 
-                    edges[left][0][x] = index;
-                    edges[index][1][x] = left;
+                    edgesUp[left][x] = index;
+                    edgesDown[index][x] = left;
 
                     table[rowTile][x]++;
                     table[rowSpace][x]--;
@@ -142,8 +148,8 @@ void generate(const Board& goal) {
 
                     auto index = add(table, currCost);
 
-                    edges[left][1][x] = index;
-                    edges[index][0][x] = left;
+                    edgesDown[left][x] = index;
+                    edgesUp[index][x] = left;
 
                     table[rowTile][x]++;
                     table[rowSpace][x]--;
@@ -167,11 +173,13 @@ void save(std::string filename) {
     for (int i = 0; i < size; i++) {
         file.write(reinterpret_cast<char*>(&tables[i]), sizeof(tables[i]));
         file.write(reinterpret_cast<char*>(&costs[i]), sizeof(costs[i]));
-        for (int j = 0; j < 2; j++) {
-            for (int k = 0; k < width; k++) {
-                file.write(reinterpret_cast<char*>(&edges[i][j][k]),
-                           sizeof(edges[i][j][k]));
-            }
+        for (int k = 0; k < width; k++) {
+            file.write(reinterpret_cast<char*>(&edgesUp[i][k]),
+                       sizeof(edgesUp[i][k]));
+        }
+        for (int k = 0; k < width; k++) {
+            file.write(reinterpret_cast<char*>(&edgesDown[i][k]),
+                       sizeof(edgesDown[i][k]));
         }
     }
 }
@@ -211,17 +219,21 @@ void WalkingDistance::load(const std::vector<int>& goal, int w, int h) {
 
     tables.resize(size);
     costs.resize(size);
-    edges.resize(size);
+    edgesUp.resize(size);
+    edgesDown.resize(size);
 
     for (int i = 0; i < size; i++) {
         file.read(reinterpret_cast<char*>(&tables[i]), sizeof(tables[i]));
         file.read(reinterpret_cast<char*>(&costs[i]), sizeof(costs[i]));
-        for (int j = 0; j < 2; j++) {
-            edges[i][j].resize(width);
-            for (int k = 0; k < width; k++) {
-                file.read(reinterpret_cast<char*>(&edges[i][j][k]),
-                          sizeof(edges[i][j][k]));
-            }
+        edgesUp[i].resize(width);
+        for (int k = 0; k < width; k++) {
+            file.read(reinterpret_cast<char*>(&edgesUp[i][k]),
+                      sizeof(edgesUp[i][k]));
+        }
+        edgesDown[i].resize(width);
+        for (int k = 0; k < width; k++) {
+            file.read(reinterpret_cast<char*>(&edgesDown[i][k]),
+                      sizeof(edgesDown[i][k]));
         }
     }
 }

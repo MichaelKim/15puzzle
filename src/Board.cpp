@@ -154,29 +154,29 @@ Board::MoveState Board::applyMove(Direction dir) {
     switch (dir) {
         case Direction::U:
             patterns[index] += getDelta(grid, tile, newBlank);
-            wdRowIndex = WalkingDistance::edges[wdRowIndex][1]
-                                               [WalkingDistance::row[tile]];
+            wdRowIndex = WalkingDistance::edgesDown[wdRowIndex]
+                                                   [WalkingDistance::row[tile]];
             // Mirrored L
             mirrPatterns[mirrIndex] += DisjointDatabase::tileDeltas[mirrTile];
             break;
         case Direction::R:
             patterns[index] -= DisjointDatabase::tileDeltas[tile];
-            wdColIndex = WalkingDistance::edges[wdColIndex][0]
-                                               [WalkingDistance::col[tile]];
+            wdColIndex = WalkingDistance::edgesUp[wdColIndex]
+                                                 [WalkingDistance::col[tile]];
             // Mirrored D
             mirrPatterns[mirrIndex] -= getDelta(mirrGrid, mirrTile, mirrBlank);
             break;
         case Direction::D:
             patterns[index] -= getDelta(grid, tile, blank);
-            wdRowIndex = WalkingDistance::edges[wdRowIndex][0]
-                                               [WalkingDistance::row[tile]];
+            wdRowIndex = WalkingDistance::edgesUp[wdRowIndex]
+                                                 [WalkingDistance::row[tile]];
             // Mirrored R
             mirrPatterns[mirrIndex] -= DisjointDatabase::tileDeltas[mirrTile];
             break;
         case Direction::L:
             patterns[index] += DisjointDatabase::tileDeltas[tile];
-            wdColIndex = WalkingDistance::edges[wdColIndex][1]
-                                               [WalkingDistance::col[tile]];
+            wdColIndex = WalkingDistance::edgesDown[wdColIndex]
+                                                   [WalkingDistance::col[tile]];
             // Mirrored U
             mirrPatterns[mirrIndex] +=
                 getDelta(mirrGrid, mirrTile, mirrNewBlank);
