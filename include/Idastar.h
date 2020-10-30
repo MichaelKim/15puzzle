@@ -1,6 +1,7 @@
 #ifndef IDASTAR_H
 #define IDASTAR_H
 
+#include <atomic>
 #include <vector>
 
 #include "Board.h"
@@ -8,16 +9,18 @@
 
 class Idastar {
 private:
-    std::vector<Direction> path;
     int minCost;
     int limit;
-    long long nodes;
+    std::atomic_llong nodes;
+
+    std::atomic_bool found;
 
 public:
     Idastar();
 
     std::vector<Direction> solve(const Board& start);
-    bool dfs(Board& root, int g, Direction prevMove);
+    bool dfs(Board& root, int g, Direction prevMove,
+             std::vector<Direction>& path);
 };
 
 #endif

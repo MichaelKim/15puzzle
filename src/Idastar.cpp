@@ -1,10 +1,13 @@
 #include "../include/Idastar.h"
 
+#include <future>
+#include <thread>
+
 #include "../include/Util.h"
 
 constexpr int INF = 1000;
 
-Idastar::Idastar() : path({}), minCost(INF), limit(0), nodes(0) {}
+Idastar::Idastar() : minCost(INF), limit(0), nodes(0), found(false) {}
 
 Direction inverse(Direction move) {
     switch (move) {
@@ -23,15 +26,15 @@ Direction inverse(Direction move) {
 
 std::vector<Direction> Idastar::solve(const Board& start) {
     // Uses IDA* with additive pattern disjoint database heuristics
-    DEBUG("Running single threaded");
+    DEBUG("Running multithreaded");
+    DEBUG("Solving: \n" << start);
 
-    path.clear();
     nodes = 1;
     limit = start.getHeuristic();
 
     if (limit == 0) {
         DEBUG("Already solved");
-        return path;
+        return {};
     }
 
     DEBUG("Limit, Nodes:");
@@ -39,51 +42,70 @@ std::vector<Direction> Idastar::solve(const Board& start) {
     // Starting moves (for prevMove)
     auto startMoves = start.getMoves();
 
-    while (path.empty()) {
-        minCost = INF;
+    while (true) {
         DEBUG(" " << limit << ", " << nodes);
 
-        for (auto startDir : startMoves) {
-            auto copy = start;
-            copy.applyMove(startDir);
+        std::vector<std::future<std::vector<Direction>>> checks;
+        std::transform(
+            startMoves.begin(), startMoves.end(), std::back_inserter(checks),
+            [this, &start](const auto startDir) {
+                return std::async(
+                    std::launch::async,
+                    [this](auto copy, auto dir) -> std::vector<Direction> {
+                        std::vector<Direction> path;
+                        copy.applyMove(dir);
+                        DEBUG("START " << dir);
 
-            if (dfs(copy, 1, inverse(startDir))) {
-                path.push_back(startDir);
-                DEBUG("Nodes expanded: " << nodes);
+                        if (dfs(copy, 1, inverse(dir), path)) {
+                            bool expected = false;
+                            if (found.compare_exchange_strong(expected, true)) {
+                                DEBUG("FOUND " << dir);
+                                path.push_back(dir);
+                                return path;
+                            }
+                        }
+
+                        DEBUG("END " << dir);
+                        return {};
+                    },
+                    start, startDir);
+            });
+
+        for (int i = 0; i < checks.size(); i++) {
+            auto path = checks[i].get();
+            if (!path.empty()) {
+                DEBUG("Nodes expanded: " << nodes.load());
                 return path;
             }
         }
 
-        limit = minCost;
+        limit += 2;
     }
-
-    return path;
 }
 
-bool Idastar::dfs(Board& node, int g, Direction prevMove) {
+bool Idastar::dfs(Board& node, int g, Direction prevMove,
+                  std::vector<Direction>& path) {
     auto h = node.getHeuristic();
     auto f = g + h;
 
-    if (f <= limit) {
-        if (h == 0) {
+    if (h == 0) [[unlikely]] {
             // Found goal state (heuristic = 0)
             return true;
         }
-    } else {
-        // Exceeded search depth, store next smallest depth
-        if (f < minCost) {
-            minCost = f;
-        }
-        return false;
+    else if (f > limit) {
+        // Exceeded search depth
+        // Exit early if other thread found the solution
+        return found.load();
     }
-    nodes += 1;
+
+    nodes++;
 
     for (int i = 0; i < 4; i++) {
         auto dir = static_cast<Direction>(i);
         if (prevMove != dir && node.canMove(dir)) {
             auto prev = node.applyMove(dir);
 
-            if (dfs(node, g + 1, inverse(dir))) {
+            if (dfs(node, g + 1, inverse(dir), path)) {
                 path.push_back(dir);
                 return true;
             }

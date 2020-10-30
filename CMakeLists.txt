@@ -4,7 +4,7 @@ project (puzzle)
 add_executable(puzzle src/main.cpp src/Board.cpp src/Direction.cpp src/DisjointDatabase.cpp src/Idastar.cpp src/InputParser.cpp src/Pattern.cpp src/WalkingDistance.cpp)
 target_include_directories(puzzle PUBLIC include)
 set_target_properties(puzzle PROPERTIES
-  CXX_STANDARD 17
+  CXX_STANDARD 20
   CXX_STANDARD_REQUIRED YES
   CXX_EXTENSIONS NO
 )
