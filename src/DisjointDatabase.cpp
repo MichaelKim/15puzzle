@@ -154,10 +154,6 @@ void DisjointDatabase::load(const std::vector<Grid>& patterns, std::string name,
         }
     }
 
-    // All partial grids, layered to one
-    // This represents the solved grid
-    Grid combined(length, 0);
-
     for (int i = 0; i < patterns.size(); i++) {
         DEBUG("Pattern #" << i << ':');
 
@@ -171,7 +167,6 @@ void DisjointDatabase::load(const std::vector<Grid>& patterns, std::string name,
                 numTiles++;
 
                 where[tile] = i;
-                combined[j] = tile;
             }
         }
 
@@ -180,6 +175,9 @@ void DisjointDatabase::load(const std::vector<Grid>& patterns, std::string name,
             size));
     }
 
+    // All partial grids, layered to one
+    // This represents the solved grid
+    auto combined = combine(patterns);
     for (int i = 0; i < length; i++) {
         if (combined[i] > 0) {
             mirrPos[combined[i]] = combined[mirror[i]];

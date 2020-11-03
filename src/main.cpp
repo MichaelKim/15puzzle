@@ -94,19 +94,6 @@ vector<vector<int>> getBoards() {
     return readBoards(cin);
 }
 
-vector<int> combine(vector<vector<int>> grids) {
-    vector<int> solution(grids[0].size(), 0);
-    for (auto& grid : grids) {
-        assertm(grid.size() == solution.size(), "Mismatching pattern sizes");
-        for (int i = 0; i < grid.size(); i++) {
-            if (grid[i] != 0) {
-                solution[i] = grid[i];
-            }
-        }
-    }
-    return solution;
-}
-
 int getInversions(const vector<int>& board) {
     int inversions = 0;
     for (int i = 0; i < board.size(); i++) {
@@ -119,15 +106,8 @@ int getInversions(const vector<int>& board) {
     return inversions;
 }
 
-int getBlank(const vector<int>& board) {
-    auto it = find(board.cbegin(), board.cend(), 0);
-    assertm(it != board.cend(), "Blank must exist in board");
-    return distance(board.cbegin(), it);
-}
-
 bool solvable(const vector<int>& solution, int width, int height,
               const vector<int>& board) {
-    int inversions = 0;
     if (width % 2 == 1 || height % 2 == 1) {
         // Odd side length
         return (getInversions(solution) % 2) == (getInversions(board) % 2);
@@ -166,7 +146,7 @@ int main(int argc, const char* argv[]) {
     // Setup WD
     START_TIMER(wd);
     WalkingDistance::load(solution, width, height);
-    END_TIMER(db);
+    END_TIMER(wd);
 
     // Reading board file
     const auto startBoards(getBoards());

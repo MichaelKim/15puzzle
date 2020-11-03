@@ -10,39 +10,12 @@
 #include "../include/Util.h"
 #include "../include/WalkingDistance.h"
 
-// WIDTH < HEIGHT
-
-int findBlank(const std::vector<int>& g) {
-    for (int i = 0; i < g.size(); i++) {
-        if (g[i] == 0) {
-            return i;
-        }
-    }
-    assertm(0, "Board must have a blank");
-}
-
-auto calcMoveList(int width, int height) {
-    // [index][direction]
-    std::vector<std::array<bool, 4>> moves(width * height,
-                                           std::array<bool, 4>{});
-
-    // Blank position
-    for (int i = 0; i < width * height; i++) {
-        moves[i][static_cast<int>(Direction::U)] = (i / width) > 0;
-        moves[i][static_cast<int>(Direction::R)] = (i % width) < width - 1;
-        moves[i][static_cast<int>(Direction::D)] = (i / width) < height - 1;
-        moves[i][static_cast<int>(Direction::L)] = (i % width) > 0;
-    }
-
-    return moves;
-}
-
 Board::Board(const std::vector<int>& g, int width, int height)
     : WIDTH(width),
       HEIGHT(height),
       deltas({-width, 1, width, -1}),
       canMoveList(calcMoveList(width, height)),
-      blank(findBlank(g)),
+      blank(getBlank(g)),
       grid(g),
       mirrGrid(width * height),
       patterns(DisjointDatabase::calculatePatterns(g)),

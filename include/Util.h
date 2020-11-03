@@ -1,9 +1,11 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include <array>
 #include <cassert>
 #include <chrono>
 #include <iostream>
+#include <vector>
 
 #define assertm(expr, msg) assert(((void)(msg), (expr)))
 #define DEBUG(x) std::cout << x << '\n'
@@ -17,5 +19,9 @@
                          1000000.0                                           \
                   << "\n\n";                                                 \
     }
+
+std::vector<int> combine(const std::vector<std::vector<int>>& grids);
+int getBlank(const std::vector<int>& board);
+std::vector<std::array<bool, 4>> calcMoveList(int width, int height);
 
 #endif  // UTIL_H
