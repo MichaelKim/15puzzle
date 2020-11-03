@@ -1,10 +1,13 @@
 #include "../include/Idastar.h"
 
+#include "../include/Board.h"
+#include "../include/BoardRect.h"
 #include "../include/Util.h"
 
 constexpr int INF = 1000;
 
-Idastar::Idastar() : path({}), minCost(INF), limit(0), nodes(0) {}
+template <class B>
+Idastar<B>::Idastar() : path({}), minCost(INF), limit(0), nodes(0) {}
 
 Direction inverse(Direction move) {
     switch (move) {
@@ -21,8 +24,8 @@ Direction inverse(Direction move) {
     }
 }
 
-std::vector<Direction> Idastar::solve(const Board& start) {
-    // Uses IDA* with additive pattern disjoint database heuristics
+template <class B>
+std::vector<Direction> Idastar<B>::solve(const B& start) {
     DEBUG("Running single threaded");
     DEBUG("Solving: \n" << start);
 
@@ -61,7 +64,8 @@ std::vector<Direction> Idastar::solve(const Board& start) {
     return path;
 }
 
-bool Idastar::dfs(Board& node, int g, Direction prevMove) {
+template <class B>
+bool Idastar<B>::dfs(B& node, int g, Direction prevMove) {
     auto h = node.getHeuristic();
     auto f = g + h;
 
@@ -95,3 +99,6 @@ bool Idastar::dfs(Board& node, int g, Direction prevMove) {
 
     return false;
 }
+
+template class Idastar<Board>;
+template class Idastar<BoardRect>;

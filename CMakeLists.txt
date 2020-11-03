@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.15)
 project (puzzle)
 
-add_executable(puzzle src/main.cpp src/Board.cpp src/Direction.cpp src/DisjointDatabase.cpp src/Idastar.cpp src/InputParser.cpp src/Pattern.cpp src/WalkingDistance.cpp)
+add_executable(puzzle src/main.cpp src/Board.cpp src/BoardRect.cpp src/Direction.cpp src/DisjointDatabase.cpp src/Idastar.cpp src/InputParser.cpp src/Pattern.cpp src/WalkingDistance.cpp src/Util.cpp)
 target_include_directories(puzzle PUBLIC include)
 set_target_properties(puzzle PROPERTIES
   CXX_STANDARD 17

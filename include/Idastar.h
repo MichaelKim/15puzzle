@@ -3,9 +3,9 @@
 
 #include <vector>
 
-#include "Board.h"
 #include "Direction.h"
 
+template <class B>
 class Idastar {
 private:
     std::vector<Direction> path;
@@ -16,8 +16,8 @@ private:
 public:
     Idastar();
 
-    std::vector<Direction> solve(const Board& start);
-    bool dfs(Board& root, int g, Direction prevMove);
+    std::vector<Direction> solve(const B& start);
+    bool dfs(B& root, int g, Direction prevMove);
 };
 
 #endif
