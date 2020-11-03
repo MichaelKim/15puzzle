@@ -138,8 +138,8 @@ void calculateDeltas() {
     }
 }
 
-void DisjointDatabase::load(const std::vector<Grid>& patterns, std::string name,
-                            int w, int h) {
+void DisjointDatabase::load(const std::vector<Grid>& patterns,
+                            const std::string& name, int w, int h) {
     width = w;
     height = h;
     auto length = w * h;

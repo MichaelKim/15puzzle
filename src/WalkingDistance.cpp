@@ -159,7 +159,7 @@ void generate(const Board& goal) {
     }
 }
 
-void save(std::string filename) {
+void save(const std::string& filename) {
     std::ofstream file(filename, std::ios::out | std::ios::binary);
     if (!file.good()) {
         std::cerr << "Could not generate database file: databases/def-wd.dat"

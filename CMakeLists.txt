@@ -8,8 +8,8 @@ set_target_properties(puzzle PROPERTIES
   CXX_STANDARD_REQUIRED YES
   CXX_EXTENSIONS NO
 )
-target_compile_options(puzzle PUBLIC -O3 -Wall -g)
-target_link_options(puzzle PUBLIC)
+target_compile_options(puzzle PUBLIC -O3 -Wall -Wextra)
+target_link_options(puzzle PUBLIC -coverage)
 
 find_program(
   CLANG_TIDY_EXE

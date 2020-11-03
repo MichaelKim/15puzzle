@@ -17,7 +17,7 @@ extern Grid tileDeltas;
 extern Grid mirrPos;
 extern Grid mirror;
 
-void load(const std::vector<Grid>& grids, std::string name, int width,
+void load(const std::vector<Grid>& grids, const std::string& name, int width,
           int height);
 std::vector<Hash> calculatePatterns(const Grid& grid);
 int getHeuristic(const std::vector<Hash>& patterns);
