@@ -120,9 +120,9 @@ int getInversions(const vector<int>& board) {
 }
 
 int getBlank(const vector<int>& board) {
-    auto it = find(board.begin(), board.end(), 0);
-    assertm(it != board.end(), "Blank must exist in board");
-    return distance(board.begin(), it);
+    auto it = find(board.cbegin(), board.cend(), 0);
+    assertm(it != board.cend(), "Blank must exist in board");
+    return distance(board.cbegin(), it);
 }
 
 bool solvable(const vector<int>& solution, int width, int height,

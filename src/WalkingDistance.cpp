@@ -93,8 +93,8 @@ void generate(const Board& goal) {
     auto add = [&newEdges](const Table& table, Cost cost) {
         auto newComp = calculateHash(table);
 
-        auto it = std::find(tables.begin(), tables.end(), newComp);
-        auto index = std::distance(tables.begin(), it);
+        auto it = std::find(tables.cbegin(), tables.cend(), newComp);
+        auto index = std::distance(tables.cbegin(), it);
         if (it == tables.end()) {
             tables.push_back(newComp);
             costs.push_back(cost);
@@ -242,9 +242,9 @@ int WalkingDistance::getIndex(const Board& grid, bool alongRow) {
     auto hash = calculateHash(calculateTable(grid, alongRow));
 
     // Convert to index
-    auto it = std::find(tables.begin(), tables.end(), hash);
+    auto it = std::find(tables.cbegin(), tables.cend(), hash);
     assertm(it != tables.end(), "Missing walking distance table");
-    auto index = std::distance(tables.begin(), it);
+    auto index = std::distance(tables.cbegin(), it);
 
     return index;
 }

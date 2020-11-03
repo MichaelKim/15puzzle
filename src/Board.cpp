@@ -111,8 +111,8 @@ inline int Board::getDelta(const std::vector<int>& g, int tile,
     const auto index = DisjointDatabase::where[tile];
     const auto delta = DisjointDatabase::tileDeltas[tile];
     return std::transform_reduce(
-        std::execution::par_unseq, g.begin() + offset + 1,
-        g.begin() + offset + WIDTH + 1, delta, std::plus<>(),
+        std::execution::par_unseq, g.cbegin() + offset + 1,
+        g.cbegin() + offset + WIDTH + 1, delta, std::plus<>(),
         [&index, &tile, &delta](const auto skip) {
             if (DisjointDatabase::where[skip] != index) {
                 return delta;
