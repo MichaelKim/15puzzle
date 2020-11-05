@@ -9,9 +9,9 @@
 
 // Minimal state info
 struct Pattern {
-    std::vector<int> pos;  // Value to position mapping
-    uint64_t id;           // distMap key
-    uint64_t g;            // Position to value mapping
+    std::vector<int> pos;   // Value to position mapping
+    std::vector<int> grid;  // Position to value mapping
+    int id;                 // distMap key
 };
 
 // Stores pre-computed values for family of Patterns
@@ -20,6 +20,8 @@ class PatternGroup {
     const int HEIGHT;
 
     std::vector<int> deltas;
+
+    int getDelta(const Pattern& ptn, int tile, int offset) const;
 
 public:
     PatternGroup(const std::vector<int>& grid, int width, int height);

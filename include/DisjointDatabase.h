@@ -8,7 +8,7 @@
 namespace DisjointDatabase {
 
 using Grid = std::vector<int>;
-using Hash = uint64_t;
+using Hash = int;
 
 extern int width;
 extern int height;

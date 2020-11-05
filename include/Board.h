@@ -24,8 +24,8 @@ class Board {
     std::vector<int> mirrGrid;  // Mirrored grid
 
     // Used for disjoint database
-    std::vector<uint64_t> patterns;      // Pattern IDs
-    std::vector<uint64_t> mirrPatterns;  // Mirrored pattern IDs
+    std::vector<int> patterns;      // Pattern IDs
+    std::vector<int> mirrPatterns;  // Mirrored pattern IDs
 
     // Used for walking distance
     int wdRowIndex;  // Chunk by row (1 2 3 4 / ...)
@@ -39,8 +39,8 @@ class Board {
     int getDelta(const std::vector<int>& g, int tile, int offset) const;
 
     struct MoveState {
-        uint64_t pattern;
-        uint64_t mirrPattern;
+        int pattern;
+        int mirrPattern;
         int rowIndex;
         int colIndex;
         int blank;

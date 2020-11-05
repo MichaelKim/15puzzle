@@ -29,7 +29,7 @@ class BoardRect {
     std::vector<int> grid;  // Value to position mapping
 
     // Used for disjoint database
-    std::vector<uint64_t> patterns;  // Pattern IDs
+    std::vector<int> patterns;  // Pattern IDs
 
     int getTile(int posn) const;
     void setTile(int posn, int tile);
@@ -37,7 +37,7 @@ class BoardRect {
     int getDelta(const std::vector<int>& g, int tile, int offset) const;
 
     struct MoveState {
-        uint64_t pattern;
+        int pattern;
         int blank;
     };
 
