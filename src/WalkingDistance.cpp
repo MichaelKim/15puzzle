@@ -1,16 +1,17 @@
 #include "../include/WalkingDistance.h"
 
 #include <algorithm>
+#include <execution>
 #include <fstream>
 #include <limits>
+#include <numeric>
 
 #include "../include/Util.h"
 
 using Board = std::vector<int>;
 using Table = std::vector<std::vector<int>>;
-using Hash = uint_fast64_t;            // 48-bit encoding
-using Cost = WalkingDistance::Cost;    // Max = 36
-using Index = WalkingDistance::Index;  // Max = TABLE_SIZE
+using Cost = WalkingDistance::Cost;
+using Index = WalkingDistance::Index;
 
 using WalkingDistance::col;
 using WalkingDistance::costs;
@@ -20,7 +21,7 @@ using WalkingDistance::height;
 using WalkingDistance::row;
 using WalkingDistance::width;
 
-std::vector<Hash> tables;
+std::vector<Table> tables;
 std::vector<Cost> WalkingDistance::costs;
 std::vector<std::vector<Index>> WalkingDistance::edgesUp;
 std::vector<std::vector<Index>> WalkingDistance::edgesDown;
@@ -50,60 +51,32 @@ Table calculateTable(const Board& grid, bool alongRow = true) {
     return table;
 }
 
-Hash calculateHash(const Table& table) {
-    // Compress WD tables
-    Hash hash = 0;
-
-    for (auto& row : table) {
-        for (auto val : row) {
-            hash = (hash << 3) | val;
+int getRowSpace(const Table& table) {
+    for (int y = 0; y < height; y++) {
+        auto count = std::reduce(std::execution::par_unseq, table[y].begin(),
+                                 table[y].end());
+        if (count == width - 1) {
+            return y;
         }
     }
-
-    return hash;
+    assertm(false, "WD table must have a row with a blank");
 }
 
-std::pair<Table, int> hashToTable(Hash hash) {
-    Table table(height, std::vector<int>(width, 0));
-    int rowSpace = 0;
-
-    for (int y = height - 1; y >= 0; y--) {
-        int count = 0;
-        for (int x = width - 1; x >= 0; x--) {
-            table[y][x] = hash & 7;
-            hash >>= 3;
-
-            count += table[y][x];
-        }
-        if (count == width - 1) {
-            rowSpace = y;
-        }
+int add(int left, int cost) {
+    int index = 0;
+    while (index < tables.size() &&
+           (index == left || tables[index] != tables[left]))
+        index++;
+    if (index == tables.size()) {
+        tables.push_back(tables[left]);
+        costs.push_back(cost);
+        edgesUp.emplace_back(width, std::numeric_limits<Index>::max());
+        edgesDown.emplace_back(width, std::numeric_limits<Index>::max());
     }
-
-    return {table, rowSpace};
+    return index;
 }
 
 void generate(const Board& goal) {
-    // Initial table
-    auto comp = calculateHash(calculateTable(goal));
-
-    // Helper for assigning new edges quickly
-    std::vector<Index> newEdges(width, std::numeric_limits<Index>::max());
-
-    auto add = [&newEdges](const Table& table, Cost cost) {
-        auto newComp = calculateHash(table);
-
-        auto it = std::find(tables.cbegin(), tables.cend(), newComp);
-        auto index = std::distance(tables.cbegin(), it);
-        if (it == tables.end()) {
-            tables.push_back(newComp);
-            costs.push_back(cost);
-            edgesUp.push_back(newEdges);
-            edgesDown.push_back(newEdges);
-        }
-        return index;
-    };
-
     // Start of BFS
     assertm(tables.size() == 0,
             "Tables should be empty at start of generation");
@@ -112,47 +85,47 @@ void generate(const Board& goal) {
             "Tables should be empty at start of generation");
     assertm(edgesDown.size() == 0,
             "Tables should be empty at start of generation");
-    tables.push_back(comp);
+
+    // Initial table (goal)
+    tables.push_back(calculateTable(goal));
     costs.push_back(0);
-    edgesUp.push_back(newEdges);
-    edgesDown.push_back(newEdges);
+    edgesUp.emplace_back(width, std::numeric_limits<Index>::max());
+    edgesDown.emplace_back(width, std::numeric_limits<Index>::max());
 
     for (int left = 0; left < tables.size(); left++) {
-        auto currTable = tables[left];
-        Cost currCost = costs[left] + 1;
-
-        auto [table, rowSpace] = hashToTable(currTable);
+        auto cost = costs[left] + 1;
+        auto rowSpace = getRowSpace(tables[left]);
 
         if (int rowTile = rowSpace + 1; rowTile < height) {
             for (int x = 0; x < width; x++) {
-                if (table[rowTile][x]) {
-                    table[rowTile][x]--;
-                    table[rowSpace][x]++;
+                if (tables[left][rowTile][x]) {
+                    tables[left][rowTile][x]--;
+                    tables[left][rowSpace][x]++;
 
-                    auto index = add(table, currCost);
+                    auto index = add(left, cost);
 
                     edgesUp[left][x] = index;
                     edgesDown[index][x] = left;
 
-                    table[rowTile][x]++;
-                    table[rowSpace][x]--;
+                    tables[left][rowTile][x]++;
+                    tables[left][rowSpace][x]--;
                 }
             }
         }
 
         if (int rowTile = rowSpace - 1; rowTile >= 0) {
             for (int x = 0; x < width; x++) {
-                if (table[rowTile][x]) {
-                    table[rowTile][x]--;
-                    table[rowSpace][x]++;
+                if (tables[left][rowTile][x]) {
+                    tables[left][rowTile][x]--;
+                    tables[left][rowSpace][x]++;
 
-                    auto index = add(table, currCost);
+                    auto index = add(left, cost);
 
                     edgesDown[left][x] = index;
                     edgesUp[index][x] = left;
 
-                    table[rowTile][x]++;
-                    table[rowSpace][x]--;
+                    tables[left][rowTile][x]++;
+                    tables[left][rowSpace][x]--;
                 }
             }
         }
@@ -168,18 +141,29 @@ void save(const std::string& filename) {
     }
 
     int size = tables.size();
+    assertm(costs.size() == size, "Mismatching table sizes");
+    assertm(edgesUp.size() == size, "Mismatching table sizes");
+    assertm(edgesDown.size() == size, "Mismatching table sizes");
     file.write(reinterpret_cast<char*>(&size), sizeof(size));
 
-    for (int i = 0; i < size; i++) {
-        file.write(reinterpret_cast<char*>(&tables[i]), sizeof(tables[i]));
-        file.write(reinterpret_cast<char*>(&costs[i]), sizeof(costs[i]));
-        for (int k = 0; k < width; k++) {
-            file.write(reinterpret_cast<char*>(&edgesUp[i][k]),
-                       sizeof(edgesUp[i][k]));
+    for (auto& table : tables) {
+        for (auto& row : table) {
+            for (auto tile : row) {
+                file.write(reinterpret_cast<char*>(&tile), sizeof(tile));
+            }
         }
-        for (int k = 0; k < width; k++) {
-            file.write(reinterpret_cast<char*>(&edgesDown[i][k]),
-                       sizeof(edgesDown[i][k]));
+    }
+    for (auto cost : costs) {
+        file.write(reinterpret_cast<char*>(&cost), sizeof(cost));
+    }
+    for (auto& edge : edgesUp) {
+        for (auto col : edge) {
+            file.write(reinterpret_cast<char*>(&col), sizeof(col));
+        }
+    }
+    for (auto& edge : edgesDown) {
+        for (auto col : edge) {
+            file.write(reinterpret_cast<char*>(&col), sizeof(col));
         }
     }
 }
@@ -222,27 +206,37 @@ void WalkingDistance::load(const std::vector<int>& goal, int w, int h) {
     edgesUp.resize(size);
     edgesDown.resize(size);
 
-    for (int i = 0; i < size; i++) {
-        file.read(reinterpret_cast<char*>(&tables[i]), sizeof(tables[i]));
-        file.read(reinterpret_cast<char*>(&costs[i]), sizeof(costs[i]));
-        edgesUp[i].resize(width);
-        for (int k = 0; k < width; k++) {
-            file.read(reinterpret_cast<char*>(&edgesUp[i][k]),
-                      sizeof(edgesUp[i][k]));
+    for (auto& table : tables) {
+        table.resize(height);
+        for (auto& row : table) {
+            row.resize(width);
+            for (auto& tile : row) {
+                file.read(reinterpret_cast<char*>(&tile), sizeof(tile));
+            }
         }
-        edgesDown[i].resize(width);
-        for (int k = 0; k < width; k++) {
-            file.read(reinterpret_cast<char*>(&edgesDown[i][k]),
-                      sizeof(edgesDown[i][k]));
+    }
+    for (auto& cost : costs) {
+        file.read(reinterpret_cast<char*>(&cost), sizeof(cost));
+    }
+    for (auto& edge : edgesUp) {
+        edge.resize(width);
+        for (auto& col : edge) {
+            file.read(reinterpret_cast<char*>(&col), sizeof(col));
+        }
+    }
+    for (auto& edge : edgesDown) {
+        edge.resize(width);
+        for (auto& col : edge) {
+            file.read(reinterpret_cast<char*>(&col), sizeof(col));
         }
     }
 }
 
 int WalkingDistance::getIndex(const Board& grid, bool alongRow) {
-    auto hash = calculateHash(calculateTable(grid, alongRow));
+    auto table = calculateTable(grid, alongRow);
 
     // Convert to index
-    auto it = std::find(tables.cbegin(), tables.cend(), hash);
+    auto it = std::find(tables.cbegin(), tables.cend(), table);
     assertm(it != tables.end(), "Missing walking distance table");
     auto index = std::distance(tables.cbegin(), it);
 
