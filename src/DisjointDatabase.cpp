@@ -51,8 +51,9 @@ std::vector<Cost> generatePattern(const Grid& pattern, int size) {
 
         // Logging
         if (currDist > dist) {
-            DEBUG((int)dist << ": " << count << ", " << (total * 100 / size)
-                            << "% (" << total << "/" << size << ")");
+            DEBUG((int)dist << ": " << count << ", "
+                            << (int)(total * (100.f / size)) << "% (" << total
+                            << "/" << size << ")");
             dist = currDist;
             count = 1;
         } else {
