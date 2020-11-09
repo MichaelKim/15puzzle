@@ -62,8 +62,8 @@ int getRowSpace(const Table& table) {
     assertm(false, "WD table must have a row with a blank");
 }
 
-int add(int left, int cost) {
-    int index = 0;
+int add(std::size_t left, int cost) {
+    std::size_t index = 0;
     while (index < tables.size() &&
            (index == left || tables[index] != tables[left]))
         index++;
@@ -92,7 +92,7 @@ void generate(const Board& goal) {
     edgesUp.emplace_back(width, std::numeric_limits<Index>::max());
     edgesDown.emplace_back(width, std::numeric_limits<Index>::max());
 
-    for (int left = 0; left < tables.size(); left++) {
+    for (std::size_t left = 0; left < tables.size(); left++) {
         auto cost = costs[left] + 1;
         auto rowSpace = getRowSpace(tables[left]);
 
@@ -141,9 +141,9 @@ void save(const std::string& filename) {
     }
 
     int size = tables.size();
-    assertm(costs.size() == size, "Mismatching table sizes");
-    assertm(edgesUp.size() == size, "Mismatching table sizes");
-    assertm(edgesDown.size() == size, "Mismatching table sizes");
+    assertm((int)costs.size() == size, "Mismatching table sizes");
+    assertm((int)edgesUp.size() == size, "Mismatching table sizes");
+    assertm((int)edgesDown.size() == size, "Mismatching table sizes");
     file.write(reinterpret_cast<char*>(&size), sizeof(size));
 
     for (auto& table : tables) {

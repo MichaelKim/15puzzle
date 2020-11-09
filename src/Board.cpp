@@ -21,7 +21,7 @@ Board::Board(const std::vector<int>& g, int width, int height)
       patterns(DisjointDatabase::calculatePatterns(g)),
       wdRowIndex(WalkingDistance::getIndex(g)),
       wdColIndex(WalkingDistance::getIndex(g, false)) {
-    assertm(g.size() == width * height, "Wrong board dimensions");
+    assertm((int)g.size() == width * height, "Wrong board dimensions");
 
     for (int i = 0; i < WIDTH * HEIGHT; i++) {
         mirrGrid[i] =

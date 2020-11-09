@@ -132,7 +132,7 @@ void calculateDeltas() {
     tileDeltas = std::vector<int>(width * height, 1);
 
     for (auto& tiles : patternTiles) {
-        for (int j = tiles.size() - 2; j >= 0; j--) {
+        for (std::size_t j = tiles.size() - 2; j-- > 0;) {
             tileDeltas[tiles[j]] =
                 tileDeltas[tiles[j + 1]] * (width * height - 1 - j);
         }
@@ -155,7 +155,7 @@ void DisjointDatabase::load(const std::vector<Grid>& patterns,
         }
     }
 
-    for (int i = 0; i < patterns.size(); i++) {
+    for (std::size_t i = 0; i < patterns.size(); i++) {
         DEBUG("Pattern #" << i << ':');
 
         int size = 1;      // # of entries in database
@@ -193,7 +193,7 @@ std::vector<Hash> DisjointDatabase::calculatePatterns(const Grid& grid) {
     auto length = width * height;
     std::vector<Hash> pat(costs.size(), 0);
 
-    for (int i = 0; i < costs.size(); i++) {
+    for (int i = 0; i < (int)costs.size(); i++) {
         // Calculate pattern
         std::vector<int> startPos(length, 0);
         std::unordered_map<int, int> before;

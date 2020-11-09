@@ -95,8 +95,8 @@ std::vector<std::vector<int>> getBoards() {
 
 int getInversions(const std::vector<int>& board) {
     int inversions = 0;
-    for (int i = 0; i < board.size(); i++) {
-        for (int j = i + 1; j < board.size(); j++) {
+    for (std::size_t i = 0; i < board.size(); i++) {
+        for (std::size_t j = i + 1; j < board.size(); j++) {
             if (board[i] != 0 && board[j] != 0 && board[i] > board[j]) {
                 inversions++;
             }
