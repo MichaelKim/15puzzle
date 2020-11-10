@@ -105,14 +105,14 @@ int getInversions(const std::vector<int>& board) {
     return inversions;
 }
 
-bool solvable(const std::vector<int>& solution, int width, int height,
+bool solvable(const std::vector<int>& solution, int width,
               const std::vector<int>& board) {
-    if (width % 2 == 1 || height % 2 == 1) {
-        // Odd side length
+    if (width % 2 == 1) {
+        // Odd width
         return (getInversions(solution) % 2) == (getInversions(board) % 2);
     }
 
-    // Even side length
+    // Even width
     auto solutionBlankRow = getBlank(solution) / width;
     auto boardBlankRow = getBlank(board) / width;
     return getInversions(solution) % 2 !=
@@ -129,7 +129,7 @@ void solve(const std::vector<int>& solution, int width, int height,
     std::vector<std::pair<B, std::vector<Direction>>> results;
     START_TIMER(solve);
     for (const auto& startBoard : grids) {
-        if (!solvable(solution, width, height, startBoard)) {
+        if (!solvable(solution, width, startBoard)) {
             std::cout << "No solution possible!\n";
             continue;
         }
