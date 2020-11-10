@@ -132,7 +132,7 @@ void calculateDeltas() {
     tileDeltas = std::vector<int>(width * height, 1);
 
     for (auto& tiles : patternTiles) {
-        for (std::size_t j = tiles.size() - 2; j-- > 0;) {
+        for (int j = (int)tiles.size() - 2; j >= 0; j--) {
             tileDeltas[tiles[j]] =
                 tileDeltas[tiles[j + 1]] * (width * height - 1 - j);
         }
