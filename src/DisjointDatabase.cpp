@@ -145,6 +145,8 @@ void DisjointDatabase::load(const std::vector<Grid>& patterns,
     height = h;
     auto length = w * h;
 
+    costs.clear();
+    patternTiles.clear();
     where.resize(length, -1);
     mirrPos.resize(length, 0);
     mirror.resize(length);

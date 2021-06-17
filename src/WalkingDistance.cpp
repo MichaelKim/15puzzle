@@ -99,13 +99,10 @@ int add(const Table& table, int cost) {
 
 void generate(const Board& goal) {
     // Start of BFS
-    assertm(tables.size() == 0,
-            "Tables should be empty at start of generation");
-    assertm(costs.size() == 0, "Tables should be empty at start of generation");
-    assertm(edgesUp.size() == 0,
-            "Tables should be empty at start of generation");
-    assertm(edgesDown.size() == 0,
-            "Tables should be empty at start of generation");
+    tables.clear();
+    costs.clear();
+    edgesUp.clear();
+    edgesDown.clear();
 
     // Initial table (goal)
     tables.push_back(calculateHash(calculateTable(goal)));
