@@ -1,0 +1,3 @@
+set -e;
+g++ -O2 -std=c++17 src/*.cpp -o bin/puzzle
+cat databases/555-reg boards/15-reg | ./bin/puzzle
