@@ -1,35 +1,18 @@
-CXX = g++
-CXXFLAGS = -std=c++17 -Wall -O3 -g
+CXX = g++-11
+CXXFLAGS = -std=c++17 -Wall -O2
 
-puzzle: obj/main.o obj/Board.o obj/BoardRect.o obj/Direction.o obj/DisjointDatabase.o obj/Idastar.o obj/InputParser.o obj/Pattern.o obj/WalkingDistance.o obj/Util.cpp | bin
-	$(CXX) $(CXXFLAGS) -o bin/puzzle $^
+SRC_DIR := src
+OBJ_DIR := obj
+BIN_DIR := bin
+SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
+OBJ_FILES := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
+LDFLAGS := -m64 #-L/opt/homebrew/Cellar/gperftools/2.9.1_1/lib -lprofiler
 
-obj/main.o: src/main.cpp | obj
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-obj/Board.o: src/Board.cpp | obj
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-obj/BoardRect.o: src/BoardRect.cpp | obj
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-obj/Direction.o: src/Direction.cpp | obj
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-obj/DisjointDatabase.o: src/DisjointDatabase.cpp | obj
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-obj/Idastar.o: src/Idastar.cpp | obj
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-obj/InputParser.o: src/InputParser.cpp | obj
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-obj/Pattern.o: src/Pattern.cpp | obj
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-obj/WalkingDistance.o: src/WalkingDistance.cpp | obj
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-obj/Util.o: src/Util.cpp | obj
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+$(BIN_DIR)/puzzle: $(OBJ_FILES)
+	$(CXX) $(LDFLAGS) -o $@ $^
 
-bin:
-	mkdir -p $@
-obj:
-	mkdir -p $@
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
-.PHONY: clean
 clean:
-	rm -r bin/ obj/ databases/*.dat
+	rm -r $(OBJ_DIR)/* $(BIN_DIR)/*
